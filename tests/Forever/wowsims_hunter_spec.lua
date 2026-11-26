@@ -244,8 +244,15 @@ describe("the Hunter wowsims.com packs #slow #wowsims", function()
         local spec, world, pack, FLOOR, LIVE, FLICKER = p[1], W[p[2]], p[3], p[4], p[5], p[6]
         local liveWorld = W[p[7] or p[2]]
         it(pack .. " follows wowsims's casts", function()
-            local r, line = ws.gate(pack, content(spec, world, pack, 60, p[8] or REPLAY_EXTRA), spec, FLOOR, REPLAY)
+            local r, line, keys =
+                ws.gate(pack, content(spec, world, pack, 60, p[8] or REPLAY_EXTRA), spec, FLOOR, REPLAY)
             ab.check(r.flicker <= FLICKER + 1e-9, pack, "ON flicker ceiling: " .. line)
+            if spec == "hunter_beast_mastery_turret" then -- fable-eng3-decision.md Q1 test 2: the hha sequence is live
+                local k = keys[pack .. ":hha#Primary"]
+                assert.is_truthy(k, "no hha operation sent")
+                assert.is_true(k.OPEN >= 1 and k.up > 0, "hha never opened in the belief")
+                assert.is_true(k.parks > 0 and k.step1 >= k.parks - 1 and k.step1 <= k.parks, "one STEP 1 per park")
+            end
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()
@@ -253,6 +260,21 @@ describe("the Hunter wowsims.com packs #slow #wowsims", function()
             end)
         end
     end
+end)
+
+-- (fable-eng3-decision.md Q3) The gate's self-test: Beast Mastery Turret's replay (one plain sequence, hha) with the
+-- belief's VS.WindowOp stubbed out fails on the up-or-closed check, before anything else.
+describe("the replay gate's APL window checks #slow #wowsims", function()
+    it("fail Beast Mastery Turret's replay when the belief's WindowOp is stubbed out", function()
+        local p = PACKS[2]
+        assert.are.equal("hunter_beast_mastery_turret", p[1])
+        local opts = setmetatable({ stubWindowOp = true }, { __index = REPLAY })
+        local ok, err = pcall(ws.gate, p[3], content(p[1], W[p[2]], p[3], 60, p[8] or REPLAY_EXTRA), p[1], p[4], opts)
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("an APL window operation the belief did not follow", 1, true))
+        -- judged at the replay (fable-eng3b-decision.md Q2): the up-or-closed failure, listed first
+        assert.is_truthy(tostring(err):find("hha#Primary: OPEN sent, not up", 1, true), tostring(err))
+    end)
 end)
 
 -- The replay and live characters learn the kit's ranks by level (ws.content's learn levels), so the book ranks wowsims's

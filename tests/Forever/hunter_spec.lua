@@ -887,6 +887,15 @@ describe("Forever Hunter priorities", function()
         assert.is_true(racials.blood_fury)
         local pe = require("Forever.helpers.pack_entries") -- a sequence's members walked too
         for name, p in pairs(packs) do
+            -- a window a priority reads: one the class registers, or a sequence the priority itself declares (L1374)
+            local windows = setmetatable({}, { __index = cls.windows })
+            for _, entries in pairs(p.lists) do
+                for _, e in ipairs(pe.flat(entries)) do
+                    if e.action == "sequence" or e.action == "strict_sequence" then
+                        windows[e.window_name] = true
+                    end
+                end
+            end
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(pe.flat(entries)) do
                     local where = name .. " " .. list .. " " .. i
@@ -899,9 +908,9 @@ describe("Forever Hunter priorities", function()
                             or pe.SHARED[e.action],
                         where
                     )
-                    assert.is_true(not window or cls.windows[e.window_name or e.list_name] ~= nil, where)
+                    assert.is_true(not window or windows[e.window_name or e.list_name] ~= nil, where)
                     for key in (e.criteria or ""):gmatch("window%.([%w_]+)") do
-                        assert.is_true(cls.windows[key] ~= nil, where .. ": window " .. key)
+                        assert.is_true(windows[key] ~= nil, where .. ": window " .. key)
                     end
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
@@ -1230,40 +1239,68 @@ describe("Forever Hunter through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    it('keeps Beast Mastery\'s hha open for the fight ("combat"), closed at combat end', function()
-        local _, F = weaveWorld(11)
-        assert.are.equal("combat", H.Hekili.Class.windows.hha.duration)
-        local t = H.ctl.now
-        assert.is_true(headless.cycle(H, t + 0.1))
-        assert.is_true((F.Window("hha")))
-        assert.is_true(headless.cycle(H, t + 4000))
-        assert.is_true((F.Window("hha")))
-        H.ctl.combat = false
-        H.Fire("PLAYER_REGEN_ENABLED")
-        assert.is_true(headless.cycle(H, t + 4000.1))
-        assert.is_false((F.Window("hha")))
-    end)
-
-    -- User report (v0.7.3): after the first fight the hawk sequence never came back until a reload; the belief's
-    -- `combat` kept the old pull's start, so the evaluator never saw a new false->true edge.
-    it("reopens Beast Mastery's hha at the next pull, out of combat closed", function()
-        local S, F = weaveWorld(11)
-        local t = H.ctl.now
-        assert.is_true(headless.cycle(H, t + 0.1))
-        assert.is_true((F.Window("hha")))
-        H.ctl.now, H.ctl.combat = t + 30, false
-        H.Fire("PLAYER_REGEN_ENABLED")
-        assert.is_true(headless.cycle(H, t + 30.1))
-        assert.is_true(headless.cycle(H, t + 35))
-        assert.is_false((F.Window("hha")))
-        H.ctl.now, H.ctl.combat = t + 40, true
+    -- (fable-eng3b-decision.md Q1 test 3, L1919) Beast Mastery's hha is bound to the fight (`time>0` on the shipped line):
+    -- the poll at combat end walks out of combat and must not reopen it, so a Summon Hawk heard after combat end (the
+    -- driver's last press) never counts toward the next pull; there it starts at the first member, as wowsims's reset.
+    it("keeps Beast Mastery's hha to the fight: a hawk after combat end does not carry into the next pull", function()
+        local pack = "Beast Mastery Turret (wowsims.com)"
+        local KEY = pack .. ":hha#Primary"
+        local seq = {}
+        for _, e in ipairs(H.Hekili.DB.profile.packs[pack].lists.default) do
+            if e.window_name == "hha" then
+                seq[#seq + 1] = e -- the shipped restart_sequence and sequence lines
+            end
+        end
+        assert.are.equal(2, #seq)
+        H.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = seq }
+        H.Hekili:LoadScripts()
+        H.Hekili:ReviewPacks()
+        H.Hekili.Scripts:ApplyWindows(pack)
+        H.Hekili.State:BuildWindows()
+        local VS = H.ns.VirtualState
+        VS.Drain(H.ctl.now)
+        local opens = { ooc = 0, combat = 0 }
+        local op = VS.WindowOp
+        VS.WindowOp = function(k, code, arg)
+            if k == KEY and code == 1 then
+                local c = H.ctl.combat and "combat" or "ooc"
+                opens[c] = opens[c] + 1
+            end
+            return op(k, code, arg)
+        end
+        H.ctl.level.target, H.ctl.distance.target, H.ctl.inRange.target = 60, 20, true
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 1
+        local function at(dt)
+            H.ctl.now = t + dt
+            assert.is_true(headless.cycle(H, t + dt))
+        end
+        local function hawk(dt)
+            H.ctl.now = t + dt
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. dt, 1293527)
+        end
+        H.ctl.now, H.ctl.combat = t, true
         H.Fire("PLAYER_REGEN_DISABLED")
-        assert.is_true(headless.cycle(H, t + 40.1))
-        local up, _, _, _, step = F.Window("hha")
-        assert.is_true(up)
-        assert.are.equal(1, step)
-        S.reset("Primary", true)
-        assert.is_true(S.window.hha.next.summon_hawk)
+        at(0.2)
+        at(0.4)
+        local up0, _, _, _, step0 = VS.Window(KEY)
+        assert.are.same({ true, 1 }, { up0, step0 }) -- opened at the pull, at the first hawk
+        H.ctl.now, H.ctl.combat = t + 10, false
+        H.Fire("PLAYER_REGEN_ENABLED")
+        at(10) -- combat end's own poll walks out of combat
+        hawk(10.05) -- the last press of the fight, heard after combat end
+        for dt = 10.2, 40, 0.2 do
+            at(dt)
+            assert.is_false((VS.Window(KEY)), ("hha up out of combat at %.1f s"):format(dt))
+        end
+        assert.are.equal(0, opens.ooc)
+        H.ctl.now, H.ctl.combat = t + 40.1, true
+        H.Fire("PLAYER_REGEN_DISABLED")
+        at(40.2)
+        at(40.4)
+        local up, _, _, _, step = VS.Window(KEY)
+        assert.are.same({ true, 1 }, { up, step }) -- the first member at the new pull
+        assert.are.equal(2, opens.combat)
         assert.are.same({}, H.errors)
     end)
 

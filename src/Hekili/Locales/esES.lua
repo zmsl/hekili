@@ -642,7 +642,7 @@ L["Not Set"] = "Sin fijar"
 L["Pool for Next Entry (%s)"] = "Acumular para la siguiente (%s)"
 L["If checked, the addon will pool resources until the next entry has enough resources to use."] = "Si está marcado, el addon acumula recursos hasta que la siguiente entrada tenga recursos suficientes para usarse."
 L["Pooling Time"] = "Tiempo de acumulación"
-L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "Indica el tiempo en segundos, como número o como expresión que dé un número.\nEl valor predeterminado es |cFFFFD1000.5|r.  Un ejemplo de expresión sería |cFFFFD100energy.time_to_max|r."
+-- L["Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true."] = ""
 L["Extra Pooling"] = "Acumulación extra"
 L["Specify the amount of extra resources to pool in addition to what is needed for the next entry."] = "Cantidad de recursos extra que acumular además de lo que necesita la siguiente entrada."
 L["Conditions"] = "Condiciones"
@@ -1045,3 +1045,6 @@ L["Priority %s, list %s, line %d reads your health without health.known first. W
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000AVISO|r: esta versión de Hekili Forever es para un cliente de WoW Forever más nuevo; reinstala la versión para %s."
+
+-- No longer used (the English changed or went away): reuse or delete
+L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "Indica el tiempo en segundos, como número o como expresión que dé un número.\nEl valor predeterminado es |cFFFFD1000.5|r.  Un ejemplo de expresión sería |cFFFFD100energy.time_to_max|r."

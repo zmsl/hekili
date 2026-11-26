@@ -19077,7 +19077,7 @@ options.packs.affliction.Affliction (wowsims.com).lists.modPooling.extra_amount	
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.affliction.Affliction (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.affliction.Affliction (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.affliction.Affliction (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -19407,7 +19407,7 @@ options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.extra_amount	des
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.affliction.SM Ruin (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.affliction.SM Ruin (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.affliction.SM Ruin (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -19784,7 +19784,7 @@ options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.arcane.Arcane (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.arcane.Arcane (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.arcane.Arcane (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20008,30 +20008,28 @@ options.packs.arms.Arms (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r 
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 12292 - |cFFFFD100|cffffd100active_enemies>1|r|r
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 402927
 options.packs.arms.Arms (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 12294 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 7384 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))))&(buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 7384 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1680 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&active_enemies>=2)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 12294 - |cFFFFD100|cffffd100!settings.wowsims_stance_dance|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 1240193 - |cFFFFD100|cffffd100(!action.mortal_strike.known||action.slam.cast<action.mortal_strike.gcd)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 2457 - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 772 - |cFFFFD100|cffffd100((action.battle_stance.known&prev.1.battle_stance)||(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)))&((!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 772 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&(!action.mortal_strike.known||action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 1310222 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 2457 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&!buff.battle_stance.up&!((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready)))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 2458 - |cFFFFD100|cffffd100(settings.wowsims_stance_dance&(!action.battle_stance.known||buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase||(action.rend.known&debuff.rend.remains>action.rend.gcd)))|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 1680 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 78 - |cFFFFD100|cffffd100(!execute_phase&rage.lo>=90&!talent.improved_slam.enabled)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&!buff.berserker_stance.up&gcd.remains<=0)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 6673 - |cFFFFD100|cffffd100(((!action.mortal_strike.known||cooldown.mortal_strike.remains>=action.mortal_strike.gcd)&((!settings.wowsims_stance_dance&active_enemies<2)||(action.whirlwind.known&cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 78 - |cFFFFD100|cffffd100!action.mortal_strike.known&rage.lo>=30|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0033	|cFFFFD10033.|r Spell 6343 - |cFFFFD100|cffffd100settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up|r|r
-options.packs.arms.Arms (wowsims.com).lists.actionID	values.0034	|cFFFFD10034.|r Spell 7386 - |cFFFFD100|cffffd100!action.mortal_strike.known&debuff.sunder_armor.stack<5|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0011	|cFFFF000011.|r strict_sequence - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known||cooldown.overpower.remains<=0))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 7384 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1680 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&active_enemies>=2)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 12294 - |cFFFFD100|cffffd100!settings.wowsims_stance_dance|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1240193 - |cFFFFD100|cffffd100(!action.mortal_strike.known||action.slam.cast<action.mortal_strike.gcd)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0017	|cFFFF000017.|r strict_sequence - |cFFFFD100|cffffd100((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known||buff.berserker_stance.up)&(!action.battle_stance.known||cooldown.battle_stance.remains<=0))&(!action.rend.known||debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 772 - |cFFFFD100|cffffd100(!execute_phase&(!action.battle_stance.known||buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 1240193 - |cFFFFD100|cffffd100(!execute_phase&(!action.mortal_strike.known||action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0020	|cFFFFD10020.|r Spell 1310222 - |cFFFFD100|cffffd100(!action.battle_stance.known||buff.battle_stance.up)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0021	|cFFFFD10021.|r Spell 2457 - |cFFFFD100|cffffd100(!settings.wowsims_stance_dance&!buff.battle_stance.up&!((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready)))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0022	|cFFFFD10022.|r Spell 2458 - |cFFFFD100|cffffd100(settings.wowsims_stance_dance&(!action.battle_stance.known||buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase||(action.rend.known&debuff.rend.remains>action.rend.gcd)))|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0023	|cFFFFD10023.|r Spell 1680 - |cFFFFD100|cffffd100settings.wowsims_stance_dance|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0024	|cFFFFD10024.|r Spell 5308 - |cFFFFD100|cffffd100execute_phase|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0025	|cFFFFD10025.|r Spell 845 - |cFFFFD100|cffffd100(active_enemies>1&rage.lo>=40)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0026	|cFFFFD10026.|r Spell 78 - |cFFFFD100|cffffd100(!execute_phase&rage.lo>=90&!talent.improved_slam.enabled)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0027	|cFFFFD10027.|r Spell 2458 - |cFFFFD100|cffffd100(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known||cooldown.whirlwind.ready))&!buff.berserker_stance.up&gcd.remains<=0)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0028	|cFFFFD10028.|r Spell 2687 - |cFFFFD100|cffffd100rage.lo<90|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0029	|cFFFFD10029.|r Spell 6673 - |cFFFFD100|cffffd100(((!action.mortal_strike.known||cooldown.mortal_strike.remains>=action.mortal_strike.gcd)&((!settings.wowsims_stance_dance&active_enemies<2)||(action.whirlwind.known&cooldown.whirlwind.remains>=action.whirlwind.gcd)))&buff.battle_shout.remains<=10)|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0030	|cFFFFD10030.|r Spell 78 - |cFFFFD100|cffffd100!action.mortal_strike.known&rage.lo>=30|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0031	|cFFFFD10031.|r Spell 6343 - |cFFFFD100|cffffd100settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up|r|r
+options.packs.arms.Arms (wowsims.com).lists.actionID	values.0032	|cFFFFD10032.|r Spell 7386 - |cFFFFD100|cffffd100!action.mortal_strike.known&debuff.sunder_armor.stack<5|r|r
 options.packs.arms.Arms (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.arms.Arms (wowsims.com).lists.action_name	name	Action Name
 options.packs.arms.Arms (wowsims.com).lists.action_name	values.battle_shout	|T136000:0|t Spell 6673
@@ -20199,7 +20197,7 @@ options.packs.arms.Arms (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.arms.Arms (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.arms.Arms (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.arms.Arms (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.arms.Arms (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.arms.Arms (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.arms.Arms (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20574,7 +20572,7 @@ options.packs.assassination.Assassination (wowsims.com).lists.modPooling.extra_a
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.assassination.Assassination (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.assassination.Assassination (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.assassination.Assassination (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -20991,7 +20989,7 @@ options.packs.balance.Balance (wowsims.com).lists.modPooling.extra_amount	desc	S
 options.packs.balance.Balance (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.balance.Balance (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.balance.Balance (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 22812)
-options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.balance.Balance (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.balance.Balance (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.balance.Balance (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -21223,8 +21221,8 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	va
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r [Item 13444] - |cFFFFD100|cffffd100time>=5|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 1130 - |cFFFFD100|cffffd100!debuff.hunters_mark.up|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 1978 - |cFFFFD100|cffffd100!debuff.serpent_sting.up|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 1293241 - |cFFFFD100|cffffd100window.hha.next.summon_hawk|r|r
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 3044 - |cFFFFD100|cffffd100window.hha.next.arcane_shot|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0016	|cFFFF000016.|r restart_sequence - |cFFFFD100|cffffd100window.hha.done|r|r
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0017	|cFFFF000017.|r sequence - |cFFFFD100|cffffd100time>0|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 19434
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.actionID	values.0019	|cFFFFD10019.|r Spell 3044 - |cFFFFD100|cffffd100!action.summon_hawk.known&target.outside8|r|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
@@ -21384,7 +21382,7 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -21419,7 +21417,6 @@ options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	de
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.beast_mastery.Beast Mastery Turret (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -21759,7 +21756,7 @@ options.packs.combat.Combat (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.combat.Combat (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.combat.Combat (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.combat.Combat (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.combat.Combat (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.combat.Combat (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.combat.Combat (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -22170,7 +22167,7 @@ options.packs.demonology.Demonology (wowsims.com).lists.modPooling.extra_amount	
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.demonology.Demonology (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.demonology.Demonology (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.demonology.Demonology (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -22510,7 +22507,7 @@ options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.extra_amoun
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.demonology.Shadow Brand (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.demonology.Shadow Brand (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.demonology.Shadow Brand (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -22929,7 +22926,7 @@ options.packs.destruction.Destruction (wowsims.com).lists.modPooling.extra_amoun
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.destruction.Destruction (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.destruction.Destruction (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.destruction.Destruction (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -23319,7 +23316,7 @@ options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	desc	
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
-options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.discipline.Smite (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.discipline.Smite (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.discipline.Smite (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -23703,7 +23700,7 @@ options.packs.elemental.Elemental (wowsims.com).lists.modPooling.extra_amount	de
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.elemental.Elemental (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.elemental.Elemental (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.elemental.Elemental (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24087,7 +24084,7 @@ options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amoun
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 8017)
-options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.enhancement.Enhancement (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.enhancement.Enhancement (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.enhancement.Enhancement (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24512,7 +24509,7 @@ options.packs.feral.Feral (wowsims.com).lists.modPooling.extra_amount	desc	Speci
 options.packs.feral.Feral (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.feral.Feral (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.feral.Feral (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (|cff00ccff[Variable]|r)
-options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.feral.Feral (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.feral.Feral (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.feral.Feral (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -24892,7 +24889,7 @@ options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.fire.Fire (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fire.Fire (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fire.Fire (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fire.Fire (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25190,7 +25187,7 @@ options.packs.fire.Frostfire (wowsims.com).lists.modPooling.extra_amount	desc	Sp
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fire.Frostfire (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fire.Frostfire (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fire.Frostfire (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25561,7 +25558,7 @@ options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	desc	Speci
 options.packs.frost.Frost (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.frost.Frost (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.frost.Frost (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.frost.Frost (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.frost.Frost (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -25968,7 +25965,7 @@ options.packs.fury.Fury (wowsims.com).lists.modPooling.extra_amount	desc	Specify
 options.packs.fury.Fury (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.fury.Fury (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.fury.Fury (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healing Potion)
-options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.fury.Fury (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.fury.Fury (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.fury.Fury (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -26394,7 +26391,7 @@ options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 5487)
-options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.guardian.Guardian (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.guardian.Guardian (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.guardian.Guardian (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -26799,7 +26796,7 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.ex
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -26834,7 +26831,6 @@ options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	desc
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.marksmanship.Marksmanship Turret (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -27359,7 +27355,7 @@ options.packs.protection.Protection (wowsims.com).lists.modPooling.extra_amount	
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 12975)
 options.packs.protection.Protection (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
-options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.protection.Protection (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.protection.Protection (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.protection.Protection (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -27394,8 +27390,7 @@ options.packs.protection.Protection (wowsims.com).lists.var_name	desc	Specify a 
 options.packs.protection.Protection (wowsims.com).lists.var_name	name	Variable Name
 options.packs.protection.Protection (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.protection.Protection (wowsims.com).lists.window_name	name	Window Name
-options.packs.protection.Protection (wowsims.com).lists.window_name	values.move1	move1
-options.packs.protection.Protection (wowsims.com).lists.window_name	values.move2	move2
+options.packs.protection.Protection (wowsims.com).lists.window_name	values.before_first_swing	before_first_swing
 options.packs.protection.Protection (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.protection.Protection (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.protection.Protection (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -27772,7 +27767,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
-options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.retribution.Holy Shock (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.retribution.Holy Shock (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.retribution.Holy Shock (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -27807,8 +27802,7 @@ options.packs.retribution.Holy Shock (wowsims.com).lists.var_name	desc	Specify a
 options.packs.retribution.Holy Shock (wowsims.com).lists.var_name	name	Variable Name
 options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	name	Window Name
-options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	values.move1	move1
-options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	values.move2	move2
+options.packs.retribution.Holy Shock (wowsims.com).lists.window_name	values.before_first_swing	before_first_swing
 options.packs.retribution.Holy Shock (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.retribution.Holy Shock (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.retribution.Holy Shock (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -27917,18 +27911,20 @@ options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0001	|
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0002	|cFFFFD1002.|r Spell 633 - |cFFFFD100|cffffd100health.known&health.pct<=settings.lay_on_hands_health&(!action.divine_shield.known||!buff.divine_shield.up)|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0003	|cFFFFD1003.|r |cff00ccff[Healthstone]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healthstone_health|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0004	|cFFFFD1004.|r |cff00ccff[Healing Potion]|r - |cFFFFD100|cffffd100health.known&health.pct<=settings.healing_potion_health|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmove_to_melee|r, if |cffffd100(!action.holy_strike.known||!action.holy_strike.in_range)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r Spell 20271 - |cFFFFD100|cffffd100(mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100time>=0&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r Spell 679 - |cFFFFD100|cffffd100((mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(!action.judgement.known||!cooldown.judgement.ready)&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&talent.seal_of_command.enabled&!buff.seal_of_command.up&(!action.seal_of_righteousness.known||!buff.seal_of_righteousness.up)&(!seal_up||(action.judgement.known&cooldown.judgement.remains>0))|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!buff.seal_of_command.up||(buff.seal_of_command.up&buff.seal_of_command.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||(!buff.seal_of_command.up&buff.echo_of_righteousness.stack>=1))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 20154 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!talent.seal_of_command.enabled||talent.twist_of_light.enabled)&(!buff.seal_of_righteousness.up||(buff.seal_of_righteousness.up&buff.seal_of_righteousness.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||!talent.seal_of_command.enabled||(!buff.seal_of_righteousness.up&buff.echo_of_command.stack=3))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffconsecration|r, if |cffffd100(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffexorcism|r, if |cffffd100(toggle.movement&(window.move1.up||window.move2.up)||(!action.holy_strike.known||action.holy_strike.in_range)||!window.move1.up&!window.move2.up)|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r Spell 20375 - |cFFFFD100|cffffd100!talent.twist_of_light.enabled&!buff.seal_of_command.up|r|r
-options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0005	|cFFFFD1005.|r |cff00ccff[Close Window]|r - |cFFFFD100|cffffd100window.move1.up&!window.move1.done&!(window.before_first_swing.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0006	|cFFFFD1006.|r |cff00ccff[Close Window]|r - |cFFFFD100|cffffd100window.move2.up&!window.move2.done&!(window.before_first_swing.up)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0007	|cFFFFD1007.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffmove_to_melee|r, if |cffffd100(!action.holy_strike.known||!action.holy_strike.in_range)|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0008	|cFFFFD1008.|r Spell 20271 - |cFFFFD100|cffffd100(mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0009	|cFFFFD1009.|r |cff00ccff[Use Items]|r - |cFFFFD100|cffffd100time>=0&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0010	|cFFFFD10010.|r Spell 24275 - |cFFFFD100|cffffd100(action.hammer_of_wrath.cast=0||mainhand_remains>mainhand_speed-0.2)&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0011	|cFFFFD10011.|r Spell 679 - |cFFFFD100|cffffd100((mainhand_remains<=mainhand_speed-0.1&mainhand_remains>=0.1)&(!action.judgement.known||!cooldown.judgement.ready)&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0012	|cFFFFD10012.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&talent.seal_of_command.enabled&!buff.seal_of_command.up&(!action.seal_of_righteousness.known||!buff.seal_of_righteousness.up)&(!seal_up||(action.judgement.known&cooldown.judgement.remains>0))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0013	|cFFFFD10013.|r Spell 20375 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!buff.seal_of_command.up||(buff.seal_of_command.up&buff.seal_of_command.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||(!buff.seal_of_command.up&buff.echo_of_righteousness.stack>=1))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0014	|cFFFFD10014.|r Spell 20154 - |cFFFFD100|cffffd100talent.twist_of_light.enabled&((!talent.seal_of_command.enabled||talent.twist_of_light.enabled)&(!buff.seal_of_righteousness.up||(buff.seal_of_righteousness.up&buff.seal_of_righteousness.remains<=mainhand_remains))&(!talent.twist_of_light.enabled||!talent.seal_of_command.enabled||(!buff.seal_of_righteousness.up&buff.echo_of_command.stack=3))&(!action.judgement.known||cooldown.judgement.remains<=(cooldown.judgement.duration-0)))&(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0015	|cFFFFD10015.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffconsecration|r, if |cffffd100(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0016	|cFFFFD10016.|r |cff00ccff[Call Action List]|r - |cFFFFD100|cff00ccffexorcism|r, if |cffffd100(toggle.movement&((window.move1.up&!window.move1.done)||(window.move2.up&!window.move2.done))||(!action.holy_strike.known||action.holy_strike.in_range)||(!window.move1.up||window.move1.done)&(!window.move2.up||window.move2.done))|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0017	|cFFFFD10017.|r Spell 20375 - |cFFFFD100|cffffd100!talent.twist_of_light.enabled&!buff.seal_of_command.up|r|r
+options.packs.retribution.Retribution (wowsims.com).lists.actionID	values.0018	|cFFFFD10018.|r Spell 20154 - |cFFFFD100|cffffd100!action.seal_of_command.known&buff.seal_of_righteousness.remains<gcd.max*2|r|r
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	desc	Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	name	Action Name
 options.packs.retribution.Retribution (wowsims.com).lists.action_name	values.blackhands_breadth	|T0:0|t [Item 13965]
@@ -28098,7 +28094,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.modPooling.extra_amoun
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 633)
-options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.retribution.Retribution (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.retribution.Retribution (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.retribution.Retribution (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -28133,8 +28129,7 @@ options.packs.retribution.Retribution (wowsims.com).lists.var_name	desc	Specify 
 options.packs.retribution.Retribution (wowsims.com).lists.var_name	name	Variable Name
 options.packs.retribution.Retribution (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.retribution.Retribution (wowsims.com).lists.window_name	name	Window Name
-options.packs.retribution.Retribution (wowsims.com).lists.window_name	values.move1	move1
-options.packs.retribution.Retribution (wowsims.com).lists.window_name	values.move2	move2
+options.packs.retribution.Retribution (wowsims.com).lists.window_name	values.before_first_swing	before_first_swing
 options.packs.retribution.Retribution (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.retribution.Retribution (wowsims.com).pack.copyPack	desc	Copy Priority
 options.packs.retribution.Retribution (wowsims.com).pack.deletePack	desc	Delete Priority
@@ -28495,7 +28490,7 @@ options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	desc	Spe
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 13908)
-options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.shadow.Shadow (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.shadow.Shadow (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.shadow.Shadow (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -28922,7 +28917,7 @@ options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Healthstone)
-options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.subtlety.Subtlety (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.subtlety.Subtlety (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.subtlety.Subtlety (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -29341,7 +29336,7 @@ options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	desc
 options.packs.survival.Survival (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -29376,7 +29371,6 @@ options.packs.survival.Survival (wowsims.com).lists.var_name	desc	Specify a name
 options.packs.survival.Survival (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -29672,7 +29666,7 @@ options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amoun
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival Melee (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Melee (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival Melee (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -29707,7 +29701,6 @@ options.packs.survival.Survival Melee (wowsims.com).lists.var_name	desc	Specify 
 options.packs.survival.Survival Melee (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival Melee (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival Melee (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival Melee (wowsims.com).pack.copyPack	desc	Copy Priority
@@ -29994,7 +29987,7 @@ options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amou
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.extra_amount	name	Extra Pooling
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	desc	If checked, the addon will pool resources until the next entry has enough resources to use.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.for_next	name	Pool for Next Entry (Spell 982)
-options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r.
+options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	desc	Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true.
 options.packs.survival.Survival Turret (wowsims.com).lists.modPooling.wait	name	Pooling Time
 options.packs.survival.Survival Turret (wowsims.com).lists.newActionGroup.createEntry	name	Create New Entry
 options.packs.survival.Survival Turret (wowsims.com).lists.newListBtn	desc	Create a New Action List
@@ -30029,7 +30022,6 @@ options.packs.survival.Survival Turret (wowsims.com).lists.var_name	desc	Specify
 options.packs.survival.Survival Turret (wowsims.com).lists.var_name	name	Variable Name
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	desc	Specify the rotation window to open or close.
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	name	Window Name
-options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.hha	hha
 options.packs.survival.Survival Turret (wowsims.com).lists.window_name	values.weave	weave
 options.packs.survival.Survival Turret (wowsims.com).pack	name	|cFF00B4FFSummary|r
 options.packs.survival.Survival Turret (wowsims.com).pack.copyPack	desc	Copy Priority

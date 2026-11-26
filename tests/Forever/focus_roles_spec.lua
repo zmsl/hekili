@@ -6,7 +6,14 @@ local function flagged(path)
     local out = {}
     for line in io.lines(path) do
         local action, tier = line:match("^actions[%w_.]*%+?=/?([%w_]+)[^\n]-,focus=(%d+)")
-        if action then
+        if action and line:find("sequence,", 1, true) then -- a sequence line (L1374): its members' tiers, in order
+            for member in line:gmatch(":([%w_]+[^:]*)") do
+                local m, t = member:match("^([%w_]+)[^:]-,focus=(%d+)")
+                if m then
+                    out[#out + 1] = m .. "=" .. t
+                end
+            end
+        elseif action then
             out[#out + 1] = action .. "=" .. tier
         end
     end

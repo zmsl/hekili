@@ -4,9 +4,13 @@
 
 ### New
 - On-use trinkets are now recommended: the Weakness Analyzer, Talisman of Ephemeral Power, Mind Quickening Gem, Everlook Pathcarver, Eye of the Beast and Blackhand's Breadth show up through "Use Items" (and the priorities that name them) while you wear them, and using one holds your other trinket for its shared lockout.
+- Custom and imported priorities: a `pool_resource` entry with conditions (no "Pool for Next Entry") now holds the entries below it while its conditions are true, and shows them counting down to the time the conditions stop being true. Its Pooling Time is kept but has no effect. No built-in priority uses it.
 
 ### Changed
 - Warlock, Rogue and Druid (Feral, Guardian's cat lines) priorities: damage over time effects (Banes, Corruption, Immolate, Rupture, Rip, Rake) are no longer started on a target about to die, and the end-of-target finishers (Ferocious Bite, Eviscerate), Warlock's quick casts and the Warlock cooldowns line now look at your current target's time to die rather than the whole fight, so recommendations can differ from before, including in single-target fights.
+- Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step.
+- Beast Mastery Turret (wowsims.com): the Summon Hawk, Summon Hawk, Arcane Shot loop is now a sequence in the priority itself instead of a rotation window inside the class pack. It starts only in combat, at its first Summon Hawk in every fight.
+- Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
@@ -16,6 +20,7 @@
 ### Known issues
 
 ### Upgrade notes
+- If you made your own copy of Beast Mastery Turret (wowsims.com) or Retribution (wowsims.com), your copy keeps its old lines that read `window.hha`, `window.move1` or `window.move2`. After this update it silently shows no Summon Hawk (Beast Mastery) or no opener (Retribution), and no message tells you. Edits made in place on the built-in priority are replaced by the new built-in priority. To fix a copy, copy the new built-in priority again and redo your edits on it.
 
 ## v0.12.1
 

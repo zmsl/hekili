@@ -1366,20 +1366,9 @@ spec:RegisterTalents({
     lacerating_strikes = { 3, 1310533, 1 },
 })
 
--- Beast Mastery's HHA (re-pin ruling R15; wowsims's turret_hawk APL at e4ef929e54, the BM build's hawk rotation since
--- 65b3f51f61: a sequence of Summon Hawk, Summon Hawk, Arcane Shot under "Use Summon Hawk" and "Use Arcane Shot", reset
--- when complete): a stepped window that loops, open for the fight ("combat": no timer). Its evaluator is the fight
--- (`combat`), not a constant: a held true opens once ever, since combat end closes every window and keeps the last
--- evaluation. On the kit: a tree's own registration would land in the kit's table anyway (a tree reads its fields
--- through the kit), and only Beast Mastery Turret's pack reads it.
-spec:RegisterWindow("hha", {
-    evaluator = function()
-        return combat > 0
-    end,
-    duration = "combat",
-    steps = { "summon_hawk", "summon_hawk", "arcane_shot" },
-    loop = true,
-})
+-- Beast Mastery's HHA (re-pin ruling R15; wowsims's turret_hawk APL): Summon Hawk, Summon Hawk, Arcane Shot, reset when
+-- complete, is the Beast Mastery Turret pack's own APL sequence (windows design v6 10.2, Phase 3 Part B, L1374); this
+-- file registered it as a looping Lua window until then.
 
 -- (L1808, owner "Setting per line") the health threshold of the packs' Deterrence (35%) lines (the recipes'
 -- `extra`, the def-int-beyond-wowsims review's defaults): a 1-100 slider on every spec
@@ -1395,8 +1384,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Beast Mastery Turret (wowsims.com)",
-    20261125000,
-    [[Hekili:vF5sVnUnqC8pl5s6g0aj7SB2MguxGg0w0SOBqrv6vkrjoYI1uKcKuRRVOp7DO8drRhBusp1lw0KZ8Bg(y(tjYsYZKig1cKNUzXnFC5YBUDXIfKi7UkGevrZ2qxJnK0s83haQX2K8z8xqVRj55ATgWoE3w1wdV0eKPkVY51oHIYCKtR5c7Jss6ObXubzKOF7VE65F5pVp1bpUCpBsubNXG9ocMSzg77BsSfqtYH(cZvA4lGUjHb50AbA(p9h)Etc2DtYKaR5HUeZewulXHczvMq38GHpkdqUIRUgJJMkncCoXW2kxC5MMekJPKFd2ydSZe0K8Zul9(rYN395hFgHuyTvM7ddxZTf1PUPqyptVczIjfnDr(IfWhYZU79b4kSwLZf4ocnZYvstqLgqNtP2vzuHiUcSxZZxDb(mwvBV01iGbu2LxyPcqAdekjeVvjYdajnvGZIpnG13UkeZb(xGJ8oszCB3VCzWTq9M2OZG0688a)(dQRg3zQBjht28yCdmUGUDpIwadhZhZ)9z8lpprlyaoj0GmdUU2ayYKhVoJTAPZ(cGkSfbBKQTYlp8NQm7pSYawlxU2e05D8(X9rVVhJftW3cBp3NaoAwCLY1ZBLFhHrcbiQLGjwWxxyhgalVe(Xv367qQqPyX516DZZC80dO3G5W8mxGQwfujZeNQXDrBX8CdmwoveVvtNPhAAfhNgC9iBBJyodkvsEwSUES95rCOK(3knw2iPtU7nIxNvgMRYQnRUzoLJOR4QCfwQeBCB8h8DPVVNzqFNRllDhpou6ULlzQTbff0aj8p2aVH99IQZO45wtHYoMxEdFMx40MnS3ZzDX(r8J8HJ5wQEnwIJ6egodUR5tKiuQ1Gg37ckb3ynT3qU)(dS5tT3yEqcH8Wrjys0rziSLMJRWCkj61ihrSyWNGDN8Kp9JmDE((EE6DsXLYNi1je5t6LfbgiG5c6hMzq9uOEDrDO0MlS3(kcBNW1RpYde9Cb)JZm4(II(H(qfRd13ntuDYLta6U5c6Kq6eG((5cAGe7eaxUyUe9vFNcw)sVPG1jmpfP(fAtxU0PzpfR5w6nqoFkG9lR80tgxd37iV3aKOwfCNQIJA)QMHu7RU3H9SroXDzl3(feN8Pt21pyFL7fAX1VO4iopX9VgoFZC46xACc3PBqAnR)b)xiQZ(QfIdF0Px09)p3Fm(bQx(K4i3kCATCWRXFgWPFv)2frmZP12cLg)GrydxWXpI6xp8nsTdt(3)]]
+    20261126000,
+    [[Hekili:vFzBVTTnqC8pl9nznybYYjTzzgtdyfBdRfRbdtzVvYuINS4mfPgjvnYB0N9DuswIwpGO09QHayttE3VJpD)VWOTrpffsjgi6XB9V9(TBV9EFF)OqZZLquyjj9i5a2qqkWp)aq0M69Fg)eupxV)PkLcWoE7j5jnRq7LklU261ZCjHAjNuX4MpkIsMni6sink83(RhF6x(ZDjw4XfTSJcZzuk06iOtxzS3vV3Kd1776BtMubFbu17PqgPIJM)t)XVxVh7UE)IaRyBStm9M8kbo0gAPEJDDqXVk8qU8RVbJJIi0CCnrX2sBCz669ekvk(gSXr4zTx9(FMyi7Mz(82p)XNqi5gtPE3MnhyM8Qe7syZitVgzItksIFMVp8US0hUZd3HvYmghpriPgMuO9kva6CcXeKs484sWCdll4n43XYkZv2gEuGqV6ngchegpUuaXNK8mpqqs44Q4tty9TbBW5a7lWzENPmVTTBxA8iuDSj6uiPklZZTFVQY5DMy3YXjBwmEagNto1IObW0XCX8FFf)YRt0ckGlcfisHBQ0aozYIpKsd2ATphiCtU3rH8K4QUFuMA(HanymmXbT3G3XTJ7IUThTbNGFnSDCFb4OzXLsBpFT8himtiaELa0XC2HCZ0ayyfWpg8Exhs4sjnoRs986mhV9aQJ4CyDMZrvRCIGQJtu4POjFDUbAdJWJpPiR0dfPKHldMAMJTzmNcfsblnwvn358mouq(BPctBeKfp9MXRlsdZKPv6GBxt6i6kUlxIPkXA7bFNVBD99cdg5Sc3)ikCm4FQAstS1mcYZjwaNycQ8Kh(lpuGeUmOJTVqsHGuPadsf0Vk93PRkkSxarbGlAtuPe8UVoxACbtqVOt7DW4Mvw7iEo86YfWfZbuhaft0mk8q9NIcr9ynA8OQyCM2OBkJ2wKbB(ytz1oDMOpCwNok8Swf2sXWJbgjk81OzfzWGVa7bnmx6NzA98UrE6CDYoL7jnOw5s6LvkMOYzd67wzqDKXEDrDQ(NnSV)ve2b1TxFKNOmAd(9Rm4UkNUHUlT2I67wjQbn1fa9WAb1R2UaOVFTGMOdVaWT(RLORe9sWgN6TeSb17LinorB50LbH9LyT2uVjA(lbCCALJEY8c9ox5DgikSrM3QQyPooRzk1XLagWEXi9C32WDCcrB9G42NvGA(UQyxwgXDomQksd5X5htjpA)Z(UdduQ7LP7N)dLa6LzxyS7ChZPIsK9VqB9lmSDfWC3G6ws25940XEA9vTAmBCY2Cb19uATLZANP9)h4))PM18xIF5B)ZujQFVCY7lUa4YVbjQ7aNuzYLk8LSWrgNHVU7x7E8wZWr)7p]]
 )
 spec:RegisterPack(
     "Marksmanship Turret (wowsims.com)",

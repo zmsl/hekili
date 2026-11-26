@@ -974,11 +974,12 @@ describe("Forever Paladin through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- R15/R16 (re-pin Task 17): Retribution's opener, wowsims's "Move to melee" sequences move1 (Seal of Command) and
-    -- move2 (Seal of Righteousness), as stepped windows: open in combat until the fight's first main-hand swing (the
-    -- arrival in melee), each under its sequence's talent condition; closed out of combat; open again next fight.
-    it("opens the opener window of the talents at the pull, closes it at the first main-hand swing", function()
-        local function fight(talents, want1, want2)
+    -- R15/R16 (re-pin Task 17), L898: the span Retribution's opener runs in, wowsims's "Move to melee" sequences
+    -- move1 / move2 (the pack's APL sequences since L1374): the class's Lua window before_first_swing, open in combat
+    -- until the fight's first main-hand swing (the arrival in melee), whatever the talents; closed out of combat; open
+    -- again next fight.
+    it("opens before_first_swing at the pull, closes it at the first main-hand swing, each fight", function()
+        local function fight(talents)
             local c = character()
             c.talents = talents
             H = headless.new({ character = c, pack = "Retribution (wowsims.com)" })
@@ -986,18 +987,18 @@ describe("Forever Paladin through the engine", function()
             local F = H.ns.Facade
             local t = H.ctl.now + 1
             assert.is_true(headless.cycle(H, t))
-            assert.are.same({ false, false }, { (F.Window("move1")), (F.Window("move2")) }) -- out of combat
+            assert.is_false((F.Window("before_first_swing"))) -- out of combat
             for _ = 1, 2 do
                 t = t + 1
                 H.ctl.now, H.ctl.combat = t, true
                 H.Fire("PLAYER_REGEN_DISABLED")
                 assert.is_true(headless.cycle(H, t + 0.1))
-                assert.are.same({ want1, want2 }, { (F.Window("move1")), (F.Window("move2")) })
+                assert.is_true((F.Window("before_first_swing")))
                 t = t + 2
                 H.ctl.now = t
                 H.Fire("PLAYER_SWING", 3.6, 0) -- the first main-hand swing: the arrival in melee
                 assert.is_true(headless.cycle(H, t + 0.1))
-                assert.are.same({ false, false }, { (F.Window("move1")), (F.Window("move2")) })
+                assert.is_false((F.Window("before_first_swing")))
                 t = t + 2
                 H.ctl.now, H.ctl.combat = t, false
                 H.Fire("PLAYER_REGEN_ENABLED")
@@ -1005,9 +1006,8 @@ describe("Forever Paladin through the engine", function()
             end
             assert.are.same({}, H.errors)
         end
-        fight({ [1310735] = 1, [20375] = 1 }, true, false) -- Unsealed Wrath and Seal of Command: move1
-        fight({ [1310735] = 1 }, false, true) -- no Seal of Command: move2
-        fight({ [20375] = 1 }, true, true) -- Seal of Command without Unsealed Wrath: both (wowsims's conditions)
+        fight({ [1310735] = 1, [20375] = 1 }) -- Unsealed Wrath and Seal of Command
+        fight({ [1310735] = 1 }) -- no Seal of Command
     end)
 
     -- (plan "Open after Day 4", the mana bound; central fix 8) Mana is secret even out of combat, so nothing measures it:
@@ -1081,6 +1081,10 @@ end)
 -- Movement ON; in range they show either way. Ranges: the DB2's (Judgement 0-10, Holy Strike 0-5, Hammer of Wrath
 -- 0-30, the seals self).
 describe("Retribution (wowsims.com)'s opener and the Movement toggle", function()
+    -- the opener's APL sequence (L1374) in the Primary display: its own key in the belief (windows design v6 §7)
+    local function seq(H, name)
+        return (H.ns.Facade.Window("Retribution (wowsims.com):" .. name .. "#Primary"))
+    end
     local RANGES = { judgement = { 0, 10 }, holy_strike = { 0, 5 }, hammer_of_wrath = { 0, 30 } }
 
     -- A world `yd` yards from its target at the pull (Seal of the Crusader up); returns the instance and a function
@@ -1152,9 +1156,26 @@ describe("Retribution (wowsims.com)'s opener and the Movement toggle", function(
     it("at 20 yd shows the Judgement chain and the held Holy Strike only with Movement ON", function()
         local H, pick = world(20)
         local on, off = both(H, pick)
-        assert.is_true((H.ns.Facade.Window("move1")))
+        assert.is_true(seq(H, "move1"))
+        assert.is_false(seq(H, "move2")) -- its talent condition: Seal of Command known
         assert.are.same({ true, true }, { on.judgement ~= nil, on.holy_strike ~= nil })
         assert.are.same({ false, false }, { off.judgement ~= nil, off.holy_strike ~= nil })
+    end)
+
+    -- L898 / design v6 10.3: a sequence the first swing cuts short is closed by its close line (default, before the
+    -- move_to_melee call), and does not reopen: its own condition reads the same span
+    it("at 20 yd opens move1; the first main-hand swing closes it for the fight", function()
+        local H, pick = world(20)
+        pick()
+        pick() -- the pass's OPEN lands at the next update (design v6 rule 8)
+        assert.is_true(seq(H, "move1"))
+        H.ctl.now = H.ctl.now + 0.5
+        H.Fire("PLAYER_SWING", 3.6, 0)
+        pick()
+        pick() -- the close line's CLOSE, the same
+        assert.is_false(seq(H, "move1"))
+        pick()
+        assert.is_false(seq(H, "move1"))
     end)
 
     -- (Holy Strike shows later in the queue either way: the forecast casts Judgement and the seal, the window's last
@@ -1178,7 +1199,7 @@ describe("Retribution (wowsims.com)'s opener and the Movement toggle", function(
         H.ctl.now = H.ctl.now + 0.5
         H.Fire("PLAYER_SWING", 3.6, 0) -- the opener closes
         local before = pick()
-        assert.is_false((H.ns.Facade.Window("move1")))
+        assert.is_false(seq(H, "move1")) -- never opened: its line is not walked in melee
         assert.are.equal(1, before.judgement) -- Seal of Command only after it (the queue's forecast casts it first)
         assert.is_true((before.seal_of_command or 99) > 1)
         H.ctl.now = H.ctl.now + 0.3
@@ -1197,7 +1218,7 @@ describe("Retribution (wowsims.com)'s opener and the Movement toggle", function(
         pick() -- past the swing's first 0.1 s (the Judgement line's swing guard, wowsims's WF guard)
         H.ctl.distance.target = 20
         local on, off = both(H, pick)
-        assert.are.same({ false, false }, { (H.ns.Facade.Window("move1")), (H.ns.Facade.Window("move2")) })
+        assert.are.same({ false, false }, { seq(H, "move1"), seq(H, "move2") })
         assert.are.same({ true, true }, { on.judgement ~= nil, off.judgement ~= nil })
     end)
 end)

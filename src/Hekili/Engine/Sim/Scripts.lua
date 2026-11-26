@@ -842,9 +842,12 @@ do
         return ConvertTimeComparison( expr )
     end
 
+    local negated = { ["<"] = ">=", ["<="] = ">", [">"] = "<=", [">="] = "<" }
+
     -- parts (optional): filled with each distinct time in order, and [ part ] = true (the times are a set: a repeat
-    -- adds nothing, so each is kept once)
-    function scripts:BuildRecheck( conditions, parts )
+    -- adds nothing, so each is kept once). `ends` (a plain pool line's, Core.lua poolLine): each comparison's opposite
+    -- too, the times it turns false (`energy<50`: energy.timeTo( 50 )).
+    function scripts:BuildRecheck( conditions, parts, ends )
         if type( conditions ) ~= "string" then return end
 
         local recheck
@@ -853,6 +856,13 @@ do
         conditions = conditions:gsub( " +", "" )
         conditions = self:EmulateSyntax( conditions, true )
         local exprs = self:SplitExpr( conditions )
+
+        if ends then
+            for i = 1, #exprs do
+                local lhs, op, rhs = exprs[ i ]:match( "^([^<>=!]+)([<>]=?)([^<>=]+)$" )
+                if lhs then exprs[ #exprs + 1 ] = lhs .. negated[ op ] .. rhs end
+            end
+        end
 
         if #exprs > 0 then
             for i, expr in ipairs( exprs ) do
@@ -1488,7 +1498,7 @@ local function ConvertScript( node, hasModifiers, header )
             rs = format( "%s | %s | %s", hasCriteria and node.criteria or "1", hasValue and node.value or "1", hasValueElse and node.value_else or "1" )
             rs = scripts:BuildRecheck( rs, rParts )
         else
-            rs = scripts:BuildRecheck( node.criteria, rParts )
+            rs = scripts:BuildRecheck( node.criteria, rParts, node.action == "pool_resource" and node.for_next ~= 1 )
         end
 
         if rs then

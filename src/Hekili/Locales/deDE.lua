@@ -641,7 +641,7 @@ L["Not Set"] = "Nicht gesetzt"
 L["Pool for Next Entry (%s)"] = "Für nächsten Eintrag poolen (%s)"
 L["If checked, the addon will pool resources until the next entry has enough resources to use."] = "Wenn markiert, poolt das Addon Ressourcen, bis der nächste Eintrag genug Ressourcen hat."
 L["Pooling Time"] = "Pooling-Zeit"
-L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "Gib die Zeit in Sekunden an, als Zahl oder als Ausdruck, der eine Zahl ergibt.\nStandard ist |cFFFFD1000.5|r. Ein Beispielausdruck wäre |cFFFFD100energy.time_to_max|r."
+-- L["Kept with the line and in exports, but it has no effect here: the entries below this one wait while its conditions are true, and are shown from the time they stop being true."] = ""
 L["Extra Pooling"] = "Zusätzliches Pooling"
 L["Specify the amount of extra resources to pool in addition to what is needed for the next entry."] = "Lege fest, wie viele Ressourcen zusätzlich zu dem, was der nächste Eintrag braucht, gepoolt werden."
 L["Conditions"] = "Bedingungen"
@@ -1044,3 +1044,6 @@ L["Priority %s, list %s, line %d reads your health without health.known first. W
 
 -- Hekili/Engine/Sim/Core.lua
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000WARNUNG|r: Diese Version von Hekili Forever ist für einen neueren Client von WoW Forever; installiere neu für %s."
+
+-- No longer used (the English changed or went away): reuse or delete
+L["Specify the time, in seconds, as a number or as an expression that evaluates to a number.\nDefault is |cFFFFD1000.5|r.  An example expression would be |cFFFFD100energy.time_to_max|r."] = "Gib die Zeit in Sekunden an, als Zahl oder als Ausdruck, der eine Zahl ergibt.\nStandard ist |cFFFFD1000.5|r. Ein Beispielausdruck wäre |cFFFFD100energy.time_to_max|r."

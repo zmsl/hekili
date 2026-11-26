@@ -3182,3 +3182,272 @@ describe("the alternatives probe sends nothing (windows design v6 §5.1; review 
         assert.is_false(belief("p").up)
     end)
 end)
+
+-- (fable-eng3-decision.md Q1/Q3) The replay harness's drift guard wraps state.openWindow; since windows v6 the core acts
+-- on its result (Core.lua: an open_window line, a plain sequence's OPEN, a strict start), so the wrapper must hand it
+-- back: with the guard installed every pass sends the same operations and gives the same records as without it.
+describe("the replay drift guard is transparent (fable-eng3-decision.md Q1, Q3)", function()
+    local ws = require("Forever.helpers.wowsims")
+    local CASES = {
+        {
+            "an open_window line",
+            {
+                windows = "actions+=/window,name=x,duration=6",
+                default = "actions+=/open_window,name=x\nactions+=/bloodrage,if=window.x.up\nactions+=/defensive_stance",
+            },
+        },
+        {
+            "a plain sequence",
+            { default = "actions+=/sequence,name=x:bloodrage,if=test_fa:berserker_stance\nactions+=/defensive_stance" },
+        },
+        {
+            "a chosen strict sequence",
+            {
+                default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance,if=!test_fa\nactions+=/defensive_stance",
+            },
+        },
+    }
+    local function run(lists, guard)
+        boot()
+        flags.fa, flags.fb = false, false
+        if guard then
+            ws.windowGuard(H)
+        end
+        load(lists)
+        local out = {}
+        for i = 1, 3 do
+            local recs, sent = tick()
+            out[i] = {
+                sent = sent,
+                args = { unpack(opArgs, 1, #sent) },
+                first = recs[1].actionName,
+                second = recs[2] and recs[2].actionName,
+                restarts = recs[1].restarts,
+            }
+            if i == 2 then
+                cast(BR)
+            end
+        end
+        return out
+    end
+    for _, c in ipairs(CASES) do
+        it(c[1] .. ": the same operations and records with the guard installed", function()
+            local bare = run(c[2])
+            assert.are_not.same({}, bare[1].sent) -- the case sends: the comparison means something
+            assert.are.same(bare, run(c[2], true))
+        end)
+    end
+end)
+
+-- (fable-eng3-decision.md Q3, fable-eng3b-decision.md Q2) The replay gate's checks for APL keys (wowsims.lua
+-- M.windowOps), driven as the replay drives them: each poll's Drain (the replay judged as it returns), its passes, then
+-- the checks' tick. `stub`: the belief's VS.WindowOp does nothing, beneath them. `casts[i]`: the cast IDs heard before
+-- poll i, or a function run then. `ooc`: combat ends right after the load (the polls start out of combat).
+describe("the replay gate's APL window checks (fable-eng3-decision.md Q3, fable-eng3b-decision.md Q2)", function()
+    local ws = require("Forever.helpers.wowsims")
+    local function run(lists, casts, stub, ooc)
+        boot()
+        flags.fa, flags.fb = false, false
+        if stub then
+            VS.WindowOp = function() end
+        end
+        local opsTick, done = ws.windowOps(H)
+        load(lists)
+        if ooc then
+            H.Fire("PLAYER_REGEN_ENABLED")
+        end
+        for i = 1, 6 do
+            local c = casts[i]
+            if type(c) == "function" then
+                c()
+            else
+                for _, id in ipairs(c or {}) do
+                    cast(id)
+                end
+            end
+            tick()
+            opsTick(t)
+        end
+        return done()
+    end
+    local PLAIN = { default = "actions+=/sequence,name=x:bloodrage:berserker_stance\nactions+=/defensive_stance" }
+
+    it("a plain sequence: OPEN sent and followed, up, parked once; nothing failed", function()
+        local failed, keys = run(PLAIN, { [3] = { BR }, [5] = { BS } })
+        assert.are.same({}, failed)
+        local k = keys[key("x")]
+        assert.are.same({ 1, 0, 0 }, { k.OPEN, k.CLOSE, k.STEP })
+        assert.is_true(k.up >= 4)
+        assert.are.equal(1, k.parks)
+    end)
+
+    it("fails with the belief's WindowOp stubbed out: an OPEN sent, the key not up", function()
+        local failed, keys = run(PLAIN, {}, true)
+        assert.is_true(keys[key("x")].OPEN >= 1) -- sent again each poll: the copy is seeded closed from the belief
+        assert.is_truthy(failed[1] and failed[1]:find(key("x") .. ": OPEN sent, not up", 1, true))
+    end)
+
+    it("an open_window then close_window pair: both followed", function()
+        local failed, keys = run({
+            windows = "actions+=/window,name=w,duration=6",
+            default = "actions+=/open_window,name=w,if=!test_fa\nactions+=/close_window,name=w,if=test_fa\n"
+                .. "actions+=/defensive_stance",
+        }, {})
+        assert.are.same({}, failed)
+        assert.are.equal(1, keys[key("w")].OPEN)
+    end)
+
+    local STRICT = {
+        default = "actions+=/strict_sequence,name=s:bloodrage:berserker_stance\nactions+=/defensive_stance",
+    }
+
+    it("fails with the belief's WindowOp stubbed out: a strict sequence's OPEN sent, the key not up", function()
+        local failed, keys = run(STRICT, {}, true)
+        assert.is_true(keys[key("s")].OPEN >= 1)
+        assert.is_truthy(failed[1] and failed[1]:find(key("s") .. ": OPEN sent, not up", 1, true))
+    end)
+
+    -- Was the KNOWN LIMIT (eng-3b report): the Drain replays the OPEN, then folds both member casts and closes the row.
+    -- Judged at the replay, before the fold, the row is up: the replay did what was sent.
+    it("a strict sequence whose members both land between two polls: followed, the row down after the Drain", function()
+        local failed, keys, acct = run(STRICT, { [2] = { BR, BS } })
+        assert.are.same({}, failed)
+        assert.are.equal(1, keys[key("s")].OPEN)
+        assert.are.same({ 1, 1 }, { acct.sent, acct.applied })
+        assert.is_false(belief("s").up)
+    end)
+
+    -- The belief's counters restart at combat start inside the Drain that folds it, after the replay: the harness's own
+    -- count is what the check reads.
+    it(
+        "an OPEN sent out of combat, replayed by the Drain that folds the pull: counted applied by the harness",
+        function()
+            local failed, keys, acct = run(PLAIN, {
+                [2] = function()
+                    H.Fire("PLAYER_REGEN_DISABLED")
+                end,
+            }, false, true)
+            assert.are.same({}, failed)
+            assert.are.equal(1, keys[key("x")].OPEN)
+            assert.are.same({ 1, 1 }, { acct.sent, acct.applied })
+            assert.are.equal(0, VSI.winOps.applied) -- the belief's own count, zeroed by the pull after the replay
+            assert.is_true(belief("x").up)
+        end
+    )
+
+    -- An operation dropped before the pull (a STEP on a closed row) is still reported after combat starts.
+    it("an operation dropped before the pull is reported at the run's end", function()
+        local failed, _, acct = run(PLAIN, {
+            [1] = function()
+                VS.WindowOp(key("x"), STEP, 2) -- out of combat, the row closed: dropped at the replay
+            end,
+            [3] = function()
+                H.Fire("PLAYER_REGEN_DISABLED")
+            end,
+        }, false, true)
+        assert.is_truthy(failed[#failed] and failed[#failed]:find("dropped 1", 1, true), tostring(failed[#failed]))
+        assert.are.equal(1, acct.dropped)
+        assert.are.equal(0, VSI.winOps.dropped) -- the belief's own count, zeroed by the pull
+    end)
+
+    -- A reset_on_target_change row: the OPEN replayed and the target swap folded in the same Drain closes it; the replay
+    -- did what was sent.
+    it("a reset_on_target_change sequence: an OPEN replayed in the Drain that folds a target swap passes", function()
+        local failed, keys = run({
+            default = "actions+=/sequence,name=x,reset_on_target_change=1:bloodrage:berserker_stance\n"
+                .. "actions+=/defensive_stance",
+        }, {
+            [2] = function()
+                H.ctl.guid.target = "Creature-swap"
+                H.Fire("PLAYER_TARGET_CHANGED")
+            end,
+        })
+        assert.are.same({}, failed)
+        assert.is_true(keys[key("x")].OPEN >= 2) -- chosen again after the swap closed it
+    end)
+end)
+
+-- (fable-eng3b-decision.md Q1 test 4, L1919) Every shipped priority with a plain `sequence` line keeps it to the fight: out
+-- of combat, a target selected, its walk sends no OPEN for a sequence key. A bare `duration=combat` sequence reopens out
+-- of combat and carries its step into the next pull (Beast Mastery's hha before eng-3c); wowsims starts every sequence
+-- at its first member at the pull (sim.reset before PrePull). Each pack in its own world's character.
+describe("the shipped plain sequences are fight-bound (fable-eng3b-decision.md Q1)", function()
+    local WORLDS = {
+        ["Beast Mastery Turret (wowsims.com)"] = function()
+            return require("Forever.helpers.hunter_world").BeastMasteryTurret
+        end,
+        ["Retribution (wowsims.com)"] = function()
+            return require("Forever.helpers.paladin_world").Retribution
+        end,
+    }
+
+    it("lists a world for every shipped pack with a plain sequence line", function()
+        local found = {}
+        local p = assert(io.popen("ls src/*/APLs/*.simc"))
+        for path in p:lines() do
+            local f = assert(io.open(path))
+            local text = f:read("*a")
+            f:close()
+            if text:find("[=/]sequence,name=") then
+                found[path:match("([^/]+)%.simc$")] = true
+            end
+        end
+        p:close()
+        local want = {}
+        for pack in pairs(WORLDS) do
+            want[pack] = true
+        end
+        assert.are.same(want, found)
+    end)
+
+    -- the pack's sequence lines alone are its priority, so each is reached on every walk: the line's own condition is
+    -- what keeps it to the fight (the lines above it in the shipped priority vary with the world's auras)
+    for pack, world in pairs(WORLDS) do
+        it(pack .. ": out of combat with a target, no OPEN sent for a sequence", function()
+            local C = world()
+            assert.are.equal(pack, C.PACK)
+            local h = headless.new({ character = C.character(), pack = C.PACK })
+            assert.are.same({}, h.loadErrors)
+            local seqs, lines = {}, {}
+            for _, entries in pairs(h.Hekili.DB.profile.packs[pack].lists) do
+                for _, e in ipairs(entries) do
+                    if e.action == "sequence" then
+                        seqs[pack .. ":" .. e.window_name .. "#Primary"] = true
+                        lines[#lines + 1] = e
+                    end
+                end
+            end
+            assert.is_truthy(next(seqs))
+            h.Hekili.DB.profile.packs[pack].lists = { precombat = {}, default = lines }
+            h.Hekili:LoadScripts()
+            h.Hekili:ReviewPacks()
+            h.Hekili.Scripts:ApplyWindows(pack)
+            h.Hekili.State:BuildWindows()
+            h.ns.VirtualState.Drain(h.ctl.now)
+            local sent, walked = {}, 0
+            local op = h.ns.VirtualState.WindowOp
+            h.ns.VirtualState.WindowOp = function(k, code, arg)
+                if code == OPEN and seqs[k] then
+                    sent[#sent + 1] = k
+                end
+                return op(k, code, arg)
+            end
+            h.ctl.inRange.target, h.ctl.level.target = true, 60
+            h.Fire("PLAYER_TARGET_CHANGED")
+            local now = h.ctl.now
+            for i = 1, 15 do
+                assert(headless.cycle(h, now + 0.2 * i))
+            end
+            assert.are.same({}, sent)
+            -- the same lines at the pull do send it: the walk reaches them, so the check above means something
+            h.ctl.now, h.ctl.combat = now + 3.1, true
+            h.Fire("PLAYER_REGEN_DISABLED")
+            for i = 1, 3 do
+                assert(headless.cycle(h, now + 3.1 + 0.2 * i))
+                walked = walked + #sent
+            end
+            assert.is_true(walked > 0, "no OPEN at the pull")
+            assert.are.same({}, h.errors)
+        end)
+    end
+end)

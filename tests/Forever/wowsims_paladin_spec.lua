@@ -112,8 +112,15 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- re-pin e5a9cd2a2d -> e4ef929e54: 0.949 (39) top [consecration -> seal_of_command 2], ON flicker 1.00; both
         -- bars kept
         -- ON flicker 2.7 -> 0 (0.00/min measured at the batch): replay-flips-09 ade4d6379 (a flip whose middle icon wowsims casts before the next tick is excused, L1317)
-        local r, line = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
+        local r, line, keys = ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.93, REPLAY)
         ab.check(r.flicker <= 0 + 1e-9, "Retribution (wowsims.com)", "ON flicker ceiling: " .. line)
+        -- fable-eng3-decision.md Q1 test 3: the opener's sequence opens in the belief (the gate checks it followed)
+        local opened = 0
+        for _, name in ipairs({ "move1", "move2" }) do
+            local k = keys["Retribution (wowsims.com):" .. name .. "#Primary"]
+            opened = opened + (k and k.OPEN >= 1 and k.up > 0 and 1 or 0)
+        end
+        assert.is_true(opened > 0, "neither move1 nor move2 opened in the belief")
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while

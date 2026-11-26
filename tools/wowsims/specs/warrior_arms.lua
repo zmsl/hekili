@@ -51,6 +51,7 @@ return {
     class = "WARRIOR",
     pack = "Arms (wowsims.com)",
     spec = "arms",
+    sequences = true, -- rule 14: the strict sequences as strict_sequence lines (windows Phase 3 Part B, the Arms probe)
     name = "Arms",
     talentTree = "warrior",
     apl = "ui/specs/warrior/dps/apls/arms.apl.json",

@@ -1897,6 +1897,23 @@ describe("the wowsims APL translator", function()
         assert.is_falsy(simc:find("# Omitted: default #%d+: strictSequence"))
     end)
 
+    -- L1291 (c): rule 14 has landed; no shipped strict_sequence line carries allow_skip (the review's M2 cost)
+    it("emits no strict_sequence line with allow_skip in any shipped pack (L1291 c)", function()
+        local pipe, strict = assert(io.popen("ls src/Hekili_*/APLs/*.simc")), 0
+        for path in pipe:lines() do
+            local f = assert(io.open(path, "rb"))
+            for line in f:lines() do
+                if line:find("/strict_sequence", 1, true) then
+                    strict = strict + 1
+                    assert.is_falsy(line:match("^[^:]*allow_skip=1"), path .. ": " .. line)
+                end
+            end
+            f:close()
+        end
+        pipe:close()
+        assert.is_true(strict > 0) -- Arms's lines: the check reads real strict lines
+    end)
+
     it("runs prev.1 through the engine: a member is recommended right after its predecessor's prediction", function()
         local headless = require("Game.harness.headless")
         local ww = require("Forever.helpers.warrior_world")
@@ -4445,6 +4462,7 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             local strict = 0
             for spec, lines in pairs(want) do
                 local _, text = apl.render(spec, forced)
+                local hasStrict = table.concat(lines, "\n"):find(" strict ", 1, true) ~= nil
                 local class = ex.recipe(spec).class
                 local abilities = engine.abilitySet(class).abilities
                 local function isAb(k)
@@ -4473,9 +4491,15 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
                             end
                         end
                         assert.is_falsy(body:find("allow_skip", 1, true), line)
-                        -- L1270: the hold walks the normal lists only for a window or variable line (holdWalk)
+                        -- L1270: the hold walks the normal lists only for a window or variable line (holdWalk): none
+                        -- in a pack with a strict line (a plain one may carry its close line: Retribution's, L898)
                         assert.is_falsy(
-                            body:match("^variable,") or body:match("^open_window") or body:match("^close_window"),
+                            hasStrict
+                                and (
+                                    body:match("^variable,")
+                                    or body:match("^open_window")
+                                    or body:match("^close_window")
+                                ),
                             line
                         )
                         assert.are.same({}, levels.line(body, isAb), line)
@@ -4616,19 +4640,20 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
     end)
 
     -- M1: the BM and Ret plain sequence lines parse without a warning; until each Part B lane drops the class's Lua
-    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1)
+    -- window of the same name, CheckWindows reports exactly that clash (E3) and, for BM, the restart line on it (E1);
+    -- after it, nothing (Retribution: L1374)
     for _, case in ipairs({
         {
             "hunter_beast_mastery_turret",
             "Forever.helpers.hunter_world",
             "BeastMasteryTurret",
-            { "E1 restart_sequence: hha is not a plain sequence", "E3 hha is a class window" },
+            {}, -- L1374: the class's hha Lua window is gone
         },
         {
             "paladin_retribution",
             "Forever.helpers.paladin_world",
             "Retribution",
-            { "E3 move1 is a class window", "E3 move2 is a class window" },
+            {}, -- L1374: the class's move1 / move2 Lua windows are gone
         },
     }) do
         it("the engine parses the " .. case[1] .. " recipe's sequence lines", function()
@@ -4644,6 +4669,81 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
             assert.are.same(case[4], errs)
         end)
     end
+
+    -- L898 / design v6 10.3: a recipe's `sequenceIf` ANDs its term into that sequence's condition and writes the
+    -- sequence's close line, `close_window,name=<w>,if=window.<w>.up&!window.<w>.done&!(<term>)`, in default before
+    -- the line that reaches the sequence's list (the list is not walked once the term turns false, design 10.3)
+    it("sequenceIf: the term in the sequence's condition and its close line before the list's call", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(400),
+                { action = { groupReference = { groupName = "Opener" } } },
+                cast(200),
+            },
+            groups = {
+                {
+                    name = "Opener",
+                    actions = {
+                        { action = { sequence = { name = "S", actions = { member(100), member(300) } } } },
+                    },
+                },
+            },
+        }, on({ sequenceIf = { s = "window.first.up" } }))
+        assert.are.equal(
+            lines({
+                "actions=dot",
+                "actions+=/close_window,name=s,if=window.s.up&!window.s.done&!(window.first.up)",
+                "actions+=/call_action_list,name=opener",
+                "actions+=/big_hit",
+                "actions.opener=sequence,name=s,mode=continue,if=window.first.up:strike:roar,use_off_gcd=1",
+            }),
+            text
+        )
+        -- a name the APL has no sequence of is an error, as is the field without `sequences`
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(400) } }, on({ sequenceIf = { s = "window.first.up" } }))
+        end, "sequenceIf: no sequence s in the APL")
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(400) } }, on({ sequenceIf = { s = "time>0" } }))
+        end, "sequenceIf: no sequence s in the APL")
+    end)
+
+    -- L1919 (fable-eng3b-decision.md Q1): the fight-bound term `time>0` goes into the sequence's condition with no close
+    -- line (it turns false only at combat end, which closes every row): Beast Mastery's hha
+    it("sequenceIf time>0: the term in the sequence's condition, no close line", function()
+        local text = apl.translate({
+            priorityList = {
+                cast(400),
+                { action = { sequence = { name = "S", actions = { member(100), member(300) } } } },
+                cast(200),
+            },
+        }, on({ sequenceIf = { s = "time>0" } }))
+        assert.are.equal(
+            lines({
+                "actions=dot",
+                "actions+=/sequence,name=s,mode=continue,if=time>0:strike:roar,use_off_gcd=1",
+                "actions+=/big_hit",
+            }),
+            text
+        )
+    end)
+
+    -- Review M4 (L1374): a sequence in the pre-pull list is omitted and named (none at the pin or at a342c253e6): the
+    -- pre-pull guard and focus strip would treat its members as ordinary lines, and the engine runs sequences only in
+    -- Primary and AOE's in-combat walk. A re-pin that brings one decides its form then.
+    it("a sequence or strictSequence in the pre-pull list is omitted, named", function()
+        for _, kind in ipairs({ "sequence", "strictSequence" }) do
+            local a = { [kind] = { name = "S", actions = { member(100), member(300) } } }
+            for _, opts in ipairs({ on(), ctx() }) do
+                local text, omitted = apl.translate({
+                    prepullActions = { { action = a, doAtValue = const("-2s") } },
+                    priorityList = { cast(400) },
+                }, opts)
+                assert.are.equal("actions=dot", text)
+                assert.are.same({ "precombat #1: a " .. kind .. " in the pre-pull list (not supported)" }, omitted)
+            end
+        end
+    end)
 
     it("rule 14b: a restart line and a reader of an omitted sequence are omitted with it", function()
         local text, omitted = apl.translate({
