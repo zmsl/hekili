@@ -21,8 +21,8 @@
 -- Amounts are secret, as live, unless `plain`. The frame loop: with `dt` (default 1/60) B:run steps the clock a frame at
 -- a time and after each frame's events calls `frame(B, t)` (default: headless.frame, or ctl.Tick on a fake_api
 -- client); with `dt` false it only fires the events and the scheduled ticks and drains (the hand-built specs' shape).
--- `rows`: B.rows keeps every row the belief emits on its combat log ({ sub, spellID, a15, t }: a15 the miss type or
--- the amount), the pairing's outcome.
+-- `rows`: B.rows keeps every row the belief emits on its combat log ({ sub, a12, a15, stamp }: a12 a spell row's ID or
+-- a swing row's amount or miss type, a15 a spell row's amount or miss type, stamp the row's time), the pairing's outcome.
 local headless = require("Game.harness.headless")
 local SECRET = require("Game.State.helpers.fake_api").SECRET
 
@@ -51,8 +51,8 @@ function M.new(H, o)
         local I = self.ns.VirtualStateInternal
         local f = I.Events.CreateFrame("Frame")
         f:SetScript("OnEvent", function()
-            local _, sub, _, _, _, _, _, _, _, _, _, spellID, _, _, a15 = self.ns.Facade.CombatLogGetCurrentEventInfo()
-            self.rows[#self.rows + 1] = { sub, spellID, a15, self.ns.Facade.GetTime() }
+            local stamp, sub, _, _, _, _, _, _, _, _, _, a12, _, _, a15 = self.ns.Facade.CombatLogGetCurrentEventInfo()
+            self.rows[#self.rows + 1] = { sub, a12, a15, stamp }
         end)
         f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     end

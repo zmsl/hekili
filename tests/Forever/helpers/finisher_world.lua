@@ -59,7 +59,7 @@ local function frame(W, ft)
     end
 end
 
---- A world: `o.viewer` "proven" (the Cooldown Manager tracks Rip and Rake, both proven by a landed cast) or false (no
+--- A world (`o.rows`: W.rows keeps the belief's emitted rows, scenario.lua): `o.viewer` "proven" (the Cooldown Manager tracks Rip and Rake, both proven by a landed cast) or false (no
 --- item), `o.cdmOff` (the debug session switch), `o.plain` (UNIT_COMBAT amounts plain: the October beta; else secret,
 --- live). The fight starts at W.t0 with our white swings every SWING s.
 function M.world(o)
@@ -72,7 +72,7 @@ function M.world(o)
         end,
     })
     assert(#H.loadErrors == 0, table.concat(H.loadErrors, "; "))
-    local W = scenario.new(H, { plain = o.plain, frame = frame })
+    local W = scenario.new(H, { plain = o.plain, frame = frame, rows = o.rows })
     W.o, W.pubs, W.items = o, {}, {}
     W.S, W.VS, W.I = H.Hekili.State, H.ns.VirtualState, H.ns.VirtualStateInternal
     local ctl = H.ctl
