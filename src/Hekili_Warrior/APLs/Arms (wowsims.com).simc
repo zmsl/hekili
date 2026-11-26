@@ -50,15 +50,13 @@ actions+=/recklessness,if=((settings.wowsims_recklessness&settings.wowsims_stanc
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/victory_rush,focus=1
 actions+=/mortal_strike,if=settings.wowsims_stance_dance
-actions+=/battle_stance,use_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))
-actions+=/overpower,focus=1,if=((action.battle_stance.known&prev.1.battle_stance)|(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))))&(buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0))
+actions+=/strict_sequence,name=battle_stance_overpower,start_on_first=1,hold_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&buff.overpower_ready.up&buff.overpower_ready.remains>gcd.remains&rage.lo>=5&(!action.overpower.known|cooldown.overpower.remains<=0)):battle_stance,use_off_gcd=1:overpower,focus=1
 actions+=/overpower,focus=1,if=(!action.battle_stance.known|buff.battle_stance.up)
 actions+=/berserker_stance,use_off_gcd=1,if=(((!settings.wowsims_stance_dance&active_enemies>=2)&(!action.whirlwind.known|cooldown.whirlwind.ready))&rage.lo>=25&gcd.remains<=0&!buff.berserker_stance.up)
 actions+=/whirlwind,if=(!settings.wowsims_stance_dance&active_enemies>=2)
 actions+=/mortal_strike,if=!settings.wowsims_stance_dance
 actions+=/slam,if=(!action.mortal_strike.known|action.slam.cast<action.mortal_strike.gcd)
-actions+=/battle_stance,use_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&(!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)
-actions+=/rend,focus=2,if=((action.battle_stance.known&prev.1.battle_stance)|(!action.battle_stance.known&((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&(!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)))&((!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10)
+actions+=/strict_sequence,name=battle_stance_rend,start_on_first=1,hold_off_gcd=1,if=((settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(!action.battle_stance.known|cooldown.battle_stance.remains<=0))&(!action.rend.known|debuff.rend.remains<=action.rend.gcd)&rage.lo>=10):battle_stance,use_off_gcd=1:rend,focus=2
 actions+=/rend,focus=2,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up)&debuff.rend.remains<=action.rend.gcd)
 actions+=/slam,if=(!execute_phase&(!action.mortal_strike.known|action.slam.cast>=action.mortal_strike.gcd)&mainhand_remains>=mainhand_speed-(0+0.3))
 actions+=/spearing_strike,if=(!action.battle_stance.known|buff.battle_stance.up)
