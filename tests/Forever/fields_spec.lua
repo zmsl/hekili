@@ -292,12 +292,19 @@ describe("the pack field registry", function()
         passes("RegisterResource", { 1, { iv_name = { value = 1, interval = "mainhand_speed" } }, nil, nil })
         passes(
             "RegisterResource",
-            { 1, { iv_fn = {
-                value = 1,
-                interval = function()
-                    return 2
-                end,
-            } }, nil, nil }
+            {
+                1,
+                {
+                    iv_fn = {
+                        value = 1,
+                        interval = function()
+                            return 2
+                        end,
+                    },
+                },
+                nil,
+                nil,
+            }
         )
         passes("RegisterResource", { 3, nil, nil, { decayInterval = 0 } })
     end)
@@ -370,6 +377,67 @@ describe("the pack field registry", function()
             assert.are.equal(belief == nil, core == nil, name)
         end
     end)
+
+    -- decision 4: the core's V4 finds the aura the belief is handed (Engine/Schema/Tracked.lua's aura compile: a primary
+    -- key, a positive spell ID, the id-less weapon-enchant exception; the kit's before the shared spec's, as Activation
+    -- merges them), so its verdict at the end of the load equals the belief's own at its build, aura lookup included
+    it(
+        "V4: the core's verdict equals the belief's at its build over the compiled def, aura lookups included",
+        function()
+            local H = boot()
+            assert.are.same({}, H.loadErrors)
+            local cls, F = H.Hekili.Class, H.ns.Fields
+            local kit, shared = cls.kit, cls.specs[0]
+            local TICKS = {
+                num = 2,
+                fn = function()
+                    return 2
+                end,
+            }
+            F.closed = false -- the checks on again, as during the load
+            local cases, n = {}, 0
+            for _, shape in ipairs({ "id", "idless", "copy", "shared", "enchant" }) do
+                for _, tt in ipairs({ "num", "fn", "none" }) do
+                    for _, dot in ipairs({ "debuff", "buff", "none" }) do
+                        for _, e in ipairs({ "debuff", "ticks", "channel" }) do
+                            n = n + 1
+                            local key = ("v4_%s_%s_%s_%s"):format(shape, tt, dot, e)
+                            local name, regKey, spec = key .. "_aura", key .. "_aura", kit
+                            local aura = { tick_time = TICKS[tt], dot = dot ~= "none" and dot or nil }
+                            if shape ~= "idless" and shape ~= "enchant" then
+                                aura.id = 991000 + n
+                            end
+                            if shape == "copy" then -- the ability names the aura by a copy key only
+                                regKey, aura.copy = key .. "_main", name
+                            elseif shape == "shared" then
+                                spec = shared
+                            elseif shape == "enchant" then
+                                aura.weaponEnchant = 0
+                            end
+                            spec:RegisterAura(regKey, aura)
+                            kit:RegisterAbility(key, { id = 992000 + n, startsCombat = true, expects = e, aura = name })
+                            local ok, err = pcall(F.Finish)
+                            cases[#cases + 1] = { key = key, core = ok, err = err }
+                        end
+                    end
+                end
+            end
+            F.closed = true
+            H.Hekili:SpecializationChanged() -- class.* from the specs, then the belief's build (ns.BuildTracked)
+            local A = H.ns.VirtualStateInternal.ab
+            local index = {}
+            for a = 1, A.n do
+                index[A.key[a]] = a
+            end
+            local refused = 0
+            for _, c in ipairs(cases) do
+                local a = assert(index[c.key], c.key)
+                assert.are.equal(A.expDeclared[a], c.core, c.key .. ": core " .. tostring(c.err))
+                refused = refused + (c.core and 0 or 1)
+            end
+            assert.is_true(refused > 0 and refused < #cases)
+        end
+    )
 
     it("V6: a tunable row needs a source and a ledger row, and its default inside its bounds", function()
         local F = druid().ns.Fields

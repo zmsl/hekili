@@ -286,7 +286,6 @@ function F.Check(on, spec, key, data)
         if data.expects ~= nil then -- V4 needs the ticking aura, which may register later
             F.pending[#F.pending + 1] = {
                 landing = true,
-                spec = spec,
                 key = key,
                 who = who,
                 expects = data.expects,
@@ -303,22 +302,28 @@ function F.Check(on, spec, key, data)
     end
 end
 
--- The registered aura `name` the belief would tick by (its own spec's, else any spec's), when it declares a tick_time
--- (a number above 0 or a function: RegisterAura keeps the declared one as `base_tick_time`, raw or in `funcs`).
-local function tickAura(spec, name)
+-- The aura `name` the belief's build hands it, when it declares a tick_time (a number above 0 or a function:
+-- RegisterAura keeps the declared one as `base_tick_time`, raw or in `funcs`). Found as the belief finds it: the entry
+-- under `name` in a class spec (the kit, which every tree reads) before the shared spec's, as Activation merges
+-- { the active spec, 0 }; then only when the build compiles it (Tracked.lua ns.TrackedAuraIds: a primary key, a
+-- positive spell ID or the id-less weapon-enchant exception). Raw reads only: no aura's onLoad runs at load.
+local function tickAura(name)
     if type(name) ~= "string" then
         return
     end
-    local au = spec and spec.auras and rawget(spec.auras, name)
-    if not au then
-        for _, s in pairs(class.specs) do
-            au = rawget(s, "auras") and rawget(s.auras, name)
-            if au then
-                break
-            end
+    local au
+    for id, s in pairs(class.specs) do
+        local t = id ~= 0 and rawget(s, "auras")
+        au = t and rawget(t, name)
+        if au then
+            break
         end
     end
     if not au then
+        local shared = class.specs[0]
+        au = shared and rawget(shared, "auras") and rawget(shared.auras, name)
+    end
+    if not (au and ns.TrackedAuraIds(au, name, rawget)) then
         return
     end
     local funcs = rawget(au, "funcs") or {}
@@ -373,7 +378,7 @@ function F.Finish()
     F.pending = {}
     for _, p in ipairs(pending) do
         if p.landing then
-            local why = F.Landing(p, tickAura(p.spec, p.cycle or p.aura or p.key))
+            local why = F.Landing(p, tickAura(p.cycle or p.aura or p.key))
             if why then
                 fail(4, p.who, "expects", why)
             end
