@@ -383,6 +383,26 @@ I.TAKEN_ROW_LAG = I.Lat.lag("wound.taken")
 local smpR, smpFrom, smpTo, smpAt, smpV = { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }
 local smpCrit, smpLand = { false, false }, { false, false }
 
+-- "A known change at t near the band stamp `stamp`" (refactor plan Pr-9 step 1, lane 5, L1827): within the band's
+-- margin (the band.margin row, I.BAND_MARGIN) plus 1e-6 slack, or none when `exact`. Each caller names today's side, so
+-- no row moves; making the sides agree is a later, behaviour-changing step. "until": t at most m after the stamp;
+-- "after": t in [stamp, stamp + m]; "since": t later than stamp - m. Each side keeps its site's arithmetic (t - stamp,
+-- or stamp - m), so its boolean is the old line's in doubles. Allocates nothing.
+local function nearStamp(t, stamp, side, exact)
+    local m = exact and I.BAND_MARGIN or I.BAND_MARGIN + 1e-6
+    if side == "since" then
+        return t > stamp - m
+    end
+    local d = t - stamp
+    if side == "until" then
+        return d <= m
+    elseif side == "after" then
+        return d >= 0 and d <= m
+    end
+    error("NearStamp: unknown side " .. tostring(side))
+end
+I.NearStamp = nearStamp
+
 -- An event of slot r at t that gives (or may give) it something besides continuous regen: the open window counts it; one
 -- dated back into a closed window unteaches that window's sample, and one within I.BAND_MARGIN after the last stamp may
 -- lie on either side of it: that window's sample and the open window both. Allocates nothing.
@@ -391,7 +411,7 @@ local function seen(r, t, what)
         return
     end
     local margin = I.BAND_MARGIN + 1e-6
-    local near = t - R.bandAt[r] <= margin
+    local near = nearStamp(t, R.bandAt[r], "until")
     if near then
         for h = 1, 2 do
             if smpR[h] == r and t > smpFrom[h] and t <= smpTo[h] + margin then
@@ -1148,8 +1168,8 @@ end
 -- Whether slot r's live band already showed a gain of d at t (the display ahead of our event): its low end rose by d,
 -- less a cell, within the margin before it. One rise shows one gain. Allocates nothing.
 local function shownGain(r, d, t)
-    local by, since = R.roseBy[r], t - R.roseT[r]
-    if not R.bandOn[r] or since < 0 or since > I.BAND_MARGIN + 1e-6 or by <= 0 or by < d - R.max[r] / 100 then
+    local by = R.roseBy[r]
+    if not R.bandOn[r] or not nearStamp(t, R.roseT[r], "after") or by <= 0 or by < d - R.max[r] / 100 then
         return false
     end
     R.roseBy[r] = 0
@@ -1780,7 +1800,12 @@ local function crossing(r, lo, hi, bt)
     local was = R.bandLo[r]
     if lo == was then
         return
-    elseif lo < was or abs(lo - R.bandHi[r]) > I.EPS or lo >= R.max[r] - I.EPS or R.movedT[r] > bt - I.BAND_MARGIN then
+    elseif
+        lo < was
+        or abs(lo - R.bandHi[r]) > I.EPS
+        or lo >= R.max[r] - I.EPS
+        or nearStamp(R.movedT[r], bt, "since", true)
+    then
         R.markT[r] = -1
         return
     end
@@ -1844,7 +1869,7 @@ local function closeWindow(r, lo, bt)
     local n, what, e = R.winN[r], R.winK[r], R.winT[r]
     if n > 0 and e > bt + 1e-6 then
         -- some of several, or one within the margin, may lie on either side: neither window is clean
-        R.winN[r] = (n > 1 or e - bt <= I.BAND_MARGIN + 1e-6) and 2 or 1
+        R.winN[r] = (n > 1 or nearStamp(e, bt, "until")) and 2 or 1
         return
     end
     R.winN[r] = 0
@@ -1911,7 +1936,7 @@ I.On(Obs.Band, function(o, t)
         R.winN[r] = 0 -- the first band: no change to learn from
     elseif bt ~= R.bandAt[r] then
         local rise = lo - R.bandLo[r]
-        if rise > 0 and (rise >= R.roseBy[r] or bt - R.roseT[r] > I.BAND_MARGIN) then
+        if rise > 0 and (rise >= R.roseBy[r] or not nearStamp(bt, R.roseT[r], "until", true)) then
             R.roseT[r], R.roseBy[r] = bt, rise
         end
         if R.swing[r] == 0 then
