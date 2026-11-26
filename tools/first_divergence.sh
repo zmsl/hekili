@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.." || exit 2
     exit 2
 }
 BASE=$1 HEAD=$2 LABEL=$3 SPEC=$4 SEEDS=${5:-1-20}
-ROOT=$PWD
+ROOT=$(pwd)
 BUSTED=$(realpath "${BUSTED:-.lua/bin/busted}")
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
