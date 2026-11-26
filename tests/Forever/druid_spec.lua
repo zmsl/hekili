@@ -243,6 +243,7 @@ describe("Forever Druid", function()
             for key, a in pairs(w.abilities) do
                 n = n + 1
                 local want = KIT[key]
+                e.buff.bear_form = nil -- a previous ability's form (feral_charge, below) must not leak: pairs order differs per VM
                 assert.is_not_nil(want, "unexpected ability " .. key)
                 assert.are.same(want[1], idsOf(a), key)
                 local cd, gcd = ld.run(a.cooldown, e), ld.run(a.gcd, e) -- caster form's (Faerie Fire's gcd is a function)

@@ -1082,7 +1082,7 @@ end)
 
 -- The priorities: the wowsims.com packs (generated from wowsims/forever's builds by `make wowsims-packs`).
 describe("Forever Warlock priorities", function()
-    it("keeps the class file's generated blocks in step with APLs/, each spec's package its pack", function()
+    it("#puc keeps the class file's generated blocks in step with APLs/, each spec's package its pack", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")

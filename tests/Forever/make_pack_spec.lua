@@ -14,7 +14,7 @@ end
 local CLASSES =
     { warrior = "Warrior", druid = "Druid", rogue = "Rogue", paladin = "Paladin", shaman = "Shaman", hunter = "Hunter" }
 
-describe("tools/make_pack.lua", function()
+describe("tools/make_pack.lua #puc", function()
     it("binds each pack to its spec's share key from the manifest", function()
         local by = {}
         for _, p in ipairs(mp.load("warrior")) do

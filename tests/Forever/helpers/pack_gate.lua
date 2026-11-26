@@ -1632,10 +1632,13 @@ end
 -- every loop.CAL_EVERY counted ticks (loop.ratios), not on ms: load from other processes slows both, so the bar does not
 -- depend on what else runs, also when the load changes during a fight. 20-fight lines read under 0.6 quiet; load moves
 -- a line by under 0.1 (Feral 3 fights: about 0.61 quiet, 0.63-0.70 under a 16-wide `make test`).
-M.CPU_RATIO = 1.0
--- A one-fight line's bar (wowsims.gate's replay): headroom over a replay's ratio (0.23-0.60 quiet, about 20 calibration
--- windows a replay).
-M.CPU_RATIO_ONE_FIGHT = 1.2
+-- Per VM, the same headroom over the slowest loop spec (seeds 1-20, 32 solo lines): PUC 5.1.5 reads 0.27-0.59, bar 1.0
+-- (1.7x); LuaJIT (compiler on, loop.calibrate interpreted) reads 0.11-0.36, bar 0.6 (1.65x).
+local LUAJIT = rawget(_G, "jit") ~= nil
+M.CPU_RATIO = LUAJIT and 0.6 or 1.0
+-- A one-fight line's bar (wowsims.gate's replay): headroom over a replay's ratio (PUC 0.23-0.60 quiet, about 20
+-- calibration windows a replay); 1.2 times the loop bar.
+M.CPU_RATIO_ONE_FIGHT = M.CPU_RATIO * 1.2
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)

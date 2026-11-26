@@ -196,7 +196,7 @@ describe("the headless loop's CPU metric", function()
         end)
         local m, r = bytes()
         assert.are.equal(math.floor(#m.cpu / loop.BYTES_EVERY), m.sampled)
-        assert.is_truthy(loop.line(m):find(("bytes %.0f per Update"):format(r.bytes), 1, true))
+        assert.is_truthy(loop.line(m):find(("bytes%%([a-z]+%%) %.0f per Update"):format(r.bytes)))
         local _, r10 = bytes(10)
         -- ten empty tables a cycle, 32 B or more each: exact whatever the collector did between the sampled cycles
         assert.is_true(r10.bytes - r.bytes >= 10 * 32, r10.bytes - r.bytes)

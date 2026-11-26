@@ -62,6 +62,7 @@ Specs.md
 .claude/
 
 .lua/
+.lj/
 luacov.stats.out
 luacov.report.out
 .superpowers/

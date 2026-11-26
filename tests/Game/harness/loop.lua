@@ -452,6 +452,12 @@ function M.calibrate()
     end
     return (os.clock() - c0) * 1000, sum
 end
+-- LuaJIT compiles this tight loop to ~1 ms (6.8 ms on PUC) while the engine's code gains far less, which would inflate the
+-- ratio about 3x: keep the calibration interpreted, the yardstick for "engine cost per interpreted read".
+local luajit = rawget(_G, "jit")
+if luajit then
+    luajit.off(M.calibrate, true)
+end
 
 --- Each tick's ms (`cpu`) over its window's calibration: tick i's window is ceil(i / `every`), `cals[w]` timed just
 --- before that window's first tick. Appended to `out` (a new list if nil), which is returned.
@@ -2104,7 +2110,9 @@ function M.line(m)
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; ready while short %d; held while ready %d; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms ratio %.3f (calibration %.2f ms) "
-        .. "bytes %.0f per Update; top [%s]; power est-truth at disagreements %.1f"
+        .. "bytes("
+        .. (luajit and "lj" or "puc")
+        .. ") %.0f per Update; top [%s]; power est-truth at disagreements %.1f" -- per VM: a LuaJIT count is not a PUC one
     ):format(
         m.fights,
         r.agreement,
