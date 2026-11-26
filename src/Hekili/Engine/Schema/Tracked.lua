@@ -76,13 +76,20 @@ function ns.TrackPassive(id)
     insert(passives, id)
 end
 
--- The spell IDs of a registration: its `id`, then its `copy` IDs (rank order), positive numbers only.
-local function idsOf(obj)
+local function index(t, k)
+    return t[k]
+end
+
+-- The spell IDs of a registration: its `id`, then its `copy` IDs (rank order), positive numbers only. `get` reads a
+-- field (default: an index, as the build does; Fields.lua passes rawget, which runs no aura's onLoad).
+local function idsOf(obj, get)
+    get = get or index
     local ids = {}
-    if type(obj.id) == "number" and obj.id > 0 then
-        ids[1] = obj.id
+    local id = get(obj, "id")
+    if type(id) == "number" and id > 0 then
+        ids[1] = id
     end
-    local copy = obj.copy
+    local copy = get(obj, "copy")
     if type(copy) == "number" and copy > 0 then
         ids[#ids + 1] = copy
     elseif type(copy) == "table" then
@@ -93,6 +100,25 @@ local function idsOf(obj)
         end
     end
     return ids
+end
+
+--- The spell IDs the build tracks aura `a` by when it is registered under key `k`, or nil when the build hands the
+--- belief no record of it: a primary key (not a copy key), a positive spell ID (its id or a copy), or the id-less
+--- weapon-enchant exception (C4: RegisterAura's negative pseudo-ID). The field registry's V4 (Fields.lua) finds its
+--- aura by the same rule, with `get` = rawget at load.
+function ns.TrackedAuraIds(a, k, get)
+    get = get or index
+    if get(a, "key") ~= k then
+        return
+    end
+    local ids = idsOf(a, get)
+    local enchant = rawget(a, "weaponEnchant") ~= nil or type(rawget(a, "enchants")) == "table"
+    if #ids == 0 and enchant and type(get(a, "id")) == "number" then
+        ids[1] = get(a, "id") -- an id-less weapon-enchant aura (C4): RegisterAura's negative pseudo-ID
+    end
+    if #ids > 0 then
+        return ids
+    end
 end
 
 -- A plain copy of `v`: a table's raw fields by value, its sub-tables copied the same way (a `copy` list, `consumedBy`,
@@ -363,18 +389,12 @@ local function buildDef()
     end
     for _, k in ipairs(sortedKeys(class.auras)) do
         local a = class.auras[k]
-        if a.key == k then
-            local ids = idsOf(a)
-            local enchant = rawget(a, "weaponEnchant") ~= nil or type(rawget(a, "enchants")) == "table"
-            if #ids == 0 and enchant and type(a.id) == "number" then
-                ids[1] = a.id -- an id-less weapon-enchant aura (C4): RegisterAura's negative pseudo-ID
-            end
-            if #ids > 0 then
-                local rec = recordOf(a)
-                rec.cdm = cdmOf(rec)
-                insert(def.auras, rec)
-                def.auraIds[#def.auras] = ids
-            end
+        local ids = ns.TrackedAuraIds(a, k)
+        if ids then
+            local rec = recordOf(a)
+            rec.cdm = cdmOf(rec)
+            insert(def.auras, rec)
+            def.auraIds[#def.auras] = ids
         end
     end
     local seen = {}

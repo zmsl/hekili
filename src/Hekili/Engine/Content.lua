@@ -84,15 +84,8 @@ local function load(name)
     end
 end
 
---- Loads Hekili_Shared, then the player's class pack, once per session (OnInitialize, its only caller; a later call
---- does nothing). Keeps a notice when the shared content fails to load (then no pack is tried: it depends on it), the
---- class cannot be read, or the pack is not installed, declares another content API (then it is not loaded) or fails
---- to load.
-function ns.LoadContent()
-    if done then
-        return
-    end
-    done = true
+-- The loads, and the notice when one fails (LoadContent below).
+local function loadAll()
     notice = load("Hekili_Shared")
     if notice then
         return
@@ -124,6 +117,41 @@ function ns.LoadContent()
     notice = load(name)
     if not notice then
         ns.PackAddon = name -- its string table labels its built-in priorities (Registry.PackLabel)
+    end
+end
+
+--- Loads Hekili_Shared, then the player's class pack, once per session (OnInitialize, its only caller; a later call
+--- does nothing). Keeps a notice when the shared content fails to load (then no pack is tried: it depends on it), the
+--- class cannot be read, or the pack is not installed, declares another content API (then it is not loaded) or fails
+--- to load.
+--- Then runs the field registry's end-of-load checks (V3 references, V4 landing evidence: Engine/Schema/Fields.lua) over
+--- every registration the content made, and closes the registry. A failure there is reported and the load goes on
+--- (fable-r3-decision.md 1): the notice names it, ns.Error logs it and the client's error handler hears it; the addon
+--- then runs as before the registry (an unresolved reference stays unresolved, the belief falls back on a malformed
+--- `expects`). A check that raised inside a pack file (the client reported that raise) is added to the notice too.
+function ns.LoadContent()
+    if done then
+        return
+    end
+    done = true
+    loadAll()
+    local F = ns.Fields
+    local inFile = F.failed -- read before Finish, which raises through the same fail()
+    local ok, err = pcall(F.Finish)
+    F.closed = true -- later registrations are unchecked (Fields.lua F.Check): never a raise in combat
+    for _, msg in ipairs({ inFile or false, not ok and tostring(err) or false }) do
+        if msg then
+            local line = format(L["a content load check failed, so that content may be incomplete: %s"], msg)
+            notice = notice and (notice .. "\n" .. line) or line
+        end
+    end
+    if not ok then
+        err = tostring(err)
+        ns.Error(err)
+        local handler = geterrorhandler and geterrorhandler() -- none in a headless load
+        if handler then
+            handler(err)
+        end
     end
 end
 

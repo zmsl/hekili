@@ -124,6 +124,12 @@ local methods = {
             return
         end
 
+        -- the field registry's load checks (Engine/Schema/Fields.lua), before the rate entries move out of `regen`
+        if meta then ns.Fields.Check( "meta", self, resource, meta ) end
+        for name, e in pairs( regen or {} ) do
+            if type( e ) == "table" then ns.Fields.Check( "regen", self, resource .. "." .. tostring( name ), e ) end
+        end
+
         local r = self.resources[ resource ] or {}
 
         r.resource = resource

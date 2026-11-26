@@ -8,13 +8,27 @@ local addons = require("helpers.addons")
 describe("Engine/Content.lua", function()
     local WARRIOR = { "load Hekili_Shared", "meta Hekili_Warrior X-Hekili-ContentAPI", "load Hekili_Warrior" }
     local calls, notes, meta, loadResult, classToken, saved, ns
+    local finished -- each Fields.Finish call: how many client calls had run by then
+    local finishErr, inFile, logged -- Finish's raise, Fields.failed before it (a pack file's raise), ns.Error's log
 
     -- a fresh load of Content.lua (its once-per-session flag reset), LoadContent, then ContentNotice; `again` repeats
     -- both calls on the same load, as OnInitialize and a disable/enable's OnEnable would
     local function run(again)
-        calls, notes = {}, {}
+        calls, notes, finished, logged = {}, {}, {}, {}
         ns = {
             L = require("helpers.english"),
+            Error = function(msg)
+                logged[#logged + 1] = msg
+            end,
+            Fields = { -- Engine/Schema/Fields.lua's end-of-load checks
+                failed = inFile,
+                Finish = function()
+                    finished[#finished + 1] = #calls
+                    if finishErr then
+                        error(finishErr, 0)
+                    end
+                end,
+            },
             Facade = {
                 UnitClass = function(unit)
                     assert.are.equal("player", unit)
@@ -53,6 +67,7 @@ describe("Engine/Content.lua", function()
 
     before_each(function()
         saved = rawget(_G, "Hekili") or false
+        finishErr, inFile = nil, nil
         meta = {}
         for _, name in ipairs(addons.CONTENT) do
             meta[name] = addons.meta(name)
@@ -135,6 +150,48 @@ describe("Engine/Content.lua", function()
         assert.are.same({ "load Hekili_Shared", "meta Hekili_Nopack X-Hekili-ContentAPI" }, calls)
         assert.are.same({ "no Forever pack for Nopack; install Hekili_Nopack" }, notes)
     end)
+
+    -- refactor plan lane 3: V3 and V4 need every registration of the load, so they run once, after the last load, also
+    -- when no pack loads
+    it("runs the field registry's end-of-load checks once, after the last load, whatever the outcome", function()
+        run(true)
+        assert.are.same({ #WARRIOR }, finished)
+        classToken = "NOPACK"
+        run()
+        assert.are.same({ 2 }, finished)
+        loadResult = function()
+            return false, "DISABLED"
+        end
+        run()
+        assert.are.same({ 1 }, finished)
+    end)
+
+    -- fable-r3-decision.md 1: a failed end-of-load pass is reported and the load goes on; the registry closes either way
+    it(
+        "adds a failed end-of-load check to the notice, keeps a load's notice, logs it, and closes the registry",
+        function()
+            run()
+            assert.is_true(ns.Fields.closed)
+            assert.are.same({}, logged)
+            finishErr = "Hekili field check V3: x"
+            classToken = "NOPACK"
+            run()
+            assert.is_true(ns.Fields.closed)
+            assert.are.same({
+                "no Forever pack for Nopack; install Hekili_Nopack\n"
+                    .. "a content load check failed, so that content may be incomplete: Hekili field check V3: x",
+            }, notes)
+            assert.are.same({ finishErr }, logged)
+            inFile, finishErr = "Hekili field check V2: y", nil -- a pack file raised; Finish passed: noted, not logged
+            classToken = "WARRIOR"
+            run()
+            assert.are.same(
+                { "a content load check failed, so that content may be incomplete: Hekili field check V2: y" },
+                notes
+            )
+            assert.are.same({}, logged)
+        end
+    )
 
     it("declares one content API in every content TOC", function()
         for _, name in ipairs(addons.CONTENT) do

@@ -183,6 +183,7 @@ local function contentNotices(out)
                     LoadAddOn = c[2],
                 },
             },
+            Fields = { Finish = function() end }, -- Engine/Schema/Fields.lua's end-of-load checks: no English
         }
         _G.Hekili = {
             Notify = function(_, s)

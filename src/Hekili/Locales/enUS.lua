@@ -864,6 +864,7 @@ L["could not load %s (%s)"] = true
 L["could not read your class at load; /reload"] = true
 L["no Forever pack for %s; install %s"] = true
 L["%s is for content API %s, this Hekili Forever for %s; update the older one"] = true
+L["a content load check failed, so that content may be incomplete: %s"] = true
 
 -- Hekili/UI/UI.lua
 L["Notifications"] = true
