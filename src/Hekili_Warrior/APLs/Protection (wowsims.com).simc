@@ -39,11 +39,9 @@
 # Omitted: cd_offensive_trinkets #3: item 23041
 # Omitted: cd_offensive_trinkets #4: item 272440
 # Omitted: cd_offensive_trinkets #5: item 272437
-# Omitted: cd_offensive_trinkets #6: item 13965
 # Omitted: cd_shield_wall_dual_wield #1: the player's health against a number outside a cast line
 # Omitted: cd_shield_wall_dual_wield #2: itemSwap
 # Omitted: default: empty group engineering
-# Omitted: default: empty group cd_offensive_trinkets
 # Omitted: default: empty group cd_shield_wall_dual_wield
 
 actions.precombat=bloodrage,use_off_gcd=1
@@ -51,7 +49,8 @@ actions.precombat+=/battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/battle_stance,use_off_gcd=1,if=!buff.battle_stance.up&(!action.defensive_stance.known|!buff.defensive_stance.up)
 actions.precombat+=/retaliation
 actions.precombat+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
-actions=last_stand,use_off_gcd=1,if=health.known&(!(buff.last_stand.up|(action.shield_wall.known&buff.shield_wall.up))&health.pct<=settings.last_stand_health)
+actions=call_action_list,name=cd_offensive_trinkets
+actions+=/last_stand,use_off_gcd=1,if=health.known&(!(buff.last_stand.up|(action.shield_wall.known&buff.shield_wall.up))&health.pct<=settings.last_stand_health)
 actions+=/shield_wall,if=health.known&(health.pct<=settings.shield_wall_health&!((action.last_stand.known&buff.last_stand.up)|buff.shield_wall.up))
 actions+=/stoneform,if=health.known&((!(action.last_stand.known|action.shield_wall.known)|!((action.last_stand.known&buff.last_stand.up)|(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.stoneform_health)
 actions+=/shatter_curse,if=health.known&((!(action.last_stand.known|action.shield_wall.known)|!((action.last_stand.known&buff.last_stand.up)|(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=settings.shatter_curse_health)
@@ -77,6 +76,7 @@ actions+=/sunder_armor,if=(debuff.sunder_armor.stack<5|((!action.shield_slam.kno
 actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&rage.lo>=20)
 actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.lo>=40)
 actions+=/bloodrage,use_off_gcd=1,if=rage.lo<90
+actions.cd_offensive_trinkets=blackhands_breadth,use_off_gcd=1
 actions.cd_racials=blood_fury,use_off_gcd=1
 actions.cd_racials+=/berserking,use_off_gcd=1
 actions.cd_racials+=/eureka,use_off_gcd=1

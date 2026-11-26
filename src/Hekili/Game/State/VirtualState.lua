@@ -51,7 +51,8 @@ VS.Obs = {
     Pet = 29, -- a: the pet unit exists 1/0 (-1: its power changed, nothing else); b: it is dead 1/0; c: its power (-1: a secret read)
     Totem = 30, -- a: slot 1-4; b: expiry (0 empty); c: 1 an out-of-combat read, 0 an update with no read
     Gear = 31, -- a: gear index; b: its value (Sources/Gear.lua)
-    ItemCooldown = 32, -- reserved
+    ItemCooldown = 32, -- a: ability index (an `item` one); b: its item's ready time from a plain item cooldown read (0
+    -- ready), staged on a change (Sources/Spellbook.lua); Families/Casts.lua sets the believed ready time to it
     Range = 33, -- reserved
     TargetCast = 34, -- a: TargetCastOf; b: castBarID; c: interruptible 1 / 0 / -1 unknown
     TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range

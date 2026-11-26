@@ -592,6 +592,15 @@ function NAMES.setCooldown(action, duration)
         I.CooldownModel(a, T + duration, duration, T, CAST)
     end
 end
+--- lockCooldown(action, duration): the simulation's verb (State.lua): `action` held on cooldown at least `duration` s
+--- from the cast, never shortened, its learned length untouched (a shared category's window, not its own cooldown).
+function NAMES.lockCooldown(action, duration)
+    local a = abByKey[action]
+    if live and a and type(duration) == "number" and A.ready0[a] < T + duration then
+        A.ready0[a] = T + duration
+        I.Sample(A.cd[a], "modelled", A.ready0[a], T, CAST)
+    end
+end
 --- reduceCooldown(action, time): Hekili's verb (State.lua): a running cooldown `time` s shorter (ready at the cast at
 --- the earliest); a charged ability's next charge `time` s sooner (VS.Charges counts the recharges it then passes).
 function NAMES.reduceCooldown(action, time)

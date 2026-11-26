@@ -19,6 +19,7 @@ local Plain, Stage, Note = S.Plain, S.Stage, S.Note
 
 -- By ability index: the last ready flag reported (-1 none, 0 not ready, 1 ready); the GCD's (-1, 0 idle, 1 active).
 local last, gcdLast = {}, -1
+local lastItem = {} -- by ability index: the last plain item ready time staged (-1 none)
 
 -- The highest known rank of each ability (rank order: its `id`, then its `copy` IDs) and, out of combat, its plain
 -- cost and whether it costs a second power type. Out of the hot path: build, SPELLS_CHANGED.
@@ -62,6 +63,7 @@ I.OnBuild(function(def)
     I.GCD_SPELL = def.gcdSpell
     for a = 1, #def.abilities do
         last[a] = -1
+        lastItem[a] = -1
     end
     gcdLast = -1
     if I.api then
@@ -114,6 +116,20 @@ local function ready(api, spellID)
     return not active or onGcd == true, active
 end
 
+-- An item's ready time from its plain cooldown read (0 ready), or nil: secret, raising, or held until its buff ends
+-- (enable 0: the client starts it later). Allocates nothing.
+local function itemReady(api, item)
+    local ok, s, d, e = pcall(api.C_Item.GetItemCooldown, item) -- secret: each value through Plain next; a raise is nil
+    if not ok then
+        return nil
+    end
+    s, d, e = Plain(api, s), Plain(api, d), Plain(api, e)
+    if type(s) ~= "number" or type(d) ~= "number" or e == 0 or e == false then
+        return nil
+    end
+    return s > 0 and d > 0 and s + d or 0
+end
+
 local function onCooldown(api, t)
     if not I.built then
         return
@@ -121,9 +137,15 @@ local function onCooldown(api, t)
     local A, edge = I.ab, false
     for a = 1, A.n do
         -- an item's cooldown is the item's, not its use spell's (lane gear-1): no use spell's flag constrains it
-        local r
-        if A.obj[a].item == nil then
+        local r, item = nil, A.obj[a].item
+        if item == nil then
             r = ready(api, A.qid[a])
+        elseif type(item) == "number" then
+            local at = itemReady(api, item)
+            if at and at ~= lastItem[a] then
+                lastItem[a] = at
+                edge = Stage(Obs.ItemCooldown, t, a, at) or edge
+            end
         end
         if r ~= nil then
             local v = r and 1 or 0

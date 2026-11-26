@@ -436,6 +436,13 @@ I.On(Obs.Cooldown, function(o, t)
     end
 end)
 
+-- An item's plain cooldown read (Sources/Spellbook.lua): its ready time as the client says it, our own use or not (an
+-- equip's lock, a use before a reload, a category window).
+I.On(Obs.ItemCooldown, function(o, t)
+    A.ready0[o.a] = o.b
+    I.Sample(A.cd[o.a], "pinned", o.b, t, Obs.ItemCooldown)
+end)
+
 -- The standing flags at `now` (TDF constrain): ready pulls a later ready time back to now (and restores a charge);
 -- not ready keeps a modelled end not already past now by more than EPS, and pushes one that is to now + CD_PROBE
 -- (the model is provably short); a probe in force (ready0 is the pinned sample's value) is pushed again each poll,

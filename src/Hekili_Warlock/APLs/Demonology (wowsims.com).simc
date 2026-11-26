@@ -20,7 +20,6 @@
 # Omitted: default #3: move
 # Omitted: multi_target_dot_logic #2: changeTarget NextTarget: no on-all-targets read of a cast before it in this list
 # Omitted: multi_target_dot_logic #7: changeTarget Target: no main target in Hekili
-# Omitted: cooldowns #1: item 18820
 # Omitted: cooldowns #2: item 250937
 
 actions.precombat=soul_fire
@@ -54,7 +53,8 @@ actions.multi_target_dot_logic+=/corruption,cycle_targets=1,focus=2,if=(!debuff.
 actions.single_target_dot_logic=bane_of_agony,focus=2,if=((!action.bane_of_doom.known|!debuff.bane_of_doom.up)&!debuff.bane_of_agony.up&fight_remains>debuff.bane_of_agony.duration)
 actions.single_target_dot_logic+=/immolate,focus=2,if=(!debuff.immolate.up&fight_remains>debuff.immolate.duration)
 actions.single_target_dot_logic+=/corruption,focus=2,if=(!debuff.corruption.up&fight_remains>debuff.corruption.duration)
-actions.cooldowns=eureka,use_off_gcd=1,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|debuff.bane_of_doom.remains<8)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)))|(action.bane_of_doom.known&!debuff.bane_of_doom.up)))
+actions.cooldowns=talisman_of_ephemeral_power,use_off_gcd=1,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|debuff.bane_of_doom.remains<15)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)))|(action.bane_of_doom.known&!debuff.bane_of_doom.up)))
+actions.cooldowns+=/eureka,use_off_gcd=1,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|debuff.bane_of_doom.remains<8)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)))|(action.bane_of_doom.known&!debuff.bane_of_doom.up)))
 actions.cooldowns+=/blood_fury,use_off_gcd=1,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|debuff.bane_of_doom.remains<15)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)))|(action.bane_of_doom.known&!debuff.bane_of_doom.up)))
 actions.cooldowns+=/berserking,use_off_gcd=1,if=(!action.bane_of_doom.known|((action.bane_of_doom.known&((!action.bane_of_doom.known|debuff.bane_of_doom.remains<15)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)))|(action.bane_of_doom.known&!debuff.bane_of_doom.up)))
 actions.cooldowns+=/searing_pain,if=((!action.bane_of_doom.known|debuff.bane_of_doom.remains<15)&(!action.bane_of_doom.known|debuff.bane_of_doom.up)&active_enemies=1)

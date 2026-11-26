@@ -1,0 +1,137 @@
+-- tests/Forever/trinkets_spec.lua (lane gear-1, G6): the on-use trinkets (Hekili_Shared Items.lua) are recommended. A
+-- worn one binds to trinket1/trinket2 and joins `use_items`; a cast of its use spell is its cast (the `copy` alias);
+-- with the item cooldown read secret the belief answers it (the cast + the item's cooldown), and the shared category
+-- 1141 holds the other trinket for its window without ever shortening a longer cooldown; an equipment change rebinds.
+local headless = require("Game.harness.headless")
+local fake = require("Game.State.helpers.fake_api")
+local C = require("Forever.helpers.mage_world").Frost
+
+local SECRET = fake.SECRET
+local ANALYZER, ANALYZER_SPELL = 272438, 1291101 -- Weakness Analyzer: 360 s, category 1141 (20 s)
+local EYE, EYE_SPELL = 13968, 1287840 -- Eye of the Beast: 300 s, category 1141 (20 s)
+
+-- A Frost Mage wearing `t13` and `t14`, its gear read, in combat, on a pack of `line` then Frostbolt.
+local function boot(t13, t14, line)
+    local char = C.character()
+    char.items = char.items or {}
+    char.items[13] = t13 and { t13 } or nil
+    char.items[14] = t14 and { t14 } or nil
+    local H = headless.new({ character = char, pack = C.PACK })
+    assert.are.same({}, H.loadErrors)
+    for _, id in ipairs({ ANALYZER, EYE }) do
+        H.ctl.itemUsable[id] = true
+    end
+    H.ctl.inRange.target, H.ctl.level.target = true, 60
+    H.Fire("PLAYER_TARGET_CHANGED")
+    H.Fire("PLAYER_EQUIPMENT_CHANGED")
+    local t = H.ctl.now + 1.5 -- the gear re-read runs 1 s after the event
+    assert(headless.cycle(H, t))
+    local lines = H.Hekili:ParseActionList("actions+=/" .. (line or "use_items"))
+    lines[1].enabled = true
+    lines[2] = { enabled = true, action = "frostbolt" }
+    H.Hekili.DB.profile.packs[C.PACK].lists = { precombat = {}, default = lines }
+    H.Hekili:LoadScripts()
+    H.Hekili:FireToggle("cooldowns", "on")
+    H.Fire("PLAYER_REGEN_DISABLED")
+    assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+    return H, t
+end
+
+local function first(H)
+    local recs = H.Hekili.Engine.Output.Primary.recs
+    return recs[1] and recs[1].actionName
+end
+
+local function cooldowns(H)
+    local st = H.Hekili.State
+    st.reset("Primary", true)
+    return st.cooldown.trinket1.remains, st.cooldown.trinket2.remains
+end
+
+describe("an on-use trinket", function()
+    it("is one ability, its use spell's cast row resolving to it", function()
+        local H = boot(ANALYZER)
+        local class = H.Hekili.Class
+        assert.are.equal(class.abilities.weakness_analyzer, class.abilities[ANALYZER_SPELL])
+        assert.are.equal("weakness_analyzer", class.itemMap[ANALYZER])
+        assert.are.equal("off", class.abilities.weakness_analyzer.gcd)
+        assert.are.equal(360, class.abilities.weakness_analyzer.cooldown)
+    end)
+
+    it("joins use_items and binds trinket1 while worn; an unequip rebinds to none", function()
+        local H, t = boot(ANALYZER)
+        local st = H.Hekili.State
+        assert.are.same({ "weakness_analyzer" }, st.items)
+        assert.are.equal("weakness_analyzer", st.trinket.t1.__ability)
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal("weakness_analyzer", first(H))
+        H.ctl.inventory[13] = nil
+        H.Fire("PLAYER_EQUIPMENT_CHANGED")
+        t = t + 1.5
+        assert(headless.cycle(H, t))
+        assert.are.same({}, st.items)
+        assert.are.equal("null_cooldown", st.trinket.t1.__ability)
+        assert.are.equal("frostbolt", first(H))
+        H.ctl.inventory[13] = EYE
+        H.Fire("PLAYER_EQUIPMENT_CHANGED")
+        t = t + 1.5
+        assert(headless.cycle(H, t))
+        assert.are.equal("eye_of_the_beast", st.trinket.t1.__ability)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("is held by the belief after its cast while the item cooldown reads secret", function()
+        local H, t = boot(ANALYZER, EYE)
+        H.ctl.itemCooldown[ANALYZER], H.ctl.itemCooldown[EYE] = { SECRET, SECRET }, { SECRET, SECRET }
+        H.ctl.now = t + 0.1
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", ANALYZER_SPELL)
+        t = t + 5
+        assert(headless.cycle(H, t))
+        local r1, r2 = cooldowns(H)
+        assert.is_true(math.abs(r1 - 355.1) < 0.5, "trinket1 " .. r1) -- 360 s from the cast
+        assert.is_true(math.abs(r2 - 15.1) < 0.5, "trinket2 " .. r2) -- the category's 20 s window
+        assert.are.equal("frostbolt", first(H))
+        t = t + 16 -- the window over: the Eye is offered, the Analyzer still held
+        assert(headless.cycle(H, t))
+        assert.are.equal("eye_of_the_beast", first(H))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("holds the other trinket in the simulation's prediction after a predicted use (plain reads)", function()
+        local H, t = boot(ANALYZER, EYE)
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        local recs = H.Hekili.Engine.Output.Primary.recs
+        assert.are.equal("weakness_analyzer", recs[1] and recs[1].actionName) -- the longer cooldown first (itemSorter)
+        assert.is_truthy(recs[2] and recs[2].actionName)
+        for i = 2, 3 do
+            assert.are_not.equal("eye_of_the_beast", recs[i] and recs[i].actionName) -- its 20 s window
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it("never shortens a longer cooldown with the category's window", function()
+        local H, t = boot(ANALYZER, EYE)
+        H.ctl.itemCooldown[ANALYZER], H.ctl.itemCooldown[EYE] = { SECRET, SECRET }, { SECRET, SECRET }
+        H.ctl.now = t + 0.1
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", EYE_SPELL) -- the Eye: 300 s, the Analyzer 20 s
+        H.ctl.now = t + 30
+        H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", ANALYZER_SPELL) -- the Analyzer: the Eye's 20 s window
+        t = t + 31
+        assert(headless.cycle(H, t))
+        local r1, r2 = cooldowns(H)
+        assert.is_true(math.abs(r1 - 359) < 0.5, "trinket1 " .. r1)
+        assert.is_true(math.abs(r2 - 269.1) < 0.5, "trinket2 " .. r2) -- still the Eye's own 300 s
+        assert.are.same({}, H.errors)
+    end)
+
+    it("is not offered while the client calls it unusable, with no error on a secret answer", function()
+        local H, t = boot(ANALYZER)
+        H.ctl.itemUsable[ANALYZER] = false
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal("frostbolt", first(H))
+        assert.are.same({}, H.errors)
+    end)
+end)

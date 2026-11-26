@@ -53,8 +53,14 @@ return {
     talentTree = "shaman",
     build = "ui/specs/shaman/enhancement/builds/testing.build.json",
     -- the build's resourcePotId 13444, Major Mana Potion; the Weakness Analyzer (ItemSparse 272438: a trinket) as
-    -- Elemental maps it
-    map = { OtherActionResourcePotion = "major_mana_potion", ["item:272438"] = "use_items" },
+    -- Elemental maps it; the Eye of the Beast 13968 and Blackhand's Breadth 13965 too (lane gear-1: the on-use trinkets
+    -- the head's gear may wear, so a re-pin keeps the line)
+    map = {
+        OtherActionResourcePotion = "major_mana_potion",
+        ["item:272438"] = "use_items",
+        ["item:13968"] = "use_items",
+        ["item:13965"] = "use_items",
+    },
     focus = { -- by role (docs/dev/wowsims-packs.md); the totems none (the user, 2026-10-21); Fire Nova is the filler
         -- at the re-pin (no Clearcasting line), so none
         water_shield = 2,

@@ -487,9 +487,21 @@ describe("shared content", function()
         end
     end)
 
-    it("registers use_items, the slots Events.lua rebinds and an empty trinket map", function()
+    it("registers use_items, the slots Events.lua rebinds and the on-use trinkets", function()
         load({ "Items" })
-        assert.are.same({ "main_hand", "null_cooldown", "trinket1", "trinket2", "use_items" }, keys("abilities"))
+        assert.are.same({
+            "blackhands_breadth",
+            "everlook_pathcarver",
+            "eye_of_the_beast",
+            "main_hand",
+            "mind_quickening_gem",
+            "null_cooldown",
+            "talisman_of_ephemeral_power",
+            "trinket1",
+            "trinket2",
+            "use_items",
+            "weakness_analyzer",
+        }, keys("abilities"))
         local a = all.abilities
         assert.are.same(
             { a.trinket1, a.trinket2, a.main_hand },
@@ -497,6 +509,7 @@ describe("shared content", function()
         )
         assert.are.same({ "|cff00ccff[Main Hand]|r", false }, { a.main_hand.name, a.main_hand.usable })
         assert.are.same({}, _G.Hekili.Class.trinkets[12345])
+        assert.are.same({ ability = "weakness_analyzer" }, _G.Hekili.Class.trinkets[272438])
     end)
 
     it("registers each shared key in one file only, every file Hekili_Shared.toc lists", function()
