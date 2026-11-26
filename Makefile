@@ -209,7 +209,7 @@ tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
 
 # `make check` skips (one line) when every input matches the last green run (scripts/check_stamp.sh); FULL=1 runs it.
-# check-full: the four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one
+# check-full: the four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one (Apple make 3.81 lacks -O: output interleaves there)
 # exit code. The begin and write lines hold no $(MAKE), so `make -n` never runs them; make stops at the first failing
 # line, so write (the stamp) runs only after both stages pass. A command-line override other than FULL (a subset or
 # another tool) or -i/-e (errors ignored, environment over the Makefile) never skips and never stamps.
@@ -223,7 +223,7 @@ check:
 
 check-full:
 	@$(if $(STAMP_OFF),echo "check: command-line overrides or -i/-e; this run leaves no stamp",scripts/check_stamp.sh begin $(STAMP_START))
-	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
+	$(MAKE) -j4 $(if $(filter 3.%,$(MAKE_VERSION)),,-Otarget) lint fmt-check typecheck test
 	$(if $(FULL),$(MAKE) test-warlock)
 	$(MAKE) syntax api-check packs-check tools-test wiki-check
 	@python3 tools/locales.py --report || true  # information only: untranslated keys per language, never a failure
