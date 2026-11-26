@@ -15,6 +15,7 @@
 ### Known issues
 
 ### Upgrade notes
+- If you edited Beast Mastery Turret (wowsims.com) or Retribution (wowsims.com), your copy keeps its old lines that read `window.hha`, `window.move1` or `window.move2`. Those windows no longer exist, so the priority reports an unknown window for each such line and skips it. Reset the priority to its built-in version, or redo your edits on it.
 
 ## v0.12.1
 

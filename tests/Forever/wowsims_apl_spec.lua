@@ -1857,6 +1857,23 @@ describe("the wowsims APL translator", function()
         assert.is_falsy(simc:find("# Omitted: default #%d+: strictSequence"))
     end)
 
+    -- L1291 (c): rule 14 has landed; no shipped strict_sequence line carries allow_skip (the review's M2 cost)
+    it("emits no strict_sequence line with allow_skip in any shipped pack (L1291 c)", function()
+        local pipe, strict = assert(io.popen("ls src/Hekili_*/APLs/*.simc")), 0
+        for path in pipe:lines() do
+            local f = assert(io.open(path, "rb"))
+            for line in f:lines() do
+                if line:find("/strict_sequence", 1, true) then
+                    strict = strict + 1
+                    assert.is_falsy(line:match("^[^:]*allow_skip=1"), path .. ": " .. line)
+                end
+            end
+            f:close()
+        end
+        pipe:close()
+        assert.is_true(strict > 0) -- Arms's lines: the check reads real strict lines
+    end)
+
     it("runs prev.1 through the engine: a member is recommended right after its predecessor's prediction", function()
         local headless = require("Game.harness.headless")
         local ww = require("Forever.helpers.warrior_world")
