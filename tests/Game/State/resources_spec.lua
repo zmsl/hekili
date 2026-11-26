@@ -2677,6 +2677,35 @@ describe("resources", function()
             end
         )
 
+        -- (band-edge round 3) the spirit branch (high / b): pairs outside the window, each with its first end a step
+        -- late, read the spirit part high; its floor rate stays at or under the truth (10), the mp5 part untouched
+        it(
+            "keeps the spirit part's floor rate at or under the truth over pairs outside the window read a step short",
+            function()
+                shaped({ spirit = 10, mp5 = 12 })
+                read(10, 100)
+                local function cell(stamp, lo)
+                    if I.log.n > 0 and I.bandT[1] ~= stamp then
+                        I.Fold(stamp - 1e-9, false)
+                    end
+                    I.bandT[1], I.bandShows[1] = stamp, 1 / 6
+                    I.Settle(stamp + 0.05)
+                    obs(Obs.Band, stamp + 0.05, 1, lo, lo + 25)
+                    I.Fold(stamp + 0.05, false)
+                end
+                local late, cross = 0.09, 25 / 22 -- a cell at the truth's 12 + 10 a second
+                for k = 1, 6 do
+                    local t, lo = 20 * k, 100 * k
+                    cell(t, lo) -- a jump: no pair
+                    cell(t + cross + late, lo + 25) -- the pair's first end, stamped late
+                    cell(t + 2 * cross, lo + 50) -- its second, on time
+                end
+                assert.are.equal(12, I.res.regE[1])
+                assert.is_true(I.res.spE[1] > 10, I.res.spE[1])
+                assert.is_true(I.res.spL[1] <= 10, I.res.spL[1])
+            end
+        )
+
         it("multiplies overlapping `spirit` auras and adds their shares", function()
             shaped(
                 { spirit = 10, mp5 = 2 },
