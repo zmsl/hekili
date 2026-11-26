@@ -169,7 +169,8 @@ Translation:
   ruling" below.
 - `sequences` (`true`): the APL's `strictSequence` and `sequence` entries are written as `strict_sequence` and
   `sequence` lines (rules 14 and 14b below; windows design v6 §10). Unset, they stay `prev.1` chains and
-  class-registered windows. Set per recipe as each spec moves to APL sequences.
+  class-registered windows. Set per recipe as each spec moves to APL sequences. A sequence in the pre-pull list is
+  omitted either way and named in the header (review M4: none at the pin; its form is decided when a pin brings one).
 - `sequenceIf` (`{ [sequence name] = SimC term }`, with `sequences`): the term is ANDed into that sequence's
   condition, and the translator writes the sequence's close line,
   `close_window,name=<w>,if=window.<w>.up&!window.<w>.done&!(<term>)`, in `default` before the line that reaches the

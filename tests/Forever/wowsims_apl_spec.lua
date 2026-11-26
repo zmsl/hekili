@@ -4506,6 +4506,23 @@ describe("the wowsims APL translator's sequence lines (recipe sequences = true)"
         end, "sequenceIf: no sequence s in the APL")
     end)
 
+    -- Review M4 (L1374): a sequence in the pre-pull list is omitted and named (none at the pin or at a342c253e6): the
+    -- pre-pull guard and focus strip would treat its members as ordinary lines, and the engine runs sequences only in
+    -- Primary and AOE's in-combat walk. A re-pin that brings one decides its form then.
+    it("a sequence or strictSequence in the pre-pull list is omitted, named", function()
+        for _, kind in ipairs({ "sequence", "strictSequence" }) do
+            local a = { [kind] = { name = "S", actions = { member(100), member(300) } } }
+            for _, opts in ipairs({ on(), ctx() }) do
+                local text, omitted = apl.translate({
+                    prepullActions = { { action = a, doAtValue = const("-2s") } },
+                    priorityList = { cast(400) },
+                }, opts)
+                assert.are.equal("actions=dot", text)
+                assert.are.same({ "precombat #1: a " .. kind .. " in the pre-pull list (not supported)" }, omitted)
+            end
+        end
+    end)
+
     it("rule 14b: a restart line and a reader of an omitted sequence are omitted with it", function()
         local text, omitted = apl.translate({
             priorityList = {

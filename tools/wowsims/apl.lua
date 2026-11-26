@@ -3228,6 +3228,15 @@ function M.translate(rotation, c)
                     end
                 elseif s then
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, s)
+                elseif name == "precombat" and (a.sequence or a.strictSequence) then
+                    -- review M4 (L1374): none at the pin; the pre-pull guard and focus strip would treat its members as
+                    -- ordinary lines, and the engine sequences only in Primary and AOE in combat. shortcut: a group
+                    -- only the pre-pull list calls is not caught here; decide the form when a re-pin brings one.
+                    omitted[#omitted + 1] = ("%s #%d: a %s in the pre-pull list (not supported)"):format(
+                        name,
+                        i,
+                        a.sequence and "sequence" or "strictSequence"
+                    )
                 else
                     ok, body, why = pcall(entry, c, e)
                 end
