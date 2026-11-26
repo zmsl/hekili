@@ -15,8 +15,9 @@ local PACKS = {
     ["Hekili_Warlock/APLs/Destruction (wowsims.com).simc"] = { 12, 2 },
     ["Hekili_Warlock/APLs/SM Ruin (wowsims.com).simc"] = { 1, 1 },
     ["Hekili_Warlock/APLs/Shadow Brand (wowsims.com).simc"] = { 9, 2 },
-    ["Hekili_Warrior/APLs/Arms (wowsims.com).simc"] = { 0, 15 },
-    ["Hekili_Warrior/APLs/Fury (wowsims.com).simc"] = { 0, 17 },
+    -- the Warriors' F: 5 each from gear-1's Blackhand's Breadth lines (cd_trinkets; an item line is fight-length, L1902 point 3)
+    ["Hekili_Warrior/APLs/Arms (wowsims.com).simc"] = { 0, 20 },
+    ["Hekili_Warrior/APLs/Fury (wowsims.com).simc"] = { 0, 22 },
 }
 
 local function count(s, term)
@@ -31,7 +32,7 @@ local function count(s, term)
 end
 
 describe("the generated packs' remaining-time terms (owner rule L1902)", function()
-    it("read target.time_to_die on target-bound lines, fight_remains elsewhere: 51 / 128", function()
+    it("read target.time_to_die on target-bound lines, fight_remains elsewhere: 51 / 138", function()
         local got, want, t, f = {}, {}, 0, 0
         local p = assert(io.popen("ls src/Hekili_*/APLs/*"))
         for path in p:read("*a"):gmatch("[^\n]+") do
@@ -56,7 +57,7 @@ describe("the generated packs' remaining-time terms (owner rule L1902)", functio
             want[k] = v
         end
         assert.are.same(want, got)
-        assert.are.same({ 51, 128 }, { t, f })
+        assert.are.same({ 51, 138 }, { t, f })
     end)
 end)
 
