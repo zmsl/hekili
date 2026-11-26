@@ -769,13 +769,6 @@ actions.move_to_melee+=/close_window,name=move2,if=...
   sequence stays up.
 - `RegisterWindow("move1")`, `("move2")` and the two header lines are removed in the same change.
 - The Holy Shock pack's "move to melee" sequences follow the same rule when a lane reaches them.
-- As built (L1374 / L898, lane eng-3): the term is `window.before_first_swing.up`, a Paladin Lua window (evaluator
-  `combat > 0 and lastSwing(1) < combat`, `close_on_false`), not an engine expression: the engine's own swing row
-  (`swings.mh_actual`) is set only from the landed wound's paired row, one or more updates after PLAYER_SWING in the
-  headless world and never on live (target rows secret), so it would have kept the opener up past the swing. The
-  recipe field `sequenceIf` ANDs the term into each sequence's condition and writes the close line in `default`
-  before `call_action_list,name=move_to_melee` (that list is walked only out of Holy Strike's range, so a close line
-  inside it would not run in melee).
 
 `weave` (Hunter) and `riposte` (Rogue) stay Lua windows: they follow observed game events, not a priority.
 

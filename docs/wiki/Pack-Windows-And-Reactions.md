@@ -63,15 +63,16 @@ spec:RegisterWindow("riposte", {
 })
 ```
 
-A window that follows an observed swing, from `src/Hekili_Paladin/Paladin.lua`: in combat, before the fight's first main-hand swing. Retribution's opener sequences read it.
+A stepped window, from `src/Hekili_Paladin/Paladin.lua`: an opening sequence of two casts, run once a fight, before the first main-hand swing.
 
 ```lua
-spec:RegisterWindow("before_first_swing", {
+spec:RegisterWindow("move1", {
     evaluator = function()
-        return combat > 0 and lastSwing(1) < combat
+        return talent.seal_of_command.enabled and combat > 0 and lastSwing(1) < combat
     end,
     duration = "combat",
     close_on_false = true,
+    steps = { "judgement", "seal_of_command" },
 })
 ```
 

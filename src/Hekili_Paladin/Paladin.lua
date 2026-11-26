@@ -1319,20 +1319,29 @@ spec:RegisterAbilities({
     retribution_aura = selfBuff("retribution_aura", RETRIBUTION_AURA),
 })
 
--- Retribution's opener (re-pin rulings R15/R16; wowsims's "Move to melee" group): the sequences move1 (Judgement, then
--- Seal of Command) and move2 (Judgement, then Seal of Righteousness), each run once a fight at the pull, are the pack's
--- APL sequences (windows design v6 10.3, Phase 3; they were Lua windows here until L1374). The span they run in is this
--- window (L898): in combat, before the fight's first main-hand swing, which lands on arrival in melee, where wowsims's
--- sequence completes; the priority reads it as `window.before_first_swing.up` in each sequence's condition and in its
--- close line. A Lua window, as Hunter weave and Rogue riposte (ruling 32: it follows an observed game event): the
--- swing is PLAYER_SWING's (lastSwing, plain in combat), where the engine's own swing row (swings.mh_actual) waits for
--- the landed wound's pairing, idle on live (target rows secret). No aura shows this span.
-spec:RegisterWindow("before_first_swing", {
+-- Retribution's opener (re-pin rulings R15/R16; wowsims's default.apl.json "Move to melee" group at e2842f0a78): the
+-- sequences move1 (Judgement, then Seal of Command) and move2 (Judgement, then Seal of Righteousness), each run once a
+-- fight, at the pull, as stepped windows over their casts (the pack's `# Window:` lines; move3 folds to never). Each
+-- evaluator is its sequence's condition (the header's), in combat, before the fight's first main-hand swing: the
+-- swing lands on arrival in melee, where wowsims's sequence completes, so the window closes there (`close_on_false`)
+-- or at its last step. No aura shows this span. (Each evaluator runs in the belief's `now` context: written in each.)
+spec:RegisterWindow("move1", {
     evaluator = function()
-        return combat > 0 and lastSwing(1) < combat
+        return talent.seal_of_command.enabled and combat > 0 and lastSwing(1) < combat
     end,
     duration = "combat",
     close_on_false = true,
+    steps = { "judgement", "seal_of_command" },
+})
+spec:RegisterWindow("move2", {
+    evaluator = function()
+        return (not talent.twist_of_light.enabled or not talent.seal_of_command.enabled)
+            and combat > 0
+            and lastSwing(1) < combat
+    end,
+    duration = "combat",
+    close_on_false = true,
+    steps = { "judgement", "seal_of_righteousness" },
 })
 
 -- Pack from the talents (Engine/Schema/Selectors.lua; after the Hekili classic branch's pack selectors), as wowsims's
@@ -1360,8 +1369,8 @@ spec:RegisterSetting("stoneform_health", 50, spec:HealthOption("stoneform"), "pr
 -- (tests/Forever/paladin_spec.lua checks they match).
 spec:RegisterPack(
     "Retribution (wowsims.com)",
-    20261125000,
-    [[Hekili:TRvAZTTnt4Fl(lQuTouh5OPEcZmPtM3PPtQNmv5ZKcIese1KeQeGwXZOr)2FxWlbcccQd7Cu7VKyJLypEWUlWURDN4(z3zbio296PJN(QjtM(YXJh7oJF3AS7S1i)BqRGFibfd)7FJ5PKfzCcnz3CRn0nmsmZ2Ngpu8P3frrbc2TiJeX)qI7cTCMTg77o7tV7JV79F46Rs3Zs3zHKGaCX(WmFtY7QDZ5H4DZlxB0sAk(wC6U5b4LOSi(U5V7tFC3Cy5DZBYLmYiHgWgTgfHcijJK0GrO1rSrLSWg(fBG5rdVeewkkHfbgta8ZuHWjSDZrbb0KFc(HBW3XS3n)9io6knkL1F9HpdmjKZxZUA0OveEy2cHDms5thc8e0D0IXlhpg)IL(V(52a0MsxsIa8h5l0sM96umS5fiUJpkkYRyzVicJFP4GYrSWTGY6HymYQeCGhklfT7pBT)FXzKEo4Jy897(FYcwHJXj8Aw4eqULKG9yHeCuWLKLoHyuep0(Me6MKbL)YAF(BCyyoNKSIz3ylEfFsndbnjcDNhOeHOKa2HXr5DuYWbwxuWXMIRGlBVyr2YLkuYwpuwlkydJttWxMXWE0Ll9w5h4m5WujPTRXefRaFM3AQyLtL)75Ggr4hrbUUHKeq3uCwgtVfNZ9IfTZ)DWShCrJfaxz8GlSkxBbw4s6TKKcocmyXvQaLEbnvrqtvf00JxqA9qf8YJt9IXrySqO1h8H0O78yqq9n4QJDnuijEqm9kCdrv7O3(OXkgrseEAEPyXpYEJt9kqcfCWZgBpzG6h9why1HdS40vRIW5aGG9dSS6)Wy4wR(bYHWx1THBYUH9POdBBRcdSUqrh2QrfKHqbWr44ywBiKtIXaG8ycncrXX4uag82KI4HxUK6NXkDOQuNMFITi1RZ4TT8KA5Tn9rLFLKSYrVZlESY0Qd4RYu4tPrGAitjfJcUZWE0ULsvYsdXa4UybJE24HdFuDeYGlRe(5WBpIHZK8ucOibKW3a51fKIiRc524e0IiCWGsQk7RMCXT5QubSO2SROLkylMMXsWmwJ3cO)lGBGaMKtdmll9h8d6(G)TJnB5sPbmJawwDzKBT6Y61UE7GKYveUGxyuj22PouikSFiTneY4qTdV1zYWNICU)ICAaXhLxK5qPTg3VqHngSO4lQsEGbQNJFzFgvpADtV3QnN73688NCBVhCB7O2sGi2VasYVk)XoGG)cn1NWIFKbg6VumVasZb(DEX)HMYSqgkVrOInf3TFaPSG6ASJrF5NNUVXkI)VDJxCKAXu(c5IpxcQuKnc7oAcJtLAXdXE(PzmuaoDpl1rTbBfNh1vodm7FZWj(y5EfetdYdt5KKSIxB33lX04puUK267VYuH2kraBBLfU2X8Qt9DvDag5UnQWXunWXzEZ0qDHNFvbSt7He7HTQuwnZD1QARj2VekblbjAILxefEo44ZR2ln92PExY0k23qPyjPlDAEdKukHVhna3z3ItzWwvAJU46dMOB7n8GHfUoVL(LNyU)U7Sc)kVIw4NhH6oZpLWXPeK7S77qB3zmoEnRwrKCxfR0qYk(TgCCR69T7SAIUCaresOIIIfilkJE1UZYDbeANGPZeH7WMlJ3L5FrQHAbBcJN2Ws7lFX9FcJV9hdnsX8qEyaFvvwiDU)v7O(BKT9ZlG)eJ4nhYxyrLdHYKb1ymgYwv)trq3Oy05wxjk5bTCCs6OhrtxZOrOEpxr9uDQRuxPHWCCAB7P3ie7locXUF2mhVKBnxhHWFzFzAKua5rYil((RGOV5Xi0Kx1NMm9O0KtCYqcn5xv0ePaAtrDAiPjZMAnAfx1kzM7VSfuLxFG(g7ZxAk9Zr1d7tRsXdSurt1kAUyrnvlEyLlQRErbe)Bhiexp5Pgx2CEZC6hp0AY4UdoQ0e9tC6bDKt)GbK7ZP3eRA88KRN01vZsQyZ3bEwb8N1ZqATPVjDX8hm3aXzCxVj6ul34HDQwhXyToX5ALdkQVe7qTDdZZ6R4aTE4MO1trvhquv3HqnsUQ(S7JWhRNbdDUJ76B08U6RlbT8RV3M41tU1NIBTshqA4CRwwx39J5)4GLXYTKBuBoSPwd6tWMoyRUvxciR7ILpXPS1F(7P5cwT0yjbR8qMtF0BhAq30IUQv)h(SP(QzeAfR3EcFM6DMzhC9J4RqB7IObDx3W)AG8MgryPuLJ50iQVZ7E6ECx2ou8d64u0aWQoO22GQMr56wEqIY4Hu4C4pW3qIi7MB9)k)Z9pNS7))p]]
+    20261123000,
+    [[Hekili:LR1wVTTnu4Fl5fp5Tu5lPTRlOkazOOyzOlOyUplzAjAlUijAisfhdy4F77qDZusu0Y2TjUTV0AZd55(5qE(CShz)f7jEio2((Xdh)2rJgF1WHdTNWxVeBpzjY9b0c4drOq4F)xmpMmlHtOrBNASIUIrczMU0W(ITUoGI8eSBwcjGFxK9mLCMTe7Ap5Z3(PB)WD3FD8owApXN45HZohM5QtExVDk3hVDA(AdMtJXpIJ3o1dphLeW3o92p)PTtHL3oTkxsideAaBWsuaYJenqsdgGwgWgKZct4lMaZd6FjiSyuelamgp4ZuHWjSTtrEE0OFb(Wd41mZTt)aIJUwHsz8p39fGj(C(s21dgSGW9tMjSJb12AFGNGUJMnC(WH4xp39DxzcU2y6Csa4)rUcTKzUmgdhEgIB5IccCYw2jGW4xkcuwIfEeuwheJrweH9CqjXOT)DJZ)BwduZbxeJV70)xI3cCioIxYclpYJKiSdZNGd8UKm3YhJc4(Mperxf1l)llD5V3IH5Cs0cMzLJ4KTLsgcAsaATdOe(Oipw34O8jYzypJlY4yvXLXLnxmlz(8Ausw2xwlYydJtJWxMWWo05ZDw46znQBQK0XvyIIvGT5SKkw5y5)ooOqeQJNH0hXoCQtioaJfsQ0n5tdw7WGsGhWfojfuiroqfWcCfxvzArtdXierIeXfNyS4JS3BvUcu(H9E1qZr9QVPBSGv73ZGtxSiaBkuAb77zSIe5rxLUWiiGTr67JfbWnAmhDwZMlQX5ExuN1YgSWmjCCiRPbZjHyq9pF1DFuyioguANvXiU)LZPUjS8GvHyQUftrtaRHBAeLAejhFghZK4rQTEAzMfQCzQFrnJlLga6GmLymYBTMZO8i5QKHcIEqpCbJE1W(9pJD4mOLKihcUHje8GPfhOaHbWxb9JeKcil85M4i0SaSxVCQ1oxj5SE21PcArP5uqlwWwmnHfHzSkD8vVdqXbMKsdCxgQdt9ApmDdei0z5sLy69aggTzKBmAZ6vUEZu68vejmxOvj20QoKjkSRpTPlKXHxiEJ1O()8MNxXHCqXC9j(B0EEH)wBQDTmN6K7PH6PKfTpJApAD1CTIdNMLzD1pHjzT86CGi2nZasVu77l1h)en2LWcpRvD1nZhl0z9LaTEHvxBEKjJA3TvWMS7K6qXl8YuZq0t)64DJ9j()MJfAjnaC6cPIpvc1PiBeMTmIOvHAbZN74gNWqE44DSuf1kSvemkNuXsZigvIMr4N47QUBwpxpPQrxKMd4uvt0F9EtDP2M7PnLPDz2n7F8Hy)Jpv7V1l8AQrkpsx9ffTjQ2VOXlZhz(g456riXGYobu4XidpT3PRyI4Ytjtl7Csom52Yv7rlvyFoAa2tEehZGJwdQorlBMarVkPcWc3NcByEeZ(pTNiLDkiMJuL9KsL0EIBmm6Cmbzp5KQC1K6AZb9VMIPtQhun6oBQ2XSNKgDfMni)R(k5yo8s694yEDxCmhFzBt3tLdxXjb2CrjTQCPcgvUhjD9eREoYYh91pzwuoQX6mOk4okBv7h2pvyNQkDVquYiJEys6GXuTnqvpKQbjutpmTTjCRQY11j2DGPE4sUbqScH)Mwl00MHPG0U63snU(dQZ6r7K9ZZuTlnOkVTJ(bLnJonGY27Z6B(UEDpSx)l77Wt7fUJFVJUJsyELDhDhG3xal7DTNZvWE1y7(1cC3NBBExjCv7Q6LX)rlDhLKBfF1PLYFsx604qFRb045oIbHJrdBjE04fvsLDVCqhFayhFKGhN6uQ)AHUA7Aan(ze14VDWg)dxfq3gGyu7tWS38H9G96PIO8leKY7ft5VzGk)JFky7dPD)O6pEx6IYZxdt7dKLXKj1eBFO4VxnXYHMfMx7JICKqyV)EyJtfC9bpKeCTlEpECT7AY84S5Zl)BEs3e6ADTI1BcFUUPW1NmQg)8mTTnIA0DviRxXZRd)9CPkxFOquN54WSZVlBh1YdAjkQXXw)xbPPtvXVtIDEGeLW9PqC4VWpqciBNA8X8)s)sjB))p]]
 )
 spec:RegisterPack(
     "Protection (wowsims.com)",

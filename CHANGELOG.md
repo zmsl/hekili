@@ -6,7 +6,6 @@
 
 ### Changed
 - Arms (wowsims.com) with Stance Dance on: the Battle Stance, then Overpower (or Rend) pairs are now strict sequences in the priority itself; while one runs, the display shows only its next step.
-- Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
 
