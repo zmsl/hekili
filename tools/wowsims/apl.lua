@@ -2047,6 +2047,27 @@ local function knownTerms(c, n, out)
     return out
 end
 
+-- L4: the keys of the abilities condition node `n` reads with `spellIsReady` (variables followed), each once,
+-- appended to `out` (`seen`: those already in it); the caller sorts them.
+local function readyKeys(c, n, out, seen)
+    while type(n) == "table" and n.variableRef and c.vars[n.variableRef.name] do
+        n = c.vars[n.variableRef.name]
+    end
+    if type(n) ~= "table" then
+        return out
+    end
+    local x = n.spellIsReady and spellLookup(c, n.spellIsReady.spellId)
+    if x and not seen[x] then
+        out[#out + 1], seen[x] = x, true
+    end
+    for k, v in pairs(n) do
+        if k ~= "spellIsReady" then
+            readyKeys(c, v, out, seen)
+        end
+    end
+    return out
+end
+
 local function sequence(c, members, cond, node)
     local out, at = {}, cond -- at: the condition that the sequence is at the next member (nil: always)
     local before = {} -- the keys of the members already cast
@@ -2710,6 +2731,33 @@ local function motion(c, a)
             end
         end
         return "waitUntil"
+    elseif a.strictSequence then -- L4: a strictSequence of one waitUntil holds the rotation until its condition
+        local ok, cond = pcall(condition, c, a.condition or {})
+        local okW, wait = pcall(condition, c, a.strictSequence.actions[1].waitUntil.condition)
+        for _, r in ipairs({ { ok, cond }, { okW, wait } }) do
+            if not r[1] and type(r[2]) ~= "table" then
+                error(r[2], 0)
+            elseif not r[1] then
+                return "strictSequence of waitUntil (" .. tostring(r[2].unsupported) .. ")"
+            end
+        end
+        if cond == false or not wait then -- never holds, or its wait is already over
+            return "strictSequence of waitUntil (holds nothing)"
+        end
+        local parts = {}
+        if cond then
+            parts[1] = "!" .. ((cond:match("^[%w_.]+$") or grouped(cond)) and cond or ("(" .. cond .. ")"))
+        end
+        -- inert while every ability the condition tests ready is disabled (toggle off, ignored): it waits for that cast
+        local ready = readyKeys(c, a.condition, {}, {})
+        table.sort(ready)
+        for _, x in ipairs(ready) do
+            local k = knownTest(c, x) -- rule 6: another ability's read, false (the `|` identity) while unlearned
+            parts[#parts + 1] = k and ("(" .. k .. "&action." .. x .. ".disabled)") or ("action." .. x .. ".disabled")
+        end
+        parts[#parts + 1] = wait
+        c.held[#c.held + 1] = { list = c.listName, n = c.entryNo, gate = table.concat(parts, "|"), hold = true }
+        return "strictSequence of waitUntil (held: carried onto the later lines)"
     end
     local okD, yd = pcall(value, c, a.move.rangeFromTarget or {})
     local ok, cond = pcall(condition, c, a.condition or {})
@@ -2845,7 +2893,7 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
             local key = h.list .. "\0" .. h.gate .. "\0" .. (h.window and "" or tostring(h.n))
             local m = merged[key]
             if not m then
-                m = { list = h.list, n = h.n, gate = h.gate, conds = {}, windows = {}, movers = {} }
+                m = { list = h.list, n = h.n, gate = h.gate, conds = {}, windows = {}, movers = {}, hold = h.hold }
                 merged[key], order[#order + 1] = m, m
             end
             m.n = math.min(m.n, h.n)
@@ -2881,6 +2929,12 @@ local function rewrite(c, lists, byName, origin, pre, omitted)
             -- the call's own condition); every held gate at the pin ends a list called from the main one. Upgrade
             -- when a pin nests the holding group deeper.
             for _, k in ipairs(calls[m.list] or {}) do
+                if m.hold and k[4] then -- L4: a hold under its call's condition is not carried that way
+                    error(
+                        ("rule 19: the hold in %s is called under a condition (%s #%d)"):format(m.list, k[1], k[3]),
+                        0
+                    )
+                end
                 later(k[1], k[3], targets)
             end
         end
@@ -3242,7 +3296,9 @@ function M.translate(rotation, c)
                 local ok, body, why = true, nil, "noted"
                 c.cycleMods = cycleAt[i] and ",cycle_targets=1" or nil -- rule 20 (rules 17 and 21 set it in `entry`)
                 local s = swapAt[i]
-                if a.move or a.waitUntil or (a.resetSequence and not c.sequences) then -- rules 19, 14b: no line, but recorded
+                local seq = a.strictSequence and a.strictSequence.actions or {}
+                local hold = #seq == 1 and seq[1].waitUntil ~= nil -- L4: a hold, carried as rule 19's held gate
+                if a.move or a.waitUntil or hold or (a.resetSequence and not c.sequences) then -- rules 19, 14b: no line, but recorded
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, motion(c, a))
                 elseif type(s) == "table" then -- rule 20: absorbed into its cast's line
                     c.deviated[#c.deviated + 1] = ("# Cycle: %s #%d changeTarget -> #%d %s: cycle_targets=1 (shown with Recommend Target Swaps on)"):format(
