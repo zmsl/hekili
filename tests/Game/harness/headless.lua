@@ -34,8 +34,9 @@ do
         if which then
             M.fastClock = clock(which == "cpu" and (osx and 12 or 2) or (osx and 6 or 1), 1000)
         end
-        if os.getenv("LJSPEED_LOOPCPU") then
-            M.cpuClock = clock(osx and 12 or 2, 1)
+        local loopcpu = os.getenv("LJSPEED_LOOPCPU")
+        if loopcpu then -- "mono": a wall clock (no syscall on macOS: an unbiased SIGPROF profile), else process CPU time
+            M.cpuClock = clock(loopcpu == "mono" and (osx and 6 or 1) or (osx and 12 or 2), 1)
         end
     end
 end
