@@ -2515,7 +2515,6 @@ end)
 --- within I.LIFT_WINDOW: the rung already showed the pool with it (L1504). Never a lift an earlier swing owes (L1525
 --- ruling (a)). Allocates nothing.
 function I.ResourceShift(r, delta, t, event, late)
-    local max = R.max[r]
     local de, dl, dh = delta, delta, delta
     local j = (late == 1 or late == 2) and delta > 0 and snap(late, t) or 0
     if j > 0 and I.clock - R.liftT[r] <= I.LIFT_WINDOW then
@@ -2533,15 +2532,13 @@ function I.ResourceShift(r, delta, t, event, late)
     if shown then
         dl = 0
     end
-    R.est0[r] = clamp(R.est0[r] + de, max)
     local lo = R.lo0[r]
-    R.lo0[r] = clamp(lo + dl, max)
+    apply(r, "shift", de, dl, dh)
     if delta < 0 and R.over[r] > 0 then -- the part the measured floor could not lose (at 0) comes off the model's
         local o = R.over[r] + delta - (R.lo0[r] - lo)
         R.over[r] = o > 0 and o or 0
     end
     norm(r)
-    R.hi0[r] = clamp(R.hi0[r] + dh, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta ~= 0 then
         moved(r, t)
@@ -2607,38 +2604,47 @@ function I.Refund(r, d, t, held, dL, dH, fE, fL)
         top = top + (moved > 0 and moved or 0)
     end
     I.ResourceShift(r, d, t, Obs.Avoided)
-    if dL then
-        R.lo0[r], R.hi0[r] = clamp(lo + dL, R.max[r]), clamp(hi + dH, R.max[r])
+    if dL then -- a `now`'s give-back: lo and hi take dL and dH from where they were
+        apply(r, "refund.give", nil, lo + dL, hi + dH)
         norm(r)
     end
+    -- The nine clamps (CLAMP-r1), each a ruling. Keeps: an answer heard since the cast already holds the refund.
+    -- step 1 KEEP LO: a usable answer since the cast raised lo, or `held` (a late refund, L1096): lo stays
     if held or R.sinceYes[r] then
-        R.lo0[r] = lo
+        apply(r, "refund", nil, lo)
     end
+    -- step 2 KEEP EST: one raised est, or `held`: est stays
     if held or R.sinceSnap[r] then
-        R.est0[r] = e
+        apply(r, "refund", e)
     end
+    -- Floors: the give-back's own (L1237, L1295 I1: before the tops, so an answer only bounds it from below).
+    -- step 3 FLOOR LO: lo at least fL
     if fL and R.lo0[r] < fL then
-        R.lo0[r] = clamp(fL, R.max[r])
+        apply(r, "refund.floor", nil, fL)
         norm(r)
     end
+    -- step 4 FLOOR EST: est at least fE
     if fE and R.est0[r] < fE then
-        R.est0[r] = clamp(fE, R.max[r])
+        apply(r, "refund.floor", fE)
     end
+    -- Tops: the lowest top a short answer set since the cast, plus what the slot gained since (it saw the refunded pool).
+    -- step 5 TOP HI: hi at most the top
     if R.hi0[r] > top then
-        R.hi0[r] = top
+        apply(r, "refund", nil, nil, top)
     end
+    -- step 6 TOP EST: est at most the top
     if R.est0[r] > top then
-        R.est0[r] = top
+        apply(r, "refund", top)
     end
+    -- step 7 TOP LO: lo at most the top
     if R.lo0[r] > top then
-        R.lo0[r] = top
+        apply(r, "refund", nil, top)
     end
-    if R.est0[r] < R.lo0[r] then
-        R.est0[r] = R.lo0[r]
-    end
-    if R.hi0[r] < R.est0[r] then
-        R.hi0[r] = R.est0[r]
-    end
+    -- The order (D-R3): a floor or a keep may have left lo over est, or est over hi.
+    -- step 8 EST OVER LO: est up to lo
+    apply(r, "refund.estUp")
+    -- step 9 HI OVER EST: hi up to est
+    apply(r, "refund.hiUp")
     if dL then -- a `now`'s give-back explains a flip (R.gain) by what est took, not by the whole take
         local took = R.est0[r] - e
         R.gain[r] = R.gain[r] - d + (took > 0 and took or 0)
@@ -2673,14 +2679,7 @@ end
 --- serial and mana's five-second window stay. `pinT0`: the slot's pin time at the refund; a pin since reset pinDelta
 --- with the refund in it, so the measurement keeps nothing of it. Allocates nothing.
 function I.Unrefund(r, d, dE, dL, dH, t, pinT0)
-    local max = R.max[r]
-    R.est0[r], R.lo0[r], R.hi0[r] = clamp(R.est0[r] - dE, max), clamp(R.lo0[r] - dL, max), clamp(R.hi0[r] - dH, max)
-    if R.lo0[r] > R.est0[r] then
-        R.lo0[r] = R.est0[r]
-    end
-    if R.hi0[r] < R.est0[r] then
-        R.hi0[r] = R.est0[r]
-    end
+    apply(r, "unrefund", -dE, -dL, -dH) -- x + -d is x - d in doubles; then lo down to est, hi up to est
     norm(r)
     R.gain[r] = R.gain[r] - d
     moved(r, t)
@@ -2695,8 +2694,8 @@ end
 --- older top's decay grid (I.OnAdvance starts its own). Allocates nothing.
 function I.ResourceSet(r, v, width, t, event)
     I.ResourceShift(r, v - R.est0[r], t, event)
-    local max = R.max[r]
-    R.lo0[r], R.over[r], R.hi0[r], R.topNext[r] = clamp(v, max), 0, clamp(v + width, max), 0
+    apply(r, "set", nil, v, v + width)
+    R.over[r], R.topNext[r] = 0, 0
 end
 
 --- (L1832, cp-fact-4) Our own cast at t may have gained slot r something the belief does not book (a proc chance
@@ -2712,9 +2711,14 @@ end
 --- restore): the estimate takes the average as a cast's change (I.ResourceShift), the floor the roll's low end and the
 --- top its high end, each from where it was; a gain the band already shows adds nothing to lo. Allocates nothing.
 function I.ResourceGainSpread(r, d, spread, t, event)
-    local lo, hi, max = R.lo0[r], R.hi0[r], R.max[r]
+    local lo, hi = R.lo0[r], R.hi0[r]
     local shown = I.ResourceShift(r, d, t, event)
-    R.lo0[r], R.hi0[r] = shown and lo or clamp(lo + d - spread, max), clamp(hi + d + spread, max)
+    if shown then
+        apply(r, "spread.keep", nil, lo)
+        apply(r, "spread", nil, nil, hi + d + spread)
+    else
+        apply(r, "spread", nil, lo + d - spread, hi + d + spread)
+    end
     norm(r)
 end
 
