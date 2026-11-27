@@ -361,6 +361,166 @@ local function clamp(v, max)
     return v
 end
 
+-- The bounded writer (refactor plan Pr-8, lane 11, L1827): every write of slot r's est0, lo0 and hi0 is apply's, named
+-- by its kind. The kind's op says what its three numbers are (nil: that side stays):
+--   add   a change: each side x + d, clamped to [0, max] (D-R2's add-and-clamp writers)
+--   put   values, clamped to [0, max] (a measurement; a sum its site keeps in its own order: a delta rounds otherwise)
+--   set   values as given (a ruling's result its caller bounds: a rung, a band, a restore)
+--   fall  toward rest: a side above rest loses d, never below rest (the out-of-combat decay)
+-- and its order, where the site keeps lo <= est <= hi today (D-R3; elsewhere VS.Power's read keeps it): "floor" est up
+-- to lo, "top" hi up to est, "down" lo down to est and then hi up to est. The bookkeeping (pinDelta, moved, norm, the
+-- sample) stays at each site: it differs at every one today (D-R2); Pr-9 step 2 adds the time and the change ring.
+local OP = {
+    max = "add", -- setMax: a rise to est and hi
+    cap = "put", -- setMax: a fall re-clamps every side
+    build = "set",
+    decay = "fall",
+    ["decay.top"] = "set", -- topBeat: the top's quantum, at rest at least
+    regen = "put", -- the fold's continuous regen, summed in the fold's order
+    tick = "add", -- a periodic regen entry's tick
+    pin = "put",
+    rung = "set", -- the cost ladder (bound's USABLE)
+    swing = "add", -- a landed swing's step (swingStep)
+    verdict = "put", -- the oracle's retraction (back)
+    retract = "put",
+    debt = "set",
+    lift = "set", -- a yes that showed a pending swing (liftTo)
+    band = "set", -- a live band (bound's BAND)
+    assumed = "add", -- Obs.Swing c = 5
+    confirmed = "add", -- Obs.Swing c = 7
+    taken = "add", -- a hit on the player
+    rest = "set", -- combat end: lo at rest at most
+    window = "add", -- the five-second rule's window moved
+    shift = "add", -- our own cast's change (I.ResourceShift)
+    ["refund.give"] = "put", -- a `now`'s give-back, from before the refund
+    refund = "set", -- the refund's keeps and tops
+    ["refund.floor"] = "put",
+    ["refund.estUp"] = "set",
+    ["refund.hiUp"] = "set",
+    unrefund = "add",
+    set = "put", -- I.ResourceSet
+    spread = "put", -- I.ResourceGainSpread
+    ["spread.keep"] = "set",
+}
+local ORDER =
+    { retract = "top", debt = "floor", ["refund.estUp"] = "floor", ["refund.hiUp"] = "top", unrefund = "down" }
+
+local function apply(r, kind, e, l, h)
+    local op, max = OP[kind], R.max[r]
+    if op == "add" then
+        if e then
+            R.est0[r] = clamp(R.est0[r] + e, max)
+        end
+        if l then
+            R.lo0[r] = clamp(R.lo0[r] + l, max)
+        end
+        if h then
+            R.hi0[r] = clamp(R.hi0[r] + h, max)
+        end
+    elseif op == "put" then
+        if e then
+            R.est0[r] = clamp(e, max)
+        end
+        if l then
+            R.lo0[r] = clamp(l, max)
+        end
+        if h then
+            R.hi0[r] = clamp(h, max)
+        end
+    elseif op == "set" then
+        if e then
+            R.est0[r] = e
+        end
+        if l then
+            R.lo0[r] = l
+        end
+        if h then
+            R.hi0[r] = h
+        end
+    elseif op == "fall" then
+        local rest = R.rest[r]
+        if e and R.est0[r] > rest then
+            local v = R.est0[r] - e
+            R.est0[r] = v > rest and v or rest
+        end
+        if l and R.lo0[r] > rest then
+            local v = R.lo0[r] - l
+            R.lo0[r] = v > rest and v or rest
+        end
+        if h and R.hi0[r] > rest then
+            local v = R.hi0[r] - h
+            R.hi0[r] = v > rest and v or rest
+        end
+    else
+        error("apply: unknown kind " .. tostring(kind))
+    end
+    local o = ORDER[kind]
+    if o == "floor" then
+        if R.est0[r] < R.lo0[r] then
+            R.est0[r] = R.lo0[r]
+        end
+    elseif o then
+        if o == "down" and R.lo0[r] > R.est0[r] then
+            R.lo0[r] = R.est0[r]
+        end
+        if R.hi0[r] < R.est0[r] then
+            R.hi0[r] = R.est0[r]
+        end
+    end
+end
+I.ResourceApply = apply
+
+--- The bound helper (Pr-8): the three band rulings, stated once (owner L1672, L1675; lhv-live-band-is-fact). From the
+--- range (e, l, h) it returns the new e, l, h. Allocates nothing.
+---  BAND (side nil): a live band [bLo, bTop] sets the floor and the ceiling: where the range meets it, the band's ends
+---    clamped into the range (what the range already holds narrows it), else the band's ends (it wins both); est inside.
+---  USABLE (side true: a yes at c; false: short at c): a one-sided bound about now that wins over the band. A yes takes
+---    lo and est up to c, and a top under c opens to the band's top (c past it: c), or with no band to `max`; a short
+---    one takes hi and est under c, and a floor past it to the bound (0 at least) or, with a band, to the band's low end
+---    under that: only the side it contradicts yields (L1675), unless `edge`: the floor's own regen explains the answer (L1946).
+---  REFINE: an exact read, a death or our own spend refines it, at its caller: a band at most a point wide is a pin
+---    (applyBand), a plain read in the band's drain drops the band (Obs.Band: unband), our own change holds a band stamped
+---    before it (holdsBack), and a death ends the target's (Families/TargetHealth.lua, TargetGone).
+local function bound(e, l, h, side, c, band, bLo, bTop, edge, max)
+    if side == nil then
+        local f, g = bLo, bTop
+        if l <= bTop and h >= bLo then
+            f, g = l > bLo and l or bLo, h < bTop and h or bTop
+        end
+        return e < f and f or (e > g and g or e), f, g
+    elseif side then
+        if l < c then
+            l = c
+        end
+        if e < c then
+            e = c
+        end
+        if h < c then
+            h = max
+            if band then
+                h = bTop > c and bTop or c
+            end
+        end
+        return e, l, h
+    end
+    local top = c - I.EPS
+    if h > top then
+        h = top
+    end
+    if e > top then
+        e = top
+    end
+    if l > top then
+        local v = top < 0 and 0 or top -- the newest bound wins
+        if band and bLo < v and not edge then
+            v = bLo
+        end
+        l = v
+    end
+    return e, l, h
+end
+I.Bound = bound
+
 -- A change of slot r we know of at t (none of it continuous regen): no crossing pair spans it. Allocates nothing.
 local function moved(r, t)
     R.markT[r] = -1
@@ -475,7 +635,7 @@ local function setMax(r, m)
     end
     if up < 0 then
         local before = R.est0[r]
-        R.est0[r], R.lo0[r], R.hi0[r] = clamp(before, m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
+        apply(r, "cap", before, R.lo0[r], R.hi0[r])
         -- the capped-away amount stays out of the regen measurement
         R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
         norm(r)
@@ -487,8 +647,7 @@ local function setMax(r, m)
                 R.over[r] = m - R.lo0[r] -- the modelled floor was at rest: it rests at the new maximum
                 norm(r)
             end
-            R.est0[r] = clamp(R.est0[r] + up, m)
-            R.hi0[r] = clamp(R.hi0[r] + up, m)
+            apply(r, "max", up, nil, up)
             R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + up, true
         end
     end
@@ -542,7 +701,7 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.swingWidth[r], R.swingOffWidth[r] = d.swingWidth or 0, d.swingOffWidth or 0
-        R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
+        apply(r, "build", R.rest[r], 0, R.max[r])
         estDebt[r] = 0
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
         R.over[r] = R.assume[r] and R.rest[r] or 0 -- the floor at rest too (over)
@@ -878,15 +1037,7 @@ end
 -- above it then keeps the grid: topBeat).
 local function beat(r, t)
     local rest, step, before = R.rest[r], R.decay[r] * R.decayIv[r], R.est0[r]
-    if before > rest then
-        R.est0[r] = before - step > rest and before - step or rest
-    end
-    if R.lo0[r] > rest then
-        R.lo0[r] = R.lo0[r] - step > rest and R.lo0[r] - step or rest
-    end
-    if R.hi0[r] > rest then
-        R.hi0[r] = R.hi0[r] - step > rest and R.hi0[r] - step or rest
-    end
+    apply(r, "decay", step, step, step)
     if R.est0[r] ~= before then
         R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.CombatEnd)
@@ -899,7 +1050,7 @@ end
 -- under a stepped truth. Allocates nothing.
 local function topBeat(r, t)
     local rest, h = R.rest[r], R.hi0[r] - R.decay[r] * R.decayIv[r]
-    R.hi0[r] = h > rest and h or rest
+    apply(r, "decay.top", nil, nil, h > rest and h or rest)
     R.topNext[r] = h > rest and t + R.decayIv[r] or 0
 end
 
@@ -910,11 +1061,15 @@ I.OnAdvance(function(from, to)
     for r = 1, R.n do
         local learned = R.regH[r] ~= 0 or R.spH[r] ~= 0
         if R.swing[r] == 0 and (learned or R.shaped[r]) then
-            local max, a, b, k = R.max[r], spans(r, from, dt)
+            local a, b, k = spans(r, from, dt)
             if learned or k ~= 0 then -- a slot with no learned regen still gains an `mp5` entry's k (as VS.Power does)
-                R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
-                R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
-                R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
+                apply(
+                    r,
+                    "regen",
+                    R.est0[r] + R.regE[r] * a + R.spE[r] * b + k,
+                    R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k,
+                    R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k
+                )
                 R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
                 R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
                 norm(r)
@@ -927,10 +1082,7 @@ I.OnAdvance(function(from, to)
             local r = G.slot[g]
             stepped(r, tick)
             seen(r, tick, OTHER)
-            local max = R.max[r]
-            R.est0[r] = clamp(R.est0[r] + v, max)
-            R.lo0[r] = clamp(R.lo0[r] + v, max)
-            R.hi0[r] = clamp(R.hi0[r] + v, max)
+            apply(r, "tick", v, v, v)
             R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + v, true
             moved(r, to)
             norm(r)
@@ -961,16 +1113,8 @@ I.OnAdvance(function(from, to)
                 topBeat(r, R.topNext[r])
             end
         elseif start then
-            local rest, drop, before = R.rest[r], d * (to - start), R.est0[r]
-            if before > rest then
-                R.est0[r] = before - drop > rest and before - drop or rest
-            end
-            if R.lo0[r] > rest then
-                R.lo0[r] = R.lo0[r] - drop > rest and R.lo0[r] - drop or rest
-            end
-            if R.hi0[r] > rest then
-                R.hi0[r] = R.hi0[r] - drop > rest and R.hi0[r] - drop or rest
-            end
+            local drop, before = d * (to - start), R.est0[r]
+            apply(r, "decay", drop, drop, drop)
             if R.est0[r] ~= before then
                 R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
                 I.Sample(R.power[r], "modelled", R.est0[r], to, Obs.CombatEnd)
