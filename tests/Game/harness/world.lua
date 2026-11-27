@@ -112,6 +112,20 @@ function M.new(seed)
         table.insert(q, lo, item)
     end
 
+    -- a pack's next live mob, half a second after a kill; its own function (lj-speed P3): a closure made inside W.emit
+    -- aborts every LuaJIT trace through it (NYI UCLO)
+    local function retarget(me)
+        return function()
+            for _, e in ipairs(W.ents) do
+                if e.kind == "mob" and not e.dead then
+                    me.target = e
+                    W.emit({ kind = "target" })
+                    return
+                end
+            end
+        end
+    end
+
     --- Records a truth event at the clock (or at `ev.t`) and applies its effects: a wound takes health, our landed
     --- wound pays our rage (`ev.rage`), a cast spends it (`ev.cost`); a pull or stop keeps our weapon damage then.
     function W.emit(ev)
@@ -178,15 +192,7 @@ function M.new(seed)
                     end
                 end
                 if W.livesLeft and W.livesLeft > 0 and me and me.target == v then -- a pack: on to the next live mob
-                    W.at(W.t + 0.5, function()
-                        for _, e in ipairs(W.ents) do
-                            if e.kind == "mob" and not e.dead then
-                                me.target = e
-                                W.emit({ kind = "target" })
-                                return
-                            end
-                        end
-                    end)
+                    W.at(W.t + 0.5, retarget(me))
                 end
             end
         elseif ev.act == "HEAL" and ev.dst then

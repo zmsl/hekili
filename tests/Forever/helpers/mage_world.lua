@@ -335,13 +335,23 @@ end
 
 -- What a press reads of our auras: on the true entity `e` (a usability answer) or in the oracle's true belief (a
 -- resolve: hunter_world reads its haste so). Each returns up(key) and stacks(key).
+-- Cached per (e, X) (lj-speed 7a): a closure pair per usability answer kept the answer path from compiling and fed the
+-- GC; the closures read e live, so cached ones answer as fresh ones.
+local onEntityCache = setmetatable({}, { __mode = "k" })
 local function onEntity(e, X)
-    return function(key)
+    local c = onEntityCache[e]
+    if c and c.X == X then
+        return c.up, c.stacks
+    end
+    local function up(key)
         return e.auras[X.aura[key].id] ~= nil
-    end, function(key)
+    end
+    local function stacks(key)
         local a = e.auras[X.aura[key].id]
         return a and a.stacks or 0
     end
+    onEntityCache[e] = { X = X, up = up, stacks = stacks }
+    return up, stacks
 end
 local function inBelief(H, X)
     local VS, now = H.ns.VirtualState, H.ctl.now
