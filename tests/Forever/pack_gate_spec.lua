@@ -69,10 +69,12 @@ describe("pack_gate's arm floors", function()
     end)
 
     it("merge the arm's loOver too: a row its default floors would MISS reads ok", function()
-        local arm, check = ab.arm, ab.check
+        local arm, check, own = ab.arm, ab.check, pack_gate.ARM_FLOORS.bands["SM Ruin"]
         finally(function()
-            ab.arm, ab.check = arm, check
+            ab.arm, ab.check, pack_gate.ARM_FLOORS.bands["SM Ruin"] = arm, check, own
         end)
+        -- no arm names a loOver floor since band-edge (L1947): a stand-in row, as the old bands SM Ruin 279
+        pack_gate.ARM_FLOORS.bands["SM Ruin"] = { loOver = 279 }
         local missed
         ab.check = function(ok, _, line)
             if not ok then

@@ -1406,7 +1406,14 @@ M.ARM_FLOORS = {
         -- jitter rule L1791: a return needs its own fact (batch 4 bands run 76cc46e51, seeds 1-20: 0.08, + 0.01): five
         -- scorch > frostfire_bolt > scorch, the change at the mana band's crossing of 308.4, the return with no fact
         -- (seeds 2, 11, 12, 16, 20); the default arm reads 0 / 0.02 / 0 on the same rule (M.FLICKER 0.03)
-        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
+        -- then band-edge (L1947 round 2, the band.stamp bound lowers the floor rate; integ/1.0.0-w1 stage 4 836403e07,
+        -- seeds 1-20 0.10 + 0.01, bands and shipped the same): one new flip of L1813's flash, seed 15 i 742 t 151.40
+        -- scorch > frostfire_bolt > scorch, the five above unchanged
+        ["Frostfire"] = { flicker = 0.11, cause = { flicker = "L1813 + L1791 + L1947" } },
+        -- band-edge (L1947 round 2, stage 4 836403e07, seeds 1-20 0.02 + 0.01, bands and shipped the same): the
+        -- band.stamp bound keeps the spirit floor rate under the truth; one flip, seed 13 i 385 t 80.00 flame_shock >
+        -- stormstrike > flame_shock, no fact (lo under flame_shock's cost for one poll). Pr-5 (L1813) removes it
+        ["Enhancement"] = { flicker = 0.03, cause = { flicker = "L1947" } },
         -- T1 (L1794, traced on tag-blockers d578acd86): a regen pair of band crossings is stamped on the world's
         -- 0.1 s regen step (world.lua W.startRegen; the fake sees the pool only there), so each end reads up to one
         -- step late (the truth at the stamp sits that far into the cell: SM Ruin seed 2 104.010 3.87 over the low
@@ -1415,15 +1422,10 @@ M.ARM_FLOORS = {
         -- 0.1-0.5 mana, until a band edge. Inferred to be the harness's step, not measured: the mechanism is traced,
         -- but whether the client's bar moves per frame or in steps is not (probe owed, L1800). Seeds 1-20 as measured: SM Ruin seeds 2 and 3, Destruction
         -- 2 and 14, Frost 15 (69.107: residues 2.705 and 0.398), Elemental 20 (171.762: 2.595 and 0.160)
-        ["SM Ruin"] = { loOver = 279, cause = { loOver = "L1794" } },
-        ["Destruction"] = { loOver = 303, heldReady = 1, cause = { loOver = "L1794", heldReady = "untraced" } },
-        ["Frost"] = { loOver = 4, cause = { loOver = "L1794" } },
-        ["Elemental"] = { loOver = 1, cause = { loOver = "L1794" } },
-        -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
-        -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
-        -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
-        -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
-        ["Affliction"] = { loOver = 43, cause = { loOver = "L1794 + L1793" } },
+        -- then band-edge (L1947 round 2: a pair's floor rate bounded by its stamp lateness, so the floor no longer
+        -- climbs over the truth): SM Ruin, Destruction, Frost, Elemental and Affliction read loOver 0 (stage 4
+        -- 836403e07, seeds 1-20, bands and shipped the same): their loOver rows removed (were 279 / 303 / 4 / 1 / 43)
+        ["Destruction"] = { heldReady = 1, cause = { heldReady = "untraced" } },
         -- batch 5 one rule (L1814): rows the arm read inside the old M.FLICKER floors, named once the default table
         -- tightened to its seeds 1-20 reading (integ/batch5 9a8a95e23, + 0.01 on flicker / retracted). Each reading is
         -- unchanged against forever b72b09cd0's bands run (batch 4, 76cc46e51; Subtlety 184 there), the
@@ -1432,7 +1434,10 @@ M.ARM_FLOORS = {
         -- 0.04 / 107), Survival Melee held 274 (273; 295), Destruction held 1 (0; 1, merged into its loOver row)
         ["Fire"] = { retracted = 0.03, readyShort = 1, cause = { retracted = "untraced", readyShort = "untraced" } },
         ["Subtlety"] = { heldReady = 181, cause = { heldReady = "untraced" } },
-        ["Survival"] = { flicker = 0.03, heldReady = 84, cause = { flicker = "untraced", heldReady = "untraced" } },
+        -- then band-edge (L1947 (1) edgeFloor, stage 4 836403e07, seeds 1-20, bands and shipped the same; controller
+        -- ruling L1957): heldReady 84 -> 85: the rung top kept after a short answer removes seed 18 n 846's held tick
+        -- (strider_kick pressed a poll earlier), which re-times seeds 19-20 (+2, other fights from tick 1)
+        ["Survival"] = { flicker = 0.03, heldReady = 85, cause = { flicker = "untraced", heldReady = "L1947" } },
         ["Survival Melee"] = { heldReady = 274, cause = { heldReady = "untraced" } },
     },
     -- The gated shipped arm (L1814: bands, time to die and the Cooldown Manager on, as the addon ships). Measured on
@@ -1464,18 +1469,16 @@ M.ARM_FLOORS = {
         -- L1813, a real flash (Fable batch 4 I2, owner ruling owed): scorch > frostfire_bolt > scorch at the mana
         -- band's crossing of 308.4, counted under L1791. 0.08 / 0.07 / 0.10, the bands arm the same; default 0 /
         -- 0.02 / 0
-        ["Frostfire"] = { flicker = 0.09, cause = { flicker = "L1813 + L1791" } },
+        -- then band-edge (L1947 round 2, see the bands arm's): seeds 1-20 0.10 + 0.01, one new flip seed 15 t 151.40
+        ["Frostfire"] = { flicker = 0.11, cause = { flicker = "L1813 + L1791 + L1947" } },
+        -- band-edge (L1947 round 2, see the bands arm's): seeds 1-20 0.02 + 0.01, the one flip seed 13 t 80.00
+        ["Enhancement"] = { flicker = 0.03, cause = { flicker = "L1947" } },
         -- T1 (L1794, see the bands arm's): a regen pair of band crossings stamped on the world's 0.1 s regen step;
         -- inferred the harness's step (probe owed, L1800). Every value the bands arm's on the same set: SM Ruin 279 /
         -- 452 / 0, Destruction 303 / 0 / 0, Frost 4 / 49 / 0
-        ["SM Ruin"] = { loOver = 279, cause = { loOver = "L1794" } },
-        ["Destruction"] = { loOver = 303, heldReady = 1, cause = { loOver = "L1794", heldReady = "untraced" } },
-        ["Frost"] = { loOver = 4, cause = { loOver = "L1794" } },
-        -- T1 (L1794) re-timed by harness-frames L1793 (5ee7dce0c; fd666cd8a reads 0): seed 9's pre-pull band pair
-        -- 2740.218 -> 2741.718 reads a 1.5 s window (true 1.598 s), spirit 30.07 vs 27.5, spE 28.27 (spL 27.72 over the
-        -- truth); the floor climbs 0.07-0.375 over the truth in seed 9's 1.4 s out of the five-second rule after a mana
-        -- gain (2754.8) and holds it to the exact read at 2763.4: 43 polls (integ5-trace-B-report.md move 2)
-        ["Affliction"] = { loOver = 43, cause = { loOver = "L1794 + L1793" } },
+        -- then band-edge (L1947 round 2, see the bands arm's): SM Ruin, Destruction, Frost, Elemental and Affliction
+        -- read loOver 0 (stage 4 836403e07, seeds 1-20): their loOver fields removed
+        ["Destruction"] = { heldReady = 1, cause = { heldReady = "untraced" } },
         -- The bands arm's untraced held-while-ready rows (L1799: they read MISS in that arm since batch 3), the shipped
         -- arm equal or under: Combat 168 / 161 / 173 (bands 169 / 173 / 177; default 160 / 157 on 21-60), Marksmanship
         -- Turret 219 / 218 / 211 (bands the same). Elemental 336 / 345 / 314, loOver 1 / 0 / 0 (bands the same; default
@@ -1485,7 +1488,7 @@ M.ARM_FLOORS = {
         -- m1), the rest above the default 0.11 untraced (L1823)
         ["Combat"] = { heldReady = 168, cause = { heldReady = "untraced" } },
         ["Marksmanship Turret"] = { heldReady = 219, cause = { heldReady = "untraced" } },
-        ["Elemental"] = { heldReady = 336, loOver = 1, cause = { heldReady = "untraced", loOver = "untraced" } },
+        ["Elemental"] = { heldReady = 336, cause = { heldReady = "untraced" } },
         -- then batch 5 (controller ruling, stage 3; seeds 1-20 on 9a8a95e23): flicker 0.30 -> 0.31, heldReady 400 -> 391.
         -- The Rows.lua gate (df3072694, L1810) keeps a cast's own-stamp MISS on the cast, and the frames-merge step
         -- (integ5 tracer C, seed 16 t166.0, the L1783 stale class: 17 -> 18 flips, 0.304/min) now shows in this arm too:
@@ -1515,7 +1518,10 @@ M.ARM_FLOORS = {
         -- 0.04 / 107), Survival Melee held 274 (273; 295), Destruction held 1 (0; 1, merged into its loOver row)
         ["Fire"] = { retracted = 0.03, readyShort = 1, cause = { retracted = "untraced", readyShort = "untraced" } },
         ["Subtlety"] = { heldReady = 181, cause = { heldReady = "untraced" } },
-        ["Survival"] = { flicker = 0.03, heldReady = 84, cause = { flicker = "untraced", heldReady = "untraced" } },
+        -- then band-edge (L1947 (1) edgeFloor, stage 4 836403e07, seeds 1-20, bands and shipped the same; controller
+        -- ruling L1957): heldReady 84 -> 85: the rung top kept after a short answer removes seed 18 n 846's held tick
+        -- (strider_kick pressed a poll earlier), which re-times seeds 19-20 (+2, other fights from tick 1)
+        ["Survival"] = { flicker = 0.03, heldReady = 85, cause = { flicker = "untraced", heldReady = "L1947" } },
         ["Survival Melee"] = { heldReady = 274, cause = { heldReady = "untraced" } },
     },
 }
