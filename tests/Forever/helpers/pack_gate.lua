@@ -213,20 +213,26 @@ M.FLICKER = {
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): flicker 0.26 -> 0.08, readyShort 6 -> 4, heldReady 276 -> 254, loOver 754 -> 701; flicker 0.07,
     -- retracted 0.04 (floor kept)
+    -- lane rage-floor (L1992, owner Hull ruling; seeds 1-20 on 4bb3e2a61, the reading: loOver 676, flicker 0.10,
+    -- heldReady 264, readyShort 4): loOver 701 -> 676 (the swing scale per booked step inside the hull); flicker 0.08 ->
+    -- 0.11 (reading + 0.01): one added press-only flip, seed 9 t 88.2 sunder_armor -> battle_stance -> sunder_armor, the
+    -- APL's truth-driven re-rank at a world swing that the oracle makes on the same ticks, in a fight the learned scale
+    -- re-times; heldReady 254 -> 264: the belief credits a landed swing at the learned floor factor (~0.75-0.9) while the
+    -- forecast prices it at the declared step, so a press shown ready at the swing waits for a pin (factor-1 run 244)
     ["Fury L60"] = {
-        loOver = 701,
-        flicker = 0.08,
+        loOver = 676,
+        flicker = 0.11,
         flickerK = 0.6,
         retracted = 0.04,
         readyShort = 4,
-        heldReady = 254,
+        heldReady = 264,
         cause = {
             loOver = "untraced",
-            flicker = "L1814",
+            flicker = "L1992",
             flickerK = "forever-repin@9b802404f",
             retracted = "L1456",
             readyShort = "L1814",
-            heldReady = "L1814",
+            heldReady = "L1992",
         },
     }, -- flicker 0.11 / 0.26 / 0.29, retracted 0.04 / 0.04 / 0 (swing width)
     -- Fury L24's flicker up with a named cause (2026-11-01): the loop client's answer for Overpower was always no (a
@@ -343,14 +349,26 @@ M.FLICKER = {
     -- seeds 21-40 / 41-60 0.15 / 0.14 (unchanged): flicker 0.16 -> 0.19
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): heldReady 863 -> 679, loOver 451 -> 344; flicker 0.18 (its row 0.19, tracer A)
+    -- lane rage-floor (L1992, owner Hull ruling; seeds 1-20 on 4bb3e2a61, the reading: loOver 226, readyShort 3,
+    -- heldReady 901, flicker 0.18): loOver 344 -> 226 (the swing scale per booked step inside the hull, the first window
+    -- keeping the boot spread: L2011 (4)); readyShort 0 -> 3: one episode, seed 18 t 10.2-10.6, sunder_armor shown ready
+    -- by the forecast's pending off-hand swing priced at the declared step (the forecast-swing class of Fury L60's 4),
+    -- re-timed into seed 18; heldReady 679 -> 901: the belief credits a landed swing at the learned floor factor while
+    -- the forecast prices it at the declared step, so a press shown ready at the swing waits for a pin (factor-1 run 709)
     ["Fury L24"] = {
-        loOver = 344,
+        loOver = 226,
         flicker = 0.19,
         flickerK = 0.6,
         retracted = 0,
-        readyShort = 0,
-        heldReady = 679,
-        cause = { loOver = "untraced", flicker = "L1832", flickerK = "forever-repin@dd94c1854", heldReady = "L1814" },
+        readyShort = 3,
+        heldReady = 901,
+        cause = {
+            loOver = "untraced",
+            flicker = "L1832",
+            flickerK = "forever-repin@dd94c1854",
+            readyShort = "L1992",
+            heldReady = "L1992",
+        },
     }, -- flicker 0.23 / 0.30 / 0.24, retracted 0 / 0 / 0 (swing width)
     -- none -> floored (gap CI, 2026-10-31; seeds 1-20 / 21-40 / 41-60, measured after the Warrior world resolved every
     -- rank of a kit addition and Revenge's window reached the client (review C1: the world tests the swing's target by
@@ -602,13 +620,18 @@ M.FLICKER = {
     -- 7805f5676, the reading: flicker 0.26, unchanged since 952767330): flicker 0.30 -> 0.27 (the one rule L1814, reading
     -- + 0.01). Cause: the pack line (L1984) lowered the gated reading 0.30 -> 0.26; the seeds 41-60 spread 0.37 is the
     -- swing-window class (L1989, L1990), not floored here. The cause field stays untraced (L1504 rule, L1988)
+    -- lane rage-floor (L1992, owner Hull ruling; seeds 1-20 on 4bb3e2a61, the reading: loOver 12, heldReady 488, flicker
+    -- 0.26): loOver 1023 -> 12: the swing scale measures per booked landed step (its +15% reference bias gone) and the
+    -- hull caps the floor factor at the declared step; the 12 are seed 8's truth falling under a flat floor at a spend
+    -- (the pre-existing spend class). heldReady 443 -> 488: base's floor sat over the truth at cost crossings, so a press
+    -- went at the crossing; the honest floor waits out the usability lag (not the factor: factor-1 run 484; inferred)
     ["Guardian"] = {
-        loOver = 1023,
+        loOver = 12,
         flicker = 0.27,
         retracted = 0,
         readyShort = 0,
-        heldReady = 443,
-        cause = { loOver = "untraced", flicker = "untraced", heldReady = "L1814" },
+        heldReady = 488,
+        cause = { loOver = "L1992", flicker = "untraced", heldReady = "L1992" },
     }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
