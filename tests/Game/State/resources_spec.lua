@@ -1003,6 +1003,74 @@ describe("resources", function()
             assert.are.same({ 1, 0, 0 }, { I.res.scale[1], I.res.swAccT[1], I.res.swAccG[1] })
         end)
 
+        -- (L1992, owner L1947 + L1969) a world whose landed swing pays exactly the model's 9: a landed swing's floor step
+        -- (value x (scale - spread)) never above 9 and its top step (value x (scale + spread)) never under it, whatever
+        -- else the hand did. Exact reads, so every window's gain is the truth: any lift is the scale's reference.
+        describe("on a fixed-step world (L1992)", function()
+            -- 40 swings 2.6 s apart from t 12.6; `avoided(k)` swings land nothing (settled as a dodge), `held(k)` ones are
+            -- a swing an on-next-swing strike took (no white step) inside an interval held out by a known gain of 5. An
+            -- exact read 0.1 s after each swing (the flip a swing's rage causes, before its credit's row, ~0.35 s on)
+            -- and 1.3 s after it; each landed credit folds after the first read. Returns the worst floor and top factors.
+            local function chain(avoided, held)
+                local R, truth, worstLo, worstHi = I.res, 0, -math.huge, math.huge
+                local function check()
+                    local s, sp = R.scale[1], R.spread[1]
+                    worstLo = math.max(worstLo, s - sp)
+                    worstHi = math.min(worstHi, s + sp)
+                end
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                I.Fold(10, false)
+                for k = 1, 40 do
+                    local t = 10 + 2.6 * k
+                    obs(Obs.Swing, t, 1, 2.6, 4)
+                    I.Fold(t, false)
+                    local landed = not avoided(k) and not held(k)
+                    if landed then
+                        truth = truth + 9
+                    elseif held(k) then
+                        I.ResourceShift(1, 5, t, Obs.CastSuccess)
+                        truth = truth + 5
+                    end
+                    obs(Obs.Read, t + 0.1, 1, truth, I.ReadOf.Resource)
+                    I.Fold(t + 0.1, false)
+                    check()
+                    if landed then
+                        obs(Obs.Swing, t, 1, 0, 1)
+                        obs(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.WOUND)
+                    elseif avoided(k) then
+                        obs(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.DODGE)
+                    end
+                    I.Fold(t + 0.45, false)
+                    check()
+                    obs(Obs.Read, t + 1.3, 1, truth, I.ReadOf.Resource)
+                    I.Fold(t + 1.3, false)
+                    check()
+                end
+                assert.is_true(I.res.scale[1] ~= 1, "no window closed") -- the chain measured
+                return worstLo, worstHi
+            end
+
+            it("keeps the floor and top steps around the true step with a quarter of the swings avoided", function()
+                local lo, hi = chain(function(k)
+                    return k % 4 == 0
+                end, function()
+                    return false
+                end)
+                assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
+                assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
+            end)
+
+            it("keeps them there when the swings an on-next-swing strike took are held out with a known gain", function()
+                local lo, hi = chain(function()
+                    return false
+                end, function(k)
+                    return k % 3 == 0
+                end)
+                assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
+                assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
+            end)
+        end)
+
         describe("a white crit (Swing c = 3 after the landed swing)", function()
             local function crits(crit)
                 local def = fs.def(fs.new(9))
