@@ -997,6 +997,33 @@ describe("the ticket pool", function()
             end)
         end)
 
+        -- gap AS, the tie holder's own wound (lane 9: rule tie_holder_wound): the swing holds the cast's dodge by the
+        -- tie; its wound past the cast's frame, in its core band, is refused by the LR (a crowd), so the holder's own
+        -- amount class names it: the swing landed, the dodge goes back to the cast
+        it("credits a tie holder its own wound the LR refused, and the dodge back to the cast (lane 9)", function()
+            rt.on(I)
+            ctl.now = 150
+            ctl.damage = { 25, 35, 10, 12 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 163.13
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            ctl.now = 163.54
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(T.PROV, T.state[sw])
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: the LR stays below its bar
+            end
+            ctl.now = 163.6
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, count(VS.Obs.Avoided)) -- the dodge was the cast's
+            assert.are.equal(
+                "cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1>tie_holder_wound>credit_swing>=swing1>give_back>=cast",
+                rt.chain("tie_holder_wound")
+            )
+        end)
+
         -- gap AS, the tie's wound (ledger L80, Rend): the cast's own-frame dodge went to the swing in flight by the
         -- MELEE tie; the swing's own wound 6 ms later falls in the cast's frame too, and the cast's open ticket took it
         it("gives the swing its own wound in the tied cast's frame, and the dodge back to the cast (L80)", function()

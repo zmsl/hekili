@@ -755,7 +755,7 @@ end)
 -- The rules no matrix case reaches, each pinned by an existing pairing spec's chain (Game.State.helpers.rule_trace):
 -- tickets_spec (replace_provisional, swing_wound_first, wound_remembered, credit_core_band, overdue, tied_wound,
 -- unmapped_excuse, give_back), pairing_replay_spec (wound_zero), now_spec (tie_crit_not_cast, latest_success_tie),
--- cleu_rows_spec (cast_wound_wide). tie_holder_wound: no spec reaches it (the identity gate only).
+-- cleu_rows_spec (cast_wound_wide), tie_holder_wound (tickets_spec, added by lane 9: no test reached it before).
 local UNREACHED = {
     "wound_zero",
     "replace_provisional",
@@ -892,6 +892,46 @@ describe("the claim table's deciding rules on each matrix case (refactor lane 9)
             assert.are.equal(RULE_PIN[m[1]], got)
         end)
     end
+
+    -- the table's order is precedence: pinned whole (the chains pin it only where rules meet in one row)
+    it("rules: the table's names in their order", function()
+        local W, names = fw.world({}), {}
+        for _, r in ipairs(W.I.Rows.RULES) do
+            names[#names + 1] = r[1]
+        end
+        assert.are.same({
+            "secret_wound_landed",
+            "secret_row",
+            "wound_zero",
+            "cast_narrow",
+            "replace_provisional",
+            "held_row_at_success",
+            "hold_early_avoid",
+            "cast_avoid_wide",
+            "secret_avoid_past_frame",
+            "swing_wound_first",
+            "swing_secret_first",
+            "swing_wins_tie",
+            "tie_crit_not_cast",
+            "credit_core_band",
+            "swing_owes_row",
+            "swing_score",
+            "swing_replaces_credit",
+            "tie_holder_wound",
+            "cast_wound_wide",
+            "tie_refused",
+            "overdue",
+            "tied_wound",
+            "unmapped_excuse",
+            "pay_cast",
+            "wound_remembered",
+            "foreign",
+            "credit_swing",
+            "latest_success_tie",
+            "give_back",
+            "reroute",
+        }, names)
+    end)
 
     -- the rules no pinned chain reaches (pinned by their own specs: tickets_spec, now_spec, row_feed_spec and others)
     it("rules: the table's rules no matrix case reaches", function()
