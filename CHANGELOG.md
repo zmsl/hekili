@@ -19,6 +19,7 @@
 - A potion, Healthstone or trinket whose cooldown the game hides from addons (or fails to report) is now timed from Hekili's own tracking of your uses, instead of being taken as the game gave it.
 - On-use trinkets from a shared trinket line are now suggested during the global cooldown, like other off-GCD lines, instead of trading places with another off-GCD cooldown (such as Combustion) for a moment.
 - The Desaturate option on the Multiple displays tab now shows its per-display Checked/Unchecked lines in its tooltip. The Targets tab's list of alternative pet abilities and the "priorities were updated/reverted" message now list their entries in a fixed order instead of a varying one.
+- Mana, focus and energy users: when you reach an ability's cost, its icon no longer wavers between ready and waiting for a moment as often.
 
 ### Known issues
 
