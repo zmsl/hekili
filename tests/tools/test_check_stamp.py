@@ -321,7 +321,7 @@ NOT_INPUTS = {
     "GATE_TAGS": "tools/accuracy/run.sh: make accuracy, not check",
     "MATRIX_CAPTURE": "tests/Forever/pairing_matrix_spec.lua: a re-pin's output file; the assertions never read it",
     "RULES_CAPTURE": "pairing_matrix_spec.lua and helpers/rule_trace.lua: a rule re-pin's output file; never asserted",
-    "FIELDS_V5":"tests/Forever/fields_spec.lua: V5's list for the lane page; the assertions never read it",
+    "FIELDS_V5": "tests/Forever/fields_spec.lua: V5's list for the lane page; the assertions never read it",
     "WOWSIMS_NEW": "tools/wowsims/drift.lua: a dev-only report, not check",
     "WOWSIMS_NEW_TREE": "tools/wowsims/drift.lua: a dev-only report, not check",
     "WOWSIMS_NEW_CLI": "tools/wowsims/drift.lua: a dev-only report, not check",

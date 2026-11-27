@@ -106,8 +106,9 @@ function T.Hold(i, rival, rowT, rule)
     claimRival[i], claimRivalAt[i], claimAt[i], claimRowT[i], claimRule[i] = rival, at[rival], at[i], rowT, rule
 end
 
---- Ends swing i's claim, the one release every overturning fact calls (the swing's own row, its close). Returns the
---- cast still waiting for the avoid (open, both anchors unchanged) and the row's time, else 0, 0. Allocates nothing.
+--- Ends swing i's claim, the one release every overturning fact calls (today the swing's own row; the window's close,
+--- the verdict and the CDM light join in the Pr-4 lane, ledger L1997 (1)). Returns the cast still waiting for the avoid
+--- (open, both anchors unchanged) and the row's time, else 0, 0. Allocates nothing.
 function T.Release(i)
     local q = claimRival[i]
     claimRival[i] = 0
@@ -291,12 +292,11 @@ local function move(i, s)
     state[i] = s
 end
 
---- Closes ticket i at t for `why` (a T.closed key) and releases its unit and its claim. Allocates nothing.
+--- Closes ticket i at t for `why` (a T.closed key) and releases its unit. Allocates nothing.
 function T.Close(i, t, why)
     if state[i] == 0 then
         return
     end
-    T.Release(i) -- the window's close (a cast waiting for the avoid keeps none: its swing never landed)
     move(i, 0)
     lr[i], avoid[i] = 0, ""
     paidAt[i] = 0

@@ -90,13 +90,6 @@ describe("the ticket pool", function()
             assert.are.same({ 0, 0 }, { T.Release(s) })
         end)
 
-        it("the holder's close (its window, a replacement, the pool's overflow) releases its claim", function()
-            local c, s = pair()
-            T.Hold(s, c, 10.03, 12)
-            T.Close(s, 11.6, "expired")
-            assert.are.equal(0, T.claimRival[s])
-        end)
-
         it("holds and releases without allocating", function()
             local c, s = pair()
             local bytes = alloc.bytes(function()

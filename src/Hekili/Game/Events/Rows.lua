@@ -1203,6 +1203,10 @@ for kk = 1, STEPS do
     FN[kk] = assert(RULES[kk][3], RULES[kk][1])
 end
 
+-- NOT re-entrant: the walk's state above is file-level, so a nested route would overwrite the outer row's. Today
+-- route runs only from U.OnRow (the UNIT_COMBAT handler) and release (SUCCEEDED, stopped, OnTick, REGEN_ENABLED), and
+-- no step fires an event synchronously (S.Stage queues until S.Flush, L.Emit queues its row). A new caller or hook
+-- must keep that. No guard flag: a step's Lua error would leave it set and refuse every later row.
 local function route(t, g, uid, act, flag, amount, school)
     if act ~= "WOUND" and not MISSES[act] then
         return 0

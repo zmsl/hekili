@@ -933,7 +933,7 @@ describe("the claim table's deciding rules on each matrix case (refactor lane 9)
         }, names)
     end)
 
-    -- the rules no pinned chain reaches (pinned by their own specs: tickets_spec, now_spec, row_feed_spec and others)
+    -- the rules no matrix case reaches (each pinned by another spec's chain: the next test)
     it("rules: the table's rules no matrix case reaches", function()
         local W = fw.world({})
         local seen, missing = {}, {}
@@ -948,5 +948,33 @@ describe("the claim table's deciding rules on each matrix case (refactor lane 9)
             end
         end
         assert.are.same(UNREACHED, missing)
+    end)
+
+    -- review minor 5: each of those is pinned by a chain another spec asserts ("<chain>", rt.chain(...)), so a deleted
+    -- chain assert fails here, not silently
+    it("rules: every rule no matrix case reaches is pinned by another spec's chain", function()
+        local pinned = {}
+        for _, path in ipairs({
+            "tests/Game/Events/tickets_spec.lua",
+            "tests/Game/Events/pairing_replay_spec.lua",
+            "tests/Game/Events/cleu_rows_spec.lua",
+            "tests/Game/State/now_spec.lua",
+        }) do
+            local f = assert(io.open(path))
+            local src = f:read("*a")
+            f:close()
+            for chain in src:gmatch('"([^"]*)"%s*,%s*rt%.chain%(') do
+                for name in chain:gmatch("[%a_]+") do
+                    pinned[name] = true
+                end
+            end
+        end
+        local unpinned = {}
+        for _, name in ipairs(UNREACHED) do
+            if not pinned[name] then
+                unpinned[#unpinned + 1] = name
+            end
+        end
+        assert.are.same({}, unpinned)
     end)
 end)

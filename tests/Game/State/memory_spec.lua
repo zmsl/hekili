@@ -3,8 +3,11 @@
 -- order (a reload into a loaded ns frees the old Kinds and nets about 0 for it): measured 149.2 KB on 2026-10-23
 -- (about Units 56, Tickets 71, Melee 14, Kinds 8). Ceiling 192 KB = measured + 25% rounded up to 8 KB (owner
 -- ruling 2026-10-23: more memory is fine). Refactor lane 9 (Pr-2) moved Rows.lua's claim arrays into Tickets (the same
--- memory, counted here now: 188.9 -> 207.6 KB at 0de708b0a): ceiling 216 KB.
+-- memory, counted here now): 188.9 KB at the base 0de708b0a, 207.6 KB with the lane. Ceiling 216 KB until the owner
+-- rules (216 or 224, ledger L1995): one constant.
 local load = require("Game.State.helpers.load")
+
+local CEILING_KB = 216
 
 local FOUR = { ["Units.lua"] = true, ["Tickets.lua"] = true, ["Melee.lua"] = true, ["Kinds.lua"] = true }
 
@@ -26,6 +29,6 @@ describe("the registry's and tickets' resident memory", function()
             end
         end
         print(("\nregistry + tickets + kinds resident: %.1f KB"):format(kb))
-        assert.is_true(kb < 216, ("%.1f KB"):format(kb))
+        assert.is_true(kb < CEILING_KB, ("%.1f KB"):format(kb))
     end)
 end)
