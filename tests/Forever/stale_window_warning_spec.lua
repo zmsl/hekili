@@ -81,33 +81,36 @@ describe("the stale window read warning", function()
         assert.is_truthy(w[1]:find("line 2 ", 1, true), w[1])
     end)
 
-    it("names a line that needs the window open over an earlier line that still fires (the Retribution copy)", function()
-        local packs = H.Hekili.DB.profile.packs
-        packs["Declarer"] = pack({
-            windows = { { action = "window", window_name = "stalew", duration = "6", enabled = true } },
-            default = { { enabled = true, action = "maul", criteria = "window.stalew.up" } },
-        })
-        packs["Ret Copy"] = pack({
-            default = {
-                { enabled = true, action = "maul", criteria = "rage>1&!window.stalew.up" }, -- fires: closed reads true
-                { enabled = true, action = "maul", criteria = "rage>2|window.stalew.up" }, -- fires through its other branch
-                { enabled = true, action = "maul", criteria = "rage>3&window.stalew.next.maul" }, -- dead: needs it open
-            },
-        })
-        packs["Only Maybe"] = pack({ -- no line needs it open: the first line, as before
-            default = {
-                { enabled = true, action = "maul", criteria = "!window.stalew.up" },
-                { enabled = true, action = "maul", criteria = "rage>2|window.stalew.up" },
-            },
-        })
-        H.Hekili.Scripts:LoadScripts()
-        local w = warned("Ret Copy")
-        assert.are.equal(1, #w, table.concat(w, "\n"))
-        assert.is_truthy(w[1]:find("line 3 ", 1, true), w[1])
-        local m = warned("Only Maybe")
-        assert.are.equal(1, #m, table.concat(m, "\n"))
-        assert.is_truthy(m[1]:find("line 1 ", 1, true), m[1])
-    end)
+    it(
+        "names a line that needs the window open over an earlier line that still fires (the Retribution copy)",
+        function()
+            local packs = H.Hekili.DB.profile.packs
+            packs["Declarer"] = pack({
+                windows = { { action = "window", window_name = "stalew", duration = "6", enabled = true } },
+                default = { { enabled = true, action = "maul", criteria = "window.stalew.up" } },
+            })
+            packs["Ret Copy"] = pack({
+                default = {
+                    { enabled = true, action = "maul", criteria = "rage>1&!window.stalew.up" }, -- fires: closed reads true
+                    { enabled = true, action = "maul", criteria = "rage>2|window.stalew.up" }, -- fires through its other branch
+                    { enabled = true, action = "maul", criteria = "rage>3&window.stalew.next.maul" }, -- dead: needs it open
+                },
+            })
+            packs["Only Maybe"] = pack({ -- no line needs it open: the first line, as before
+                default = {
+                    { enabled = true, action = "maul", criteria = "!window.stalew.up" },
+                    { enabled = true, action = "maul", criteria = "rage>2|window.stalew.up" },
+                },
+            })
+            H.Hekili.Scripts:LoadScripts()
+            local w = warned("Ret Copy")
+            assert.are.equal(1, #w, table.concat(w, "\n"))
+            assert.is_truthy(w[1]:find("line 3 ", 1, true), w[1])
+            local m = warned("Only Maybe")
+            assert.are.equal(1, #m, table.concat(m, "\n"))
+            assert.is_truthy(m[1]:find("line 1 ", 1, true), m[1])
+        end
+    )
 
     it("is silent for a disabled line, a class window, a priority's own window, and a longer name", function()
         local packs = H.Hekili.DB.profile.packs
@@ -126,10 +129,11 @@ describe("the stale window read warning", function()
         assert.are.same({}, warned("(wowsims.com)")) -- every shipped priority reads only its own or a class window
         -- a class window (registered by a pack's spec): silent, even with a priority trying to declare it
         H.Hekili.Class.kit:RegisterWindow("classw", { duration = 6 })
-        H.Hekili.DB.profile.packs["Class Declarer"] = pack({ -- a second priority declaring it is the E3 compile error: it never enters declaredWindows (L2000)
-            windows = { { action = "window", window_name = "classw", duration = "6", enabled = true } },
-            default = { { enabled = true, action = "maul", criteria = "window.classw.up" } },
-        })
+        H.Hekili.DB.profile.packs["Class Declarer"] =
+            pack({ -- a second priority declaring it is the E3 compile error: it never enters declaredWindows (L2000)
+                windows = { { action = "window", window_name = "classw", duration = "6", enabled = true } },
+                default = { { enabled = true, action = "maul", criteria = "window.classw.up" } },
+            })
         H.Hekili.DB.profile.packs["Class Reader"] = pack({
             default = { { enabled = true, action = "maul", criteria = "window.classw.up" } },
         })
