@@ -750,7 +750,9 @@ I.OnBuild(function(def, now)
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.spDecl[r], R.spDev[r] = spirit, 0
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
-        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] = 0, 1, I.REGEN_SPREAD, 0, 0
+        -- a swing-paid slot's scale deviation starts at its boot spread: one window's ratio must not collapse it (L2011)
+        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] =
+            R.swing[r] > 0 and I.REGEN_SPREAD or 0, 1, I.REGEN_SPREAD, 0, 0
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.mayT[r] = -1e9

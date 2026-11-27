@@ -918,6 +918,25 @@ describe("resources", function()
             within(1 + I.ALPHA * (v / 45 - 1), I.res.scale[1]) -- per booked step (L1992): five landed steps of 9
         end)
 
+        -- (L2011 (4)) the boot spread is the scale's deviation before any window: one window's ratio moves it by alpha,
+        -- it does not replace it (a deviation booted at 0 left alpha x |ratio - scale|, 0.1 -> ~0.03 on the first close)
+        it("keeps the boot spread's weight through the swing scale's first window", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            for k = 0, 4 do
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 0, 1)
+            end
+            I.Fold(21, false)
+            local v = 45 * 1.05 -- five landed steps of 9, 5% over the model
+            obs(Obs.Read, 23.5, 1, v, I.ReadOf.Resource)
+            I.Fold(23.5, false)
+            obs(Obs.Read, 24, 1, v, I.ReadOf.Resource)
+            I.Fold(24, false)
+            local s = 1 + I.ALPHA * 0.05
+            within(s, I.res.scale[1])
+            within(I.REGEN_SPREAD + I.ALPHA * (math.abs(1.05 - s) - I.REGEN_SPREAD), I.res.spread[1])
+        end)
+
         it(
             "learns the swing scale alike with an own gain inside one step, several pins at one instant or a crit (GAP AC)",
             function()
