@@ -5,6 +5,7 @@
 ### New
 - On-use trinkets are now recommended: the Weakness Analyzer, Talisman of Ephemeral Power, Mind Quickening Gem, Everlook Pathcarver, Eye of the Beast and Blackhand's Breadth show up through "Use Items" (and the priorities that name them) while you wear them, and using one holds your other trinket for its shared lockout.
 - Custom and imported priorities: a `pool_resource` entry with conditions (no "Pool for Next Entry") now holds the entries below it while its conditions are true, and shows them counting down to the time the conditions stop being true. Its Pooling Time is kept but has no effect. No built-in priority uses it.
+- A priority line that reads a window the priority does not declare, but another priority does (typically a copy of a built-in priority made before its windows moved into it), now gets a warning on the Warnings page naming the priority, list, line and window, saying the line will never fire. It is shown once per session.
 
 ### Changed
 - Warlock, Rogue and Druid (Feral, Guardian's cat lines) priorities: damage over time effects (Banes, Corruption, Immolate, Rupture, Rip, Rake) are no longer started on a target about to die, and the end-of-target finishers (Ferocious Bite, Eviscerate), Warlock's quick casts and the Warlock cooldowns line now look at your current target's time to die rather than the whole fight, so recommendations can differ from before, including in single-target fights.
