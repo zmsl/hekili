@@ -598,15 +598,16 @@ end
 M.feed = feed -- a spec with its own ticks over a world (a fight past a kill: tests/Forever/kill_rows_spec.lua)
 
 -- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0, the resource
--- each spends: the cost declaration's key, false none) and its focus entry into slot flicker.FOCUS (the display's focus:
--- the best tier within the Timeline's 10 s horizon, then the soonest); returns how many.
+-- each spends now: the cost declaration's key, false none or free, as a Cat's Faerie Fire) and its focus entry into
+-- slot flicker.FOCUS (the display's focus: the best tier within the Timeline's 10 s horizon, then the soonest); returns
+-- how many.
 local function queue(H, q, n, res)
     local out = H.Hekili.Engine.Output.Primary
     local k = math.min(n, out.count)
     for i = 1, k do
         local r = out.recs[i]
         q.name[i], q.time[i], q.cost[i] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
-        q.res[i] = r.resource_type or false
+        q.res[i] = (r.cost or 0) > 0 and r.resource_type or false
     end
     for i = k + 1, n do
         q.name[i], q.time[i], q.cost[i], q.res[i] = false, 0, 0, false
@@ -618,7 +619,7 @@ local function queue(H, q, n, res)
         local r = out.recs[i]
         if type(r.focus) == "number" and r.focus >= 1 and (best == nil or r.focus < best) and (r.time or 0) <= 10 then
             q.name[F], q.time[F], q.cost[F] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
-            q.res[F] = r.resource_type or false
+            q.res[F] = (r.cost or 0) > 0 and r.resource_type or false
             best = r.focus
             if best == 1 then
                 break
