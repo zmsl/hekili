@@ -256,6 +256,7 @@ spec:RegisterResource(
             end,
         },
         base = 1213, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+        rest = "max", -- mana rests full out of combat
     }
 )
 

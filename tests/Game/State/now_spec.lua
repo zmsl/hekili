@@ -544,6 +544,7 @@ describe("now handlers", function()
                 summonTotem("totem_test", "no_such_element", 5) -- an unknown element writes nothing
             end,
         })
+        h.Class.totemSlots = { fire = 1, earth = 2, water = 3, air = 4 } -- the pack's declaration (L1827 row 5)
         start()
         ctl.Fire("PLAYER_REGEN_DISABLED")
         cast(6262, 20)
@@ -732,6 +733,7 @@ describe("now handlers", function()
                 seen[5], seen[6] = totem.air.expires, totem.air.active
             end,
         })
+        h.Class.totemSlots = { fire = 1, earth = 2, water = 3, air = 4 }
         start()
         ctl.Fire("PLAYER_REGEN_DISABLED") -- out of combat poll 7 would read the fake client's empty slots
         cast(6262, 20)
@@ -739,6 +741,37 @@ describe("now handlers", function()
         assert.are.same({ true, 115, false, false, 140, true }, seen)
         cast(6263, 141) -- past the modelled expiry
         assert.are.same({ false, 0, false, false, 0, false }, seen)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
+    -- lane 6 (L1827 row 5): the element names are the pack's (def.totemSlots), none the core's; a rebuild drops the last
+    it("takes totem.<element> and summonTotem's element names from the declared slots alone", function()
+        local seen = {}
+        register("totem_spirit", {
+            id = 6262,
+            now = function()
+                summonTotem("totem_spirit", "spirit", 120)
+                summonTotem("totem_spirit", "fire", 60) -- declared by no pack here: writes nothing
+            end,
+        })
+        register("totem_read", {
+            id = 6263,
+            now = function()
+                seen[1], seen[2], seen[3] = totem.spirit.up, totem.spirit.remains, totem.fire.up
+            end,
+        })
+        h.Class.totemSlots = { spirit = 2 }
+        start()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        cast(6262, 20)
+        cast(6263, 25)
+        assert.are.same({ true, 115, false }, seen)
+        assert.are.equal(140, VS.Totem(2, 21).est)
+        assert.is_nil(VS.Totem(1, 21))
+        h.Class.totemSlots = {}
+        ns.BuildTracked()
+        cast(6263, 26)
+        assert.are.same({ false, 0, false }, seen)
         assert.are.equal(0, I.nowErrors)
     end)
 
@@ -956,7 +989,7 @@ describe("now handlers", function()
             costMods = {},
             gcdMods = { { aura = "grace_test", pct = -0.1, spells = { fs.SPENDER_C } } },
         }
-        ns.ResourceIsPoints = function() -- Tracked.lua's race path (Engine/Sim/Constants.lua's)
+        ns.ResourceIsPoints = function() -- unread since lane 6 (the build reads meta `points`); kept, no old-code cleanup
             return false
         end
         start()
@@ -1237,6 +1270,7 @@ describe("now handlers", function()
         })
         register("charge_test", { id = 3131, charges = 2, recharge = 10 }) -- the charge step too
         h.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18 }
+        h.Class.totemSlots = { fire = 1 }
         start()
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the capturing subscriber allocates by design
@@ -1530,8 +1564,9 @@ describe("now handlers", function()
         -- and with no plain read past the window: the row's verdict stands.
         describe("the point fact (a `now` gain of a slot read plain in combat)", function()
             local POINTS = 4
+            local TARGET_POINTS = { onTarget = true, points = true } -- the packs' combo points (L1827 rows 1, 3)
             local function beginPoints(before)
-                h.Class.resources.combo_points = { type = POINTS }
+                h.Class.resources.combo_points = { type = POINTS, state = { meta = TARGET_POINTS } }
                 h.Class.abilities.spender_c.funcs.now = function()
                     applyDebuff("target", "spender_c", 15) -- luacheck: ignore 113 (the `now` context's verb)
                     gain(1, "combo_points") -- luacheck: ignore 113 (the `now` context's verb)
@@ -1767,7 +1802,8 @@ describe("now handlers", function()
                 probe.spendType, probe.spend = "energy", 40 -- the probe: its flips at 40 pin the pool
                 c.spendType, c.spend, c.refundOnAvoid = "energy", cost or 30, true
                 if points then
-                    h.Class.resources.combo_points = { type = POINTS }
+                    h.Class.resources.combo_points =
+                        { type = POINTS, state = { meta = { onTarget = true, points = true } } }
                     c.funcs.now = function()
                         gain(1, "combo_points") -- luacheck: ignore 113 (the `now` context's verb)
                     end

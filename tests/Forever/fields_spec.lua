@@ -297,6 +297,69 @@ describe("the pack field registry", function()
         passes("RegisterResource", { 3, nil, nil, { decayInterval = 0 } })
     end)
 
+    -- lane 6 (L1827 rows 1-3, 5): the facts the core guessed from key names are meta fields and a totem slot
+    -- declaration, checked like any other
+    it("r6: a resource meta declares onTarget, rest and points; a totem slot is a whole number 1 to 4", function()
+        local env = druid()
+        local kit = env.class.kit
+        local function fails(call, args, what)
+            local ok, err = pcall(kit[call], kit, unpack(args, 1, 4))
+            assert.is_false(ok, what)
+            assert.is_truthy(tostring(err):find(what, 1, true), err)
+        end
+        local ok, err = pcall(kit.RegisterResource, kit, 1, nil, nil, { onTarget = true, rest = "max", points = true })
+        assert(ok, tostring(err))
+        ok, err = pcall(kit.RegisterResource, kit, 1, nil, nil, { rest = "zero" })
+        assert(ok, tostring(err))
+        fails("RegisterResource", { 1, nil, nil, { rest = "full" } }, "V2: DRUID meta rage: rest is full, not one of")
+        fails("RegisterResource", { 1, nil, nil, { onTarget = 1 } }, "V2: DRUID meta rage: onTarget is a number")
+        fails("RegisterResource", { 1, nil, nil, { points = "yes" } }, "V2: DRUID meta rage: points is a string")
+        ok, err = pcall(kit.RegisterTotemSlots, kit, { spirit = { slot = 2 }, light = { slot = 4 } })
+        assert(ok, tostring(err))
+        assert.are.same({ spirit = 2, light = 4 }, kit.totemSlots)
+        fails("RegisterTotemSlots", { { a = { slot = 0 } } }, "V2: DRUID totem a: slot is 0, below 1")
+        fails("RegisterTotemSlots", { { a = { slot = 5 } } }, "V2: DRUID totem a: slot is 5, above 4")
+        fails("RegisterTotemSlots", { { a = { slot = 2.5 } } }, "V2: DRUID totem a: slot is 2.5, not a whole number")
+        fails("RegisterTotemSlots", { { a = { slott = 1 } } }, "V1: DRUID totem a: slott is one edit from slot")
+        fails("RegisterTotemSlots", { { a = { slot = 1, other = 1 } } }, "V1: DRUID totem a: other is no field")
+    end)
+
+    -- review r6 finding 5: the plan's placeholder form and an empty entry fail by name, not by a raw error or silently
+    it("r6: a totem slot entry is a { slot = n } table: a bare number or a missing slot fails V2", function()
+        local kit = druid().class.kit
+        local ok, err = pcall(kit.RegisterTotemSlots, kit, { fire = 1 })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V2: DRUID totem fire: entry is 1, not a table of fields", 1, true), err)
+        ok, err = pcall(kit.RegisterTotemSlots, kit, { fire = {} })
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("V2: DRUID totem fire: slot is missing", 1, true), err)
+        assert.is_nil(kit.totemSlots.fire)
+    end)
+
+    -- lane 6: every pack states what the core guessed from the key name before (Tracked.lua's ON_TARGET,
+    -- Constants.lua's passive_regen and points, Now.lua's TOTEM_SLOT), with the same values
+    it("r6: every shipped pack declares the facts the core guessed from its resources' names", function()
+        local REST = { mana = true, focus = true, energy = true, essence = true }
+        local POINTS = { combo_points = true, runes = true, soul_shards = true, holy_power = true, chi = true }
+        POINTS.arcane_charges, POINTS.essence = true, true
+        local seen = 0
+        for _, c in ipairs(CLASSES) do
+            local env = engine.load(c)
+            assert.are.same({}, env.loadErrors, c)
+            for k, r in pairs(env.class.kit.resources) do
+                local meta = r.state.meta
+                local what = c .. " " .. k
+                assert.are.equal(REST[k] and "max" or nil, meta.rest, what)
+                assert.are.equal(POINTS[k] or nil, meta.points, what)
+                assert.are.equal(k == "combo_points" or nil, meta.onTarget, what)
+                seen = seen + 1
+            end
+            local slots = c == "SHAMAN" and { fire = 1, earth = 2, water = 3, air = 4 } or {}
+            assert.are.same(slots, env.class.kit.totemSlots, c)
+        end
+        assert.is_true(seen >= 13) -- every class's resources: 9 pools, 2 rages, 2 combo points
+    end)
+
     it("has one row per field with a type, a doc line and its bounds in order", function()
         local F = druid().ns.Fields
         local n = 0

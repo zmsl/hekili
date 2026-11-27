@@ -156,7 +156,7 @@ S.Poll(1, function(api, t)
         if not I.inCombat and R.swing[r] == 0 then
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
             local idle, act = Plain(api, rawIn), Plain(api, rawAct)
-            -- A 0 for a slot resting at its maximum is a form that does not regenerate it (a pull from Bear Form): skip.
+            -- A 0 for a slot resting at its maximum (its pack's `rest = "max"`) is a form that does not regenerate it: skip.
             if R.fsr[r] then
                 -- an `fsr` slot (C3): not casting is both parts, casting the mp5 part alone
                 if

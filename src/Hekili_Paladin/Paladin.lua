@@ -279,6 +279,7 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
         end,
     },
     base = BASE_MANA,
+    rest = "max", -- mana rests full out of combat
 })
 
 -- Talents: { talent tree (1 Holy, 2 Protection, 3 Retribution: the dominant tree picks the spec), rank 1's spell, max

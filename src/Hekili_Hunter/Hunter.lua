@@ -405,6 +405,7 @@ spec:RegisterResource(
             end,
         },
         base = BASE_MANA, -- a fraction cost is of base mana (Spec.lua)
+        rest = "max", -- mana rests full out of combat
     }
 )
 

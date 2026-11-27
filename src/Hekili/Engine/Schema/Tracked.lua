@@ -42,6 +42,7 @@ local def = {
     reactions = {}, -- RegisterReaction's records { key, who, outcome, hand, now }: Families/Now.lua (no ability index)
     gear = {}, -- the declared gear (spec:RegisterGear's sets and items, spec:RegisterSetBonus's bonuses): Families/Gear.lua
     gcdMods = {}, -- the GCD modifiers { aura, pct, spells } (Engine/Schema/Races.lua; aura audit C12): Families/Casts.lua
+    totemSlots = {}, -- RegisterTotemSlots' client slot by element name (Families/Now.lua's totem.<element>, summonTotem)
 }
 local LISTS = {
     "abilities",
@@ -57,12 +58,10 @@ local LISTS = {
     "reactions",
     "gear",
     "gcdMods",
+    "totemSlots",
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
--- L90: a resource the game binds to one target: only the count on the current target is usable
--- (GetComboPoints("player", "target")); the pool UnitPower answers survives a swap (Game/State/Sources/Power.lua).
-local ON_TARGET = { combo_points = true }
 -- a test's stand-in class may have no `pets`, `windows`, `reactions`, `gear` or `setBonuses`
 local NO_PETS, NO_WINDOWS, NO_GEAR = {}, {}, {}
 -- The sim's own generated entries (Spec/Regen.lua RegisterResource: the stepped decay and the hits taken), reserved names
@@ -321,9 +320,12 @@ local function buildDef()
             key = k,
             type = r.type,
             token = k:upper(),
-            onTarget = ON_TARGET[k] == true, -- usable only on the current target (Sources/Power.lua, L90)
+            -- the pack's declarations (lane 6, L1827 rows 1-2; Engine/Schema/Fields.lua): L90, the game binds the count
+            -- to one target, so only the current target's is usable (GetComboPoints("player", "target"); the pool
+            -- UnitPower answers survives a swap: Sources/Power.lua); a regenerating pool rests at its maximum
+            onTarget = meta.onTarget == true,
             max = meta.max or 100, -- a number, or a function the belief runs in its context
-            rest = ns.ResourceRegenerates(k) == true, -- a regenerating resource rests at its maximum (Resources.lua)
+            rest = meta.rest == "max", -- a flag (Resources.lua)
             swing = swing,
             swingValue = value,
             swingOff = offValue,
@@ -349,10 +351,10 @@ local function buildDef()
         insert(def.resources, d)
         slotByKey[k] = #def.resources
         -- the race pack's resource and cost modifiers (Engine/Schema/Races.lua, event-facade spec §12b): every resource of the class,
-        -- but a maximum modifier never scales a point resource (ns.ResourceIsPoints, Constants.lua)
+        -- but a maximum modifier never scales a point resource (the meta's `points`, lane 6, L1827 row 3)
         local race = ns.raceMods
         if race then
-            d.maxMods = not ns.ResourceIsPoints(k) and plain(race.maxMods, {}) or nil
+            d.maxMods = meta.points ~= true and plain(race.maxMods, {}) or nil
             d.costMods = plain(race.costMods, {})
             -- the race's regen entries on this resource (Races.lua RegisterRegenMod), after the class's (`mult` is a copy:
             -- a rebuild never appends to the class's own `regenMult`)
@@ -421,6 +423,9 @@ local function buildDef()
         if type(spell) == "number" then
             insert(def.gear, { key = k, aura = spell })
         end
+    end
+    for elem, slot in pairs(class.totemSlots or NO_PETS) do -- a plain copy (lane 6, L1827 row 5)
+        def.totemSlots[elem] = slot
     end
     for _, k in ipairs(sortedKeys(class.pets or NO_PETS)) do
         local p = class.pets[k]

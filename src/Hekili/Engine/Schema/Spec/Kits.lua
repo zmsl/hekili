@@ -39,6 +39,7 @@ local function buildSpec( id, key, name, texture, role, pClass, melee )
 
         pets = {},
         totems = {},
+        totemSlots = {}, -- RegisterTotemSlots' slot by element name
         windows = {}, -- RegisterWindow's records by name
         reactions = {}, -- RegisterReaction's records by name
 

@@ -934,20 +934,20 @@ describe("Forever Druid", function()
     )
 
     it(
-        "declares energy paused in Bear Form, combo points with no maximum, mana's five-second rule, Classic's order",
+        "declares energy paused in Bear Form and resting at max, combo points on the target as points, mana's five-second rule, Classic's order",
         function()
             assert.are.same({ 3, 4, 1, 0 }, w.order)
-            for _, pt in ipairs({ 4 }) do
-                assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
-            end
+            -- combo points: no models, on the target, a count (lane 6 rows 1 and 3)
+            assert.are.same({ nil, { onTarget = true, points = true } }, { w.resources[4].models, w.resources[4].meta })
             -- no energy in Bear Form (wowsims forms.go pauseCatEnergy)
             assert.are.same(
-                { { bear_pause = { aura = "bear_form", mult = 0 } }, { regen = 10, refundOnAvoid = 0.8 } },
+                { { bear_pause = { aura = "bear_form", mult = 0 } }, { regen = 10, rest = "max", refundOnAvoid = 0.8 } },
                 { w.resources[3].models, w.resources[3].meta }
             )
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
             local fsr, e = w.resources[0].meta.fsr, ld.env(w)
             assert.are.same({ 22, 0 }, { fsr.spirit, fsr.mp5 })
+            assert.are.equal("max", w.resources[0].meta.rest) -- lane 6 row 2
             -- the static share follows Reflection's rank (17/33/50%, wowsims's curve)
             local shares = {}
             for rank = 0, 3 do

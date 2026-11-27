@@ -588,6 +588,7 @@ spec:RegisterResource(
             end,
         },
         base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
+        rest = "max", -- mana rests full out of combat
     }
 )
 
@@ -597,6 +598,8 @@ for key, t in pairs(TOTEMS) do
     registered[key] = { id = t.ids[1], copy = rest(t.ids), element = t.element, duration = t.duration }
 end
 spec:RegisterTotems(registered)
+-- The client's totem slot of each element (GetTotemInfo), which `totem.<element>` and summonTotem's element read.
+spec:RegisterTotemSlots({ fire = { slot = 1 }, earth = { slot = 2 }, water = { slot = 3 }, air = { slot = 4 } })
 
 -- A totem buff's `copy` with the totem's own spell ids too: the Cooldown Manager's totem entries link the summons and the
 -- buffs together (one entry, one aura).

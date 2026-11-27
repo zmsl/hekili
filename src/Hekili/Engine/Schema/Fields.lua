@@ -1,11 +1,11 @@
 -- Engine/Schema/Fields.lua
 -- The pack field registry (refactor plan lane 3, L1819, L1827; belief-purpose-taxonomy 5.2): one row per field a
 -- registration may declare on an ability (RegisterAbility), an aura (RegisterAura), a resource's meta and its `fsr`
--- (RegisterResource) and a regen entry, each with its type, today's default (stated, never written: the consumers keep
--- their own), its bounds and one doc line. Generic: no class, spell or form word. Only the fields that exist today: the
--- ones the shipped content declares and the ones the registration calls or the belief read. The registration calls
--- validate what the pack wrote against it (F.Check), before they read or move anything, so a valid pack changes
--- nothing and a mistake stops at load, never in combat:
+-- (RegisterResource), a regen entry and a totem element's slot (RegisterTotemSlots), each with its type, today's
+-- default (stated, never written: the consumers keep their own), its bounds and one doc line. Generic: no class, spell
+-- or form word. Only the fields that exist today: the ones the shipped content declares and the ones the registration
+-- calls or the belief read. The registration calls validate what the pack wrote against it (F.Check), before they read
+-- or move anything, so a valid pack changes nothing and a mistake stops at load, never in combat:
 --   V1 an unknown key: one edit from a registered name of 4 or more characters fails; on a regen entry or an `fsr` (belief-only tables) any
 --      unknown key fails; on an ability, an aura or a meta, which also carry the engine's own fields, it is listed
 --      (F.findings)
@@ -25,8 +25,8 @@ local class = Hekili.Class
 local format = string.format
 
 local F = {
-    rows = { ability = {}, aura = {}, meta = {}, fsr = {}, regen = {} },
-    names = { ability = {}, aura = {}, meta = {}, fsr = {}, regen = {} }, -- each kind's rows in order (the page's table)
+    rows = { ability = {}, aura = {}, meta = {}, fsr = {}, regen = {}, totem = {} },
+    names = { ability = {}, aura = {}, meta = {}, fsr = {}, regen = {}, totem = {} }, -- each kind's rows in order
     findings = {}, -- V1's listed keys: "<pack> <object> <key>: <field> (V1)"
     unlanded = {}, -- V5: "<pack> <key>" of each combat-starting ability with no `expects`
     pending = {}, -- V3's references and V4's declarations, checked at F.Finish
@@ -35,7 +35,7 @@ local F = {
 ns.Fields = F
 
 -- Belief-only tables: any key the registry lacks fails (V1).
-local STRICT = { regen = true, fsr = true }
+local STRICT = { regen = true, fsr = true, totem = true }
 local KIND_OF = { aura = "auras", resource = "resources", talent = "talents", ability = "abilities" }
 local SOURCES = { measured = true, wowsims = true, ruling = true, design = true, unmeasured = true } -- as the latency table's
 
@@ -61,10 +61,10 @@ local function isa(t, v)
     return ty == t -- number, string, table
 end
 
---- Adds field `name` to kind `on` ("ability", "aura", "meta", "fsr", "regen"). `ty`: alternatives joined by "|" of
+--- Adds field `name` to kind `on` ("ability", "aura", "meta", "fsr", "regen", "totem"). `ty`: alternatives joined by "|" of
 --- bool, number, string, table, fn, key (a number or a string), any, enum (a string of `opt.enum`), or a reference
 --- (aura, resource, talent, ability: a key checked at F.Finish), each optionally "list:" (an array of it). "fn" on an
---- ability also admits a `{ byRank = values }` table (only RegisterAbility converts it: Spec/Ranks.lua). `opt`: min, max, gt (a number above it), enum, tune
+--- ability also admits a `{ byRank = values }` table (only RegisterAbility converts it: Spec/Ranks.lua). `opt`: min, max, gt (a number above it), int (a whole number), enum, tune
 --- ({ source, row }: V6), atLeast (another field of the same object: V7). Load only.
 function F.Row(on, name, ty, default, doc, opt)
     opt = opt or {}
@@ -83,6 +83,7 @@ function F.Row(on, name, ty, default, doc, opt)
         min = opt.min,
         max = opt.max,
         gt = opt.gt,
+        int = opt.int,
         tune = opt.tune,
         atLeast = opt.atLeast,
     }
@@ -187,6 +188,9 @@ local function misfit(r, v)
         end
         if r.gt and not (v > r.gt) then
             return "is " .. v .. ", not above " .. r.gt
+        end
+        if r.int and v ~= math.floor(v) then
+            return "is " .. v .. ", not a whole number"
         end
     end
 end
@@ -299,6 +303,22 @@ function F.Check(on, spec, key, data)
             -- only what the belief compiles (Tracked.lua: no variant, a positive spell ID)
             F.unlanded[#F.unlanded + 1] = packOf(spec) .. " " .. tostring(key)
         end
+    end
+end
+
+--- F.Check for an entry that must be a table holding field `need` (RegisterTotemSlots' `{ slot = n }`): a bare value
+--- or an entry without `need` fails V2, naming the pack and the entry, instead of a raw error or a silent nothing.
+function F.CheckEntry(on, spec, key, data, need)
+    if F.closed then
+        return
+    end
+    local who = packOf(spec) .. " " .. on .. " " .. tostring(key)
+    if type(data) ~= "table" then
+        fail(2, who, "entry", format("is %s, not a table of fields", tostring(data)))
+    end
+    F.Check(on, spec, key, data)
+    if data[need] == nil then
+        fail(2, who, need, "is missing")
     end
 end
 
@@ -562,6 +582,23 @@ row("meta", "decay", "number|fn", nil, "the loss a second out of combat")
 row("meta", "decayInterval", "number|fn", nil, "seconds per quantum of that loss (0: continuous)", { min = 0 })
 row("meta", "refundOnAvoid", "number", nil, "the share of an avoided cast's cost given back", { min = 0, max = 1 })
 row("meta", "fsr", "table", nil, "the five-second rule's parts (spirit, mp5, share)")
+-- What the core once guessed from the resource's key name (lane 6, L1827 rows 1-3): the pack states it.
+row(
+    "meta",
+    "onTarget",
+    "bool",
+    false,
+    "true: the game binds the count to one target; only the current target's is usable"
+)
+row(
+    "meta",
+    "rest",
+    "enum",
+    "zero",
+    "where the pool rests out of combat: its maximum (a pool that regenerates) or 0",
+    { enum = { "max", "zero" } }
+)
+row("meta", "points", "bool", false, "true: a count, not a pool: a percentage maximum modifier never scales it")
 row("fsr", "spirit", "number|fn", nil, "the spirit part a second, paused after our spend")
 row("fsr", "mp5", "number|fn", nil, "the part a second that never pauses")
 row("fsr", "share", "number|fn", nil, "the spirit part's share kept while casting", { min = 0, max = 1 })
@@ -593,3 +630,13 @@ row("regen", "share", "number|fn", nil, "the spirit regen kept while casting, ad
 row("regen", "mp5", "number|fn", nil, "a second's flat regen while the aura is up")
 row("regen", "mp5Mult", "number", nil, "the gear and buff flat regen times this", { min = 0 })
 row("regen", "energize", "bool", false, "true: the mp5 is a periodic energize that ticks its own amount")
+
+-- A totem element's slot (RegisterTotemSlots: `totem.<element>` and summonTotem's element; lane 6, L1827 row 5).
+row(
+    "totem",
+    "slot",
+    "number",
+    nil,
+    "the client's totem slot (GetTotemInfo) the element fills",
+    { min = 1, max = 4, int = true }
+)

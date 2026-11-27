@@ -266,8 +266,9 @@ NAMES.talent = setmetatable({}, {
     end,
 })
 
--- totem.<element>: the belief's totem slot (Families/Totems.lua; the sim's state.totem shape, State.lua).
-local TOTEM_SLOT = { fire = 1, earth = 2, water = 3, air = 4 }
+-- totem.<element>: the belief's totem slot (Families/Totems.lua; the sim's state.totem shape, State.lua). The element
+-- names and their slots are the pack's (def.totemSlots, RegisterTotemSlots: lane 6, L1827 row 5), set at the build.
+local totemSlot = {}
 local totemMeta = {
     __index = function(r, f)
         local rec = VS.Totem(rawget(r, "slot"), T)
@@ -289,9 +290,6 @@ NAMES.totem = setmetatable({}, {
         return NO_TOTEM
     end,
 })
-for elem, slot in pairs(TOTEM_SLOT) do
-    rawset(NAMES.totem, elem, setmetatable({ slot = slot }, totemMeta))
-end
 
 -- action.<key>.in_range: the range poll's last plain answer for the ability (Sources/Target.lua; the sim's
 -- state.action.x.in_range is the client's IsSpellInRange): true unless the client answered false. Entries per tracked
@@ -628,7 +626,7 @@ end
 --- summonTotem(name, element, duration): Hekili's signature (State.lua); the element's slot expires `duration` s after
 --- the cast (an unknown element or a non-number duration writes nothing).
 function NAMES.summonTotem(name, elem, duration)
-    local slot = TOTEM_SLOT[elem]
+    local slot = totemSlot[elem]
     if live and slot and type(duration) == "number" then
         I.TotemModel(slot, T + duration, A.qid[curA] or 0, type(name) == "string" and name or "", T, CAST)
     end
@@ -790,6 +788,14 @@ I.OnBuild(function(def)
     end
     for k in pairs(NAMES.window) do
         rawset(NAMES.window, k, nil)
+    end
+    for k in pairs(totemSlot) do
+        rawset(NAMES.totem, k, nil)
+        totemSlot[k] = nil
+    end
+    for elem, slot in pairs(def.totemSlots or NO_SETTINGS) do -- a hand-built def may carry none
+        totemSlot[elem] = slot
+        rawset(NAMES.totem, elem, setmetatable({ slot = slot }, totemMeta))
     end
     local wins = def.windows or NO_SETTINGS -- a hand-built def may carry no `windows`
     for k = 1, #wins do

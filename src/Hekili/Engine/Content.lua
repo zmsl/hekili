@@ -72,7 +72,10 @@ local format = string.format
 --   Also without a bump: the `now` and handler verb `lockCooldown` and the ability fields `category` and
 --   `categoryCooldown` (on-use trinkets); an older core reads nil for the verb, so a use's category lock raises, and
 --   ignores the fields.
-local CONTENT_API = 17
+-- 18 (2026-11-26, lane 6, L1827): spec:RegisterTotemSlots and a resource meta's `onTarget`, `rest` and `points`, which
+-- the core no longer guesses from key names: an older core raises on the call, and this core gives an older pack's
+-- combo points no target binding, its energy and mana no rest at the maximum and its element names no slot.
+local CONTENT_API = 18
 
 local done, notice = false, nil
 

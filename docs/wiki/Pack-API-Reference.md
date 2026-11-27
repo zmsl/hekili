@@ -120,6 +120,12 @@ spec:RegisterPets({
 
 `RegisterTotems({ [key] = { id, copy } })` names the totems; the Shaman's file builds its table from its totem list and passes it. `RegisterPet` and `RegisterTotem` are the single forms; no class pack calls them directly.
 
+`RegisterTotemSlots({ [element] = { slot = n } })` names the elements `totem.<element>` and the belief's `summonTotem` read, each with the game's totem slot (1 to 4) it fills. Only the belief reads them: the simulation's `totem.<element>` keeps its own four elements (fire, earth, water, air), so a new element name is seen by the belief alone. From `src/Hekili_Shaman/Shaman.lua`:
+
+```lua
+spec:RegisterTotemSlots({ fire = { slot = 1 }, earth = { slot = 2 }, water = { slot = 3 }, air = { slot = 4 } })
+```
+
 ### Simulation extensions
 
 These add to the simulation only; the belief does not run them.
