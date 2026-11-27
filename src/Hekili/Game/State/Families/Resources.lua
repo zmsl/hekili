@@ -1310,13 +1310,12 @@ local function pin(r, v, width, t, origin, event, mid)
         local m = R.shaped[r] and gain or gain / dt -- nonzero: dt >= PIN_GAP (1 s)
         calibrate(r, m, t, R.pinA[r], R.pinB[r], R.pinT[r], Obs.Usable)
     end
-    local max = R.max[r]
     local was = R.lo0[r] + R.over[r]
     local est = v + width / 2
     if origin == "pinned" then
         est = R.est0[r] < v and v or (R.est0[r] > v + width and v + width or R.est0[r])
     end
-    R.est0[r], R.lo0[r], R.hi0[r] = clamp(est, max), clamp(v, max), clamp(v + width, max)
+    apply(r, "pin", est, v, v + width)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.pinOwn[r] = t, vm, 0, measures, false
     R.pinA[r], R.pinB[r] = 0, 0
@@ -1360,41 +1359,23 @@ local function ladder(r, c, affordable, t, lag)
             end
         end
     end
-    local snapped = false
     local was = R.lo0[r] + R.over[r]
+    local e0, h0, bLo = R.est0[r], R.hi0[r], R.bandLo[r]
+    -- a yes above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put the
+    -- slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
+    local e, l, h =
+        bound(e0, R.lo0[r], h0, affordable, c, R.bandOn[r], bLo, bandTop(bLo, R.bandHi[r]), edgeFloor, R.max[r])
+    apply(r, "rung", e, l, h)
+    local snapped = affordable and e0 < c or not affordable and e0 > c - I.EPS
+    if snapped then
+        R.snapT[r] = t
+    end
     if affordable then
-        if R.lo0[r] < c then
-            R.lo0[r] = c
-        end
-        if R.est0[r] < c then
-            R.est0[r], R.snapT[r], snapped = c, t, true
-        end
-        if R.hi0[r] < c then
-            -- above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put
-            -- the slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
-            local v = R.max[r]
-            if R.bandOn[r] then
-                v = bandTop(R.bandLo[r], R.bandHi[r])
-                v = v > c and v or c
-            end
-            R.hi0[r] = v
+        if h0 < c then
             R.capT[r] = -1e9 -- a usable answer above the top: the short one is contradicted, the read stands
         end
     else
         local top = c - I.EPS
-        if R.hi0[r] > top then
-            R.hi0[r] = top
-        end
-        if R.est0[r] > top then
-            R.est0[r], R.snapT[r], snapped = top, t, true
-        end
-        if R.lo0[r] > top then
-            local v = top < 0 and 0 or top -- the newest bound wins
-            if R.bandOn[r] and R.bandLo[r] < v and not edgeFloor then
-                v = R.bandLo[r]
-            end
-            R.lo0[r] = v
-        end
         if was >= top then
             R.capT[r], R.capB[r] = t, false
         elseif R.swing[r] == 0 then
@@ -1496,7 +1477,7 @@ end
 -- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
 -- slot's rung lift (R.liftE/L/H). Allocates nothing.
 local function swingStep(r, hand, c, t, owed, at)
-    local max, v, s, sp, w = R.max[r], 0, 1, 0, 0
+    local v, s, sp, w = 0, 1, 0, 0
     if c == 1 then
         v, s, sp, w = I.SwingValue(r, hand, at), R.scale[r], R.spread[r], I.SwingWidth(r, hand, at)
     else
@@ -1519,9 +1500,7 @@ local function swingStep(r, hand, c, t, owed, at)
                 R.swAccG[r] = R.swAccG[r] - v
             end
         end
-        R.est0[r] = clamp(R.est0[r] + de, max)
-        R.lo0[r] = clamp(R.lo0[r] + dl, max)
-        R.hi0[r] = clamp(R.hi0[r] + dh, max)
+        apply(r, "swing", de, dl, dh)
         stepped(r, at)
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
     end
@@ -1565,12 +1544,12 @@ end
 -- since the credit voids it, and so does a NOT answer in its window. Returns whether a credit of slot r explains a
 -- crossing of cost c: confirmed by this answer, or still awaiting its verdict with its step across c.
 -- Allocates nothing.
-local function back(cur, d, pre, max)
+local function back(cur, d, pre)
     local v = cur - d
     if v < pre then
         v = cur < pre and cur or pre
     end
-    return clamp(v, max)
+    return v -- apply's put clamps it
 end
 
 -- Record k's verdict from answer `now` (YES, SHORT, NOT) at t: nil before its window opens (it stays open), else
@@ -1590,10 +1569,13 @@ local function verdict(k, now, t)
     end
     local s = recR[k]
     if v and now ~= YES and recFirm[k] then
-        local max = R.max[s]
-        R.est0[s] = back(R.est0[s], recEst[k], recE0[k], max)
-        R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
-        R.hi0[s] = back(R.hi0[s], recHi[k], recHi0[k], max)
+        apply(
+            s,
+            "verdict",
+            back(R.est0[s], recEst[k], recE0[k]),
+            back(R.lo0[s], recLo[k], recLo0[k]),
+            back(R.hi0[s], recHi[k], recHi0[k])
+        )
         local h = hitRate[recHand[k]] - recHit[k]
         hitRate[recHand[k]] = h > 0 and h or 0
         I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
@@ -1612,10 +1594,7 @@ local function retract(k, t)
         recA[k], recR[k] = 0, 0
         return
     end
-    local max = R.max[s]
-    R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
-    local h = back(R.hi0[s], recHi[k], recHi0[k], max)
-    R.hi0[s] = h > R.est0[s] and h or R.est0[s]
+    apply(s, "retract", nil, back(R.lo0[s], recLo[k], recLo0[k]), back(R.hi0[s], recHi[k], recHi0[k])) -- hi down to est at most
     estDebt[s] = estDebt[s] + recEst[k]
     local hr = hitRate[recHand[k]] - recHit[k]
     hitRate[recHand[k]] = hr > 0 and hr or 0
@@ -1628,8 +1607,7 @@ function I.SettleDebt(r)
     local d = estDebt[r]
     if r > 0 and d and d > 0 then
         estDebt[r] = 0
-        local e = R.est0[r] - d
-        R.est0[r] = e > R.lo0[r] and e or R.lo0[r]
+        apply(r, "debt", R.est0[r] - d)
     end
 end
 
@@ -1695,10 +1673,7 @@ end
 local function liftTo(r, v)
     if v > R.lo0[r] then
         v = v < R.hi0[r] and v or R.hi0[r]
-        R.lo0[r] = v
-        if R.est0[r] < v then
-            R.est0[r] = v
-        end
+        apply(r, "lift", R.est0[r] < v and v or nil, v)
     end
 end
 
