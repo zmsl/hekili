@@ -794,7 +794,8 @@ describe("Forever Druid", function()
         end)
 
         it(
-            "declares Primal Fury's rage as `onCrit` on the bear's strikes: 5 at 2/2, 2.5 at 1/2, in Bear Form",
+            "declares Primal Fury's rage as `onCrit` on the bear's strikes: 5 at 2/2, at 1/2 a range (floor none, "
+                .. "estimate 2.5, top 5), in Bear Form",
             function()
                 local bear = { maul = true, swipe_bear = true, lacerate = true, primal_bite = true }
                 for key, a in pairs(w.abilities) do
@@ -817,7 +818,8 @@ describe("Forever Druid", function()
                             got[#got + 1] = g
                         end
                     end
-                    assert.are.same({ { 5, "rage" }, { 2.5, "rage" } }, got, key)
+                    -- 1/2 is a roll the belief cannot see (owner L1397; Fable L1984): gain(2.5, "rage", 2.5)
+                    assert.are.same({ { 5, "rage" }, { 2.5, "rage", 2.5 } }, got, key)
                 end
             end
         )
@@ -902,7 +904,7 @@ describe("Forever Druid", function()
 
     it(
         "gains rage per white swing in Bear Form only, at the form's fixed 2.5 s x 4.5 (wowsims's two-hand factor), a crit "
-            .. "2.5 s x 3.46 more and Primal Fury's 5; Enrage 2/s; decay 1.25",
+            .. "2.5 s x 3.46 more and Primal Fury's 5 at 2/2 only; Enrage 2/s; decay 1.25",
         function()
             local models = w.resources[1].models
             w.state.buff.bear_form = { up = false }
@@ -921,8 +923,8 @@ describe("Forever Druid", function()
             local talent = w.state.talent
             w.state.talent = rank(2) -- Primal Fury ("Blood Frenzy", DB2 16958): 16959's 5 rage at 2/2
             near(16.25, setfenv(models.mainhand.crit, w.state)())
-            w.state.talent = rank(1) -- 50% at 1/2 (wowsims's ladder): its expected 2.5
-            near(13.75, setfenv(models.mainhand.crit, w.state)())
+            w.state.talent = rank(1) -- 50% at 1/2 (wowsims's ladder): a roll, no proc booked on a white crit (L1984)
+            near(11.25, setfenv(models.mainhand.crit, w.state)())
             w.state.talent = talent
             assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
             assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
@@ -1359,20 +1361,27 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.same({ 10, 0 }, { n, I.nowErrors })
     end)
 
-    it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
+    -- 1/2 is a roll the belief cannot see (owner L1397, Fable L1984): the floor gains none, the estimate the mean, the
+    -- top a whole proc; 2/2 is certain: 5 in all three
+    it("gives Primal Fury's rage at a bear strike's own crit: 5 at 2/2, a range at 1/2, none at 0/2 (GAP T)", function()
         I.Sources.Direct(VS.Obs.CombatStart, 1.5) -- in combat: no rage decay
         cast(5487, 2) -- Bear Form
         local function crit(t)
             cast(407995, t) -- Primal Bite
-            local before = power(1, t + 0.05)
+            local b = VS.Power(1, t + 0.05)
+            local lo, est, hi = b.lo, b.est, b.hi
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
             ctl.Tick(t + 0.06)
             VS.Drain(t + 0.07)
-            return power(1, t + 0.1) - before
+            local a = VS.Power(1, t + 0.1)
+            assert.is_true(hi + 5 < 100, tostring(hi)) -- the top is not at the cap
+            return { a.lo - lo, a.est - est, a.hi - hi }
         end
-        assert.are.equal(0, crit(4))
+        assert.are.same({ 0, 0, 0 }, crit(4))
+        I.SetTalentRank(I.talents.bySpell[16958], 1)
+        assert.are.same({ 0, 2.5, 5 }, crit(6))
         I.SetTalentRank(I.talents.bySpell[16958], 2)
-        assert.are.equal(5, crit(6))
+        assert.are.same({ 5, 5, 5 }, crit(8))
         assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 

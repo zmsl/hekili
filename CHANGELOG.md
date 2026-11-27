@@ -13,6 +13,8 @@
 - Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
+- Guardian Druids with Primal Fury (Blood Frenzy) at 1 of 2 ranks: the 5 rage a critical hit only sometimes gives in Bear Form is no longer counted as half of it always coming; rage-gated recommendations wait for the rage you have.
+- Paladins with Sanctified Judgement at 1 or 2 ranks: Judgement's mana refund, a chance below the last rank, is no longer counted as if part of it always came; your mana is counted when the refund shows.
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.
 - Gnome Rogues: when Eureka is about to be used, the rotation after the energy pooling step now waits until you have 90 energy, as the wowsims rotation does. The lines above that step (defensives, Riposte, Garrote, Vanish, Preparation and the opening cooldowns) still show. There is no pooling while Eureka's toggle is off.
 - Shadow Brand Warlock: after the pre-pull Shadow Bolt is cast, Corruption is now recommended while the bolt is still flying, instead of Shadow Bolt again.

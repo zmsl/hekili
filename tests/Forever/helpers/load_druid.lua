@@ -285,8 +285,8 @@ function M.env(w)
     function e.spend(n, resource)
         table.insert(e.spent, { n, resource })
     end
-    function e.gain(n, resource)
-        table.insert(e.gained, { n, resource })
+    function e.gain(n, resource, spread) -- spread: the `now` context's roll half-width (nil: none)
+        table.insert(e.gained, { n, resource, spread })
     end
     e.reset = {} -- the belief's resetResource (Families/Now.lua): { resource, amount, upto } in call order
     function e.resetResource(resource, amount, upto)

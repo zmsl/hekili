@@ -296,8 +296,8 @@ local function classData(H, C)
         end
     end
     local talent = H.Hekili.State.talent
-    -- Sanctified Judgement's refund in the world: only at 3/3, a sure one (the class file counts the mean at 1-2, the
-    -- world builds take none there): the seals' cost multiplier
+    -- Sanctified Judgement's refund in the world: only at 3/3, a sure one (the class file books none at 1-2, a random
+    -- proc it only may gain; the world builds take none there): the seals' cost multiplier
     X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
     X.mult = 1 - 0.02 * (talent.benediction.rank or 0)
     return X

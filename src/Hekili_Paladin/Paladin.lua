@@ -506,8 +506,9 @@ local PURIFYING_POWER_CD = { [0] = 0, 0.17, 0.33 }
 -- Any seal up: Judgement's requirement.
 -- Sanctified Judgement (1311074, Forever-only, 3 ranks: a 33/66/100% chance to return 20/40/60%): 60% of the seal's
 -- base cost x (2 - its cost multiplier) at 3/3 (tests/Forever/wowsims/paladin_retribution.log:439, Seal of Command
--- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6); below 3/3 the belief and the forecast count
--- the mean (chance x refund), as the Rogue's Relentless Strikes.
+-- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6), counted only at 3/3 (100%). Below it the
+-- refund is a random resource proc, never an expected gain (owner L1397, L1851): the reads find one that came, and the
+-- belief's `mayGain` keeps its regen pins from learning it as regen, as the Rogue's Relentless Strikes.
 -- The fourth field is the judgement debuff the seal puts on the target (none for Command and Righteousness: damage only).
 local SEAL_BASE = {
     { "seal_of_command", SEAL_OF_COMMAND_COST, SEAL_OF_COMMAND },
@@ -521,8 +522,9 @@ local SEAL_BASE = {
 local SJ_CHANCE = { 0.33, 0.66, 1 }
 local SJ_REFUND = { 0.2, 0.4, 0.6 }
 -- A Judgement's cast effect, Judgement's and Swift Judgement's (the `now` and the `handler`, two closures so each gets
--- its own environment): the seal's judgement debuff, and the refund.
-local function judgementCast()
+-- its own environment): the seal's judgement debuff, and the refund. `belief`: the `now`'s, the only one that may read
+-- the belief's `mayGain` (the sim's state has no such key, as Rogue.lua's relentless).
+local function judgementCast(belief)
     return function()
         for i = 1, #SEAL_BASE do
             local s = SEAL_BASE[i]
@@ -532,10 +534,14 @@ local function judgementCast()
                 end
                 local sj = talent.sanctified_judgement.rank
                 if sj > 0 then
-                    local mult = sealMult(talent)
                     local cost = byRank(s[2], s[3])
-                    -- the mean: chance 33/66/100% x refund 20/40/60% (the talent's two curves, wowsims's spell data)
-                    gain((cost < 1 and cost * BASE_MANA or cost) * (2 - mult) * SJ_CHANCE[sj] * SJ_REFUND[sj], "mana") -- Justice's is a fraction
+                    -- refund 20/40/60% (the talent's curve, wowsims's spell data); Justice's cost is a fraction
+                    local refund = (cost < 1 and cost * BASE_MANA or cost) * (2 - sealMult(talent)) * SJ_REFUND[sj]
+                    if SJ_CHANCE[sj] >= 1 then
+                        gain(refund, "mana")
+                    elseif belief then -- the sim's `handler` books nothing
+                        mayGain(refund, "mana")
+                    end
                 end
                 return
             end
@@ -740,7 +746,7 @@ spec:RegisterAbilities({
             return seal_up, "requires a seal"
         end,
 
-        now = judgementCast(),
+        now = judgementCast(true),
         handler = judgementCast(),
     },
 
@@ -759,7 +765,7 @@ spec:RegisterAbilities({
             return seal_up, "requires a seal"
         end,
 
-        now = judgementCast(),
+        now = judgementCast(true),
         handler = judgementCast(),
     },
 

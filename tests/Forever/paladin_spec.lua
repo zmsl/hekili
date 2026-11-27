@@ -307,17 +307,33 @@ describe("Forever Paladin", function()
         end
     )
 
-    -- Sanctified Judgement (1311074): a 33/66/100% chance to return 20/40/60% of the seal's base cost: the mean at every rank.
-    it("refunds Sanctified Judgement's expected mana at every rank", function()
+    -- Sanctified Judgement (1311074): a 33/66/100% chance to return 20/40/60% of the seal's base cost. Owner 2026-11-18
+    -- (L1397, L1851): a random resource proc is never an expected gain, so the refund only at 3/3 (certain), in the sim's
+    -- `handler` and the belief's `now` alike; at 1-2 the `now` declares `mayGain` (the refund it may give), the
+    -- `handler` nothing.
+    it("refunds Sanctified Judgement's mana only at 3/3; ranks 1-2 only may gain it", function()
         w.game.known[20920] = true
         for _, field in ipairs({ "now", "handler" }) do
-            for r, want in ipairs({ 210 * 0.33 * 0.2, 210 * 0.66 * 0.4, 210 * 0.6 }) do
+            for r, want in ipairs({ 0, 0, 210 * 0.6 }) do
                 local e = ld.env(w)
+                e.may = {}
+                if field == "now" then -- the belief's verb (Families/Now.lua); the sim's state has none
+                    function e.mayGain(n, resource)
+                        table.insert(e.may, { n, resource })
+                    end
+                end
                 e.talent = talents({ sanctified_judgement = r })
                 e.buff = buffs({ seal_of_command = true })
                 ld.run(w.abilities.judgement[field], e)
-                assert.are.equal(1, #e.gained, field .. r)
-                assert.is_true(math.abs(e.gained[1][1] - want) < 1e-9, field .. r .. " " .. tostring(e.gained[1][1]))
+                local got = e.gained[1] and e.gained[1][1] or 0
+                assert.is_true(math.abs(got - want) < 1e-9, field .. r .. " " .. tostring(got))
+                if field == "now" and r < 3 then
+                    assert.are.equal(1, #e.may, field .. r)
+                    assert.is_true(math.abs(e.may[1][1] - 210 * 0.2 * r) < 1e-9, field .. r .. " may")
+                    assert.are.equal("mana", e.may[1][2], field .. r)
+                else
+                    assert.are.equal(0, #e.may, field .. r)
+                end
             end
         end
     end)
@@ -1008,6 +1024,33 @@ describe("Forever Paladin through the engine", function()
         end
         fight({ [1310735] = 1, [20375] = 1 }) -- Unsealed Wrath and Seal of Command
         fight({ [1310735] = 1 }) -- no Seal of Command
+    end)
+
+    -- (L1851 fix round 1) Sanctified Judgement under the real sim state and belief: at 1-2 a Seal + Judgement cycle
+    -- records no error (the sim's `handler` never reads the belief's `mayGain`) and the sim books no mana; 3/3 the refund.
+    it("books Sanctified Judgement's refund in the sim only at 3/3, with no error at any rank", function()
+        for r = 1, 3 do
+            local c = character()
+            c.talents = { [1310735] = 1, [1311074] = r }
+            local E = headless.new({ character = c, pack = "Retribution (wowsims.com)" })
+            assert.are.same({}, E.loadErrors)
+            local S, t = E.Hekili.State, E.ctl.now + 1
+            E.ctl.now = t
+            E.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 20375) -- Seal of Command
+            assert.is_true(headless.cycle(E, t + 0.1))
+            S.reset("Primary", true)
+            assert.is_true(S.buff.seal_of_command.up, "rank " .. r)
+            local m0 = S.mana.current
+            E.Hekili.Class.abilities.judgement.handler()
+            local want = r == 3 and 210 * (2 - (1 - 0.02 * S.talent.benediction.rank)) * 0.6 or 0
+            want = math.min(want, S.mana.max - m0) -- the seal's spend left this much room
+            assert.is_true(r < 3 or want > 0, "no room for the 3/3 refund")
+            assert.is_true(math.abs(S.mana.current - m0 - want) < 1, "rank " .. r .. " " .. (S.mana.current - m0))
+            E.ctl.now = t + 1
+            E.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", 20271) -- Judgement
+            assert.is_true(headless.cycle(E, t + 1.1))
+            assert.are.same({}, E.errors, "rank " .. r)
+        end
     end)
 
     -- (plan "Open after Day 4", the mana bound; central fix 8) Mana is secret even out of combat, so nothing measures it:
