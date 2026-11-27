@@ -270,13 +270,22 @@ end
 
 -- What a press reads of our state: on the true entity `e` (a usability answer; Shadowform its form) or in the oracle's
 -- true belief (a resolve). Each returns up(key).
+-- Cached per (e, X) (lj-speed 7a): a closure per usability answer kept the answer path from compiling and fed the GC;
+-- the closure reads e live, so a cached one answers as a fresh one.
+local onEntityCache = setmetatable({}, { __mode = "k" })
 local function onEntity(e, X)
-    return function(key)
+    local c = onEntityCache[e]
+    if c and c.X == X then
+        return c.up
+    end
+    local function up(key)
         if key == "shadowform" then
             return e.form == SHADOWFORM
         end
         return e.auras[X.aura[key].id] ~= nil
     end
+    onEntityCache[e] = { X = X, up = up }
+    return up
 end
 local function inBelief(H, X)
     local VS, now = H.ns.VirtualState, H.ctl.now
