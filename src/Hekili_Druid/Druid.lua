@@ -287,7 +287,7 @@ spec:RegisterResource(
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
             -- shortcut: no width on a swing's crit, so 1/2 books no proc here (estimate 2.5 short, top a proc short until the
-            -- next pin); add a crit width in core if a ceiling read or L1852 (a) needs it
+            -- next pin); add a crit width in core if a ceiling read or L1852 (a) needs it (L1985)
             crit = function()
                 return BEAR_RAGE_RATE * BEAR_SWING + (talent.primal_fury.rank >= 2 and PRIMAL_FURY or 0)
             end,

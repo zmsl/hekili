@@ -1026,6 +1026,33 @@ describe("Forever Paladin through the engine", function()
         fight({ [1310735] = 1 }) -- no Seal of Command
     end)
 
+    -- (L1851 fix round 1) Sanctified Judgement under the real sim state and belief: at 1-2 a Seal + Judgement cycle
+    -- records no error (the sim's `handler` never reads the belief's `mayGain`) and the sim books no mana; 3/3 the refund.
+    it("books Sanctified Judgement's refund in the sim only at 3/3, with no error at any rank", function()
+        for r = 1, 3 do
+            local c = character()
+            c.talents = { [1310735] = 1, [1311074] = r }
+            local E = headless.new({ character = c, pack = "Retribution (wowsims.com)" })
+            assert.are.same({}, E.loadErrors)
+            local S, t = E.Hekili.State, E.ctl.now + 1
+            E.ctl.now = t
+            E.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 20375) -- Seal of Command
+            assert.is_true(headless.cycle(E, t + 0.1))
+            S.reset("Primary", true)
+            assert.is_true(S.buff.seal_of_command.up, "rank " .. r)
+            local m0 = S.mana.current
+            E.Hekili.Class.abilities.judgement.handler()
+            local want = r == 3 and 210 * (2 - (1 - 0.02 * S.talent.benediction.rank)) * 0.6 or 0
+            want = math.min(want, S.mana.max - m0) -- the seal's spend left this much room
+            assert.is_true(r < 3 or want > 0, "no room for the 3/3 refund")
+            assert.is_true(math.abs(S.mana.current - m0 - want) < 1, "rank " .. r .. " " .. (S.mana.current - m0))
+            E.ctl.now = t + 1
+            E.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", 20271) -- Judgement
+            assert.is_true(headless.cycle(E, t + 1.1))
+            assert.are.same({}, E.errors, "rank " .. r)
+        end
+    end)
+
     -- (plan "Open after Day 4", the mana bound; central fix 8) Mana is secret even out of combat, so nothing measures it:
     -- the belief assumes a fresh boot at rest, the bound too (`mana.pct` full), until a measurement says less (a short
     -- answer below it).

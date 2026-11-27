@@ -522,8 +522,9 @@ local SEAL_BASE = {
 local SJ_CHANCE = { 0.33, 0.66, 1 }
 local SJ_REFUND = { 0.2, 0.4, 0.6 }
 -- A Judgement's cast effect, Judgement's and Swift Judgement's (the `now` and the `handler`, two closures so each gets
--- its own environment): the seal's judgement debuff, and the refund.
-local function judgementCast()
+-- its own environment): the seal's judgement debuff, and the refund. `belief`: the `now`'s, the only one that may read
+-- the belief's `mayGain` (the sim's state has no such key, as Rogue.lua's relentless).
+local function judgementCast(belief)
     return function()
         for i = 1, #SEAL_BASE do
             local s = SEAL_BASE[i]
@@ -538,7 +539,7 @@ local function judgementCast()
                     local refund = (cost < 1 and cost * BASE_MANA or cost) * (2 - sealMult(talent)) * SJ_REFUND[sj]
                     if SJ_CHANCE[sj] >= 1 then
                         gain(refund, "mana")
-                    elseif mayGain then -- the belief's `now` only: the sim books nothing
+                    elseif belief then -- the sim's `handler` books nothing
                         mayGain(refund, "mana")
                     end
                 end
@@ -745,7 +746,7 @@ spec:RegisterAbilities({
             return seal_up, "requires a seal"
         end,
 
-        now = judgementCast(),
+        now = judgementCast(true),
         handler = judgementCast(),
     },
 
@@ -764,7 +765,7 @@ spec:RegisterAbilities({
             return seal_up, "requires a seal"
         end,
 
-        now = judgementCast(),
+        now = judgementCast(true),
         handler = judgementCast(),
     },
 
