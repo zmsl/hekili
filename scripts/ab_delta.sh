@@ -15,9 +15,17 @@ set -euo pipefail
     exit 2
 }
 
-# compare <title> <twin: 0|1> <old tsv> <new tsv> <late: 0|1>: prints the rows, exits 1 on a failure (gawk: asorti)
+# compare <title> <twin: 0|1> <old tsv> <new tsv> <late: 0|1>: prints the rows, exits 1 on a failure (plain awk: Apple's has no asorti)
 compare() {
-    gawk -F'\t' -v title="$1" -v twin="$2" -v late="$5" '
+    awk -F'\t' -v title="$1" -v twin="$2" -v late="$5" '
+    function sorted(arr, out,    k, n, i, t) { # the keys of arr, ascending as strings, into out[1..n]
+        n = 0
+        for (k in arr) {
+            out[++n] = k ""
+            for (i = n; i > 1 && out[i - 1] > out[i]; i--) { t = out[i]; out[i] = out[i - 1]; out[i - 1] = t }
+        }
+        return n
+    }
     function add(arr, k, s, a) { # a "p/t" pair (a lone number: the player) onto arr[k, 1], arr[k, 2]
         split(s, a, "/")
         arr[k, 1] += a[1]
@@ -51,7 +59,7 @@ compare() {
     }
     END {
         bad = 0
-        n = asorti(SPEC, specs)
+        n = sorted(SPEC, specs)
         for (i = 1; i <= n; i++) {
             s = specs[i]
             if (!((s, 1) in A) || !((s, 2) in A)) {
@@ -69,7 +77,7 @@ compare() {
             bad = bad || flag != ""
             printf "%s\t%s\tagreement %.3f -> %.3f (%+.3f)\tflicker %s -> %s (%+.2f)%s\n", title, s, A[s, 1], A[s, 2], da, F[s, 1], F[s, 2], df, flag
         }
-        n = asorti(WHO, whos)
+        n = sorted(WHO, whos)
         for (i = 1; i <= n; i++) {
             w = whos[i]
             v1 = V[w, 1, 1] + V[w, 1, 2]

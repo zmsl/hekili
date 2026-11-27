@@ -261,7 +261,7 @@ class Stamp(unittest.TestCase):
                 os.remove(self.path(rel))
 
     def test_non_md_under_docs_runs(self):  # ruling S5: only *.md counts as docs
-        for rel in ("docs/dev/x.lua", "docs/dev/data.json", "docs/dev/notes.MD"):
+        for rel in ("docs/dev/x.lua", "docs/dev/data.json", "docs/dev/upper.MD"):
             with self.subTest(rel=rel):
                 self.stamp()
                 self.write(rel, "x\n")

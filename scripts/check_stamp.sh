@@ -41,7 +41,7 @@ worktree_lines() {
         if [ -f "$p" ]; then
             printf '%s\n' "$p" >>"$TMP/files"
         elif [ -d "$p" ]; then
-            printf 'W dir %s\t%s\n' "$(find "$p/" -type f -printf '%P %s %T@ %m\n' | sort | md5sum | cut -d' ' -f1)" "$p"
+            printf 'W dir %s\t%s\n' "$(cd "$p" && find . -type f -exec stat -c '%n %s %.9Y %a' {} + | sort | md5sum | cut -d' ' -f1)" "$p"
         else
             printf 'W other %s\t%s\n' "$(readlink "$p" || echo -)" "$p"
         fi
