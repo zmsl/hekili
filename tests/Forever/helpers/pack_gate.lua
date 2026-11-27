@@ -1511,8 +1511,9 @@ M.ARM_FLOORS = {
         -- then rip-orphan (L2005; 63825dc0a, seeds 1-20, shipped only): 201 -> 202. Seed 6 t 7.6: an avoid row undid our
         -- Insect Swarm (7.4) in the drain of the light's LONG open, which stayed up for the fight (rule 1 could not close
         -- it); now its DOWN closes it at 19.6 and ours recasts Insect Swarm as the oracle does (top insect_swarm ->
-        -- starfire 79 / -> wrath 71 gone, agreement 0.991 -> 1.000). The fight re-times from there (seeds 6-20); every
-        -- held tick of seed 6 on both trees is Wrath's cost crossing within 0.21 s (L1118): 8 -> 9, seeds 7-20 net 0
+        -- starfire 79 gone, insect_swarm -> wrath 71 -> 4, agreement 0.991 -> 1.000). The fight re-times from there
+        -- (seeds 6-20); every held tick of seed 6 on both trees is Wrath's cost crossing within 0.21 s (L1118): 8 -> 9,
+        -- seeds 7-20 net 0
         ["Balance"] = { heldReady = 202, cause = { heldReady = "L1823 + L1793 + L2005" } },
         -- Feral { flicker = 0.05 } dropped (batch 5 one rule, 9a8a95e23): seeds 1-20 read 0, inside M.FLICKER
         -- batch 5 one rule (L1814): rows the arm read inside the old M.FLICKER floors, named once the default table
