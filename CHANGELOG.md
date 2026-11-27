@@ -14,6 +14,7 @@
 - Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
+- Paladins: Divine Favor is no longer recommended again right after you press it. Its 2 minute cooldown starts when Holy Shock or a heal spends the charge, not at the press, so it was shown as ready until then; it is now held back while the charge is up and timed from the spend.
 - Guardian Druids with Primal Fury (Blood Frenzy) at 1 of 2 ranks: the 5 rage a critical hit only sometimes gives in Bear Form is no longer counted as half of it always coming; rage-gated recommendations wait for the rage you have.
 - Paladins with Sanctified Judgement at 1 or 2 ranks: Judgement's mana refund, a chance below the last rank, is no longer counted as if part of it always came; your mana is counted when the refund shows.
 - Combat Rogue: Blade Flurry is now recommended during the fight for every race, not only for Orcs.

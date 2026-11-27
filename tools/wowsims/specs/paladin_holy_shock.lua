@@ -40,7 +40,8 @@ return {
     -- ID wowsims casts and logs; the kit's holy_shock (its ranks 1311606, 20473, 20929, 20930)
     map = { [25902] = "holy_shock" },
     -- by role (docs/dev/wowsims-packs.md): Hammer of Wrath's execute window 1, the seal and Consecration kept up 2
-    focus = { hammer_of_wrath = 1, seal_of_righteousness = 2, consecration = 2 },
+    -- seal_of_command: the hand-edited list (see the .simc header) casts it at the same tier as Seal of Righteousness
+    focus = { hammer_of_wrath = 1, seal_of_righteousness = 2, seal_of_command = 2, consecration = 2 },
     -- extra (L1808, owner "Setting per line"; content outside wowsims's model, which never casts it): Divine Shield (its
     -- usable check refuses it under Forbearance) at or below 20%; Lay on Hands (all Paladin specs, the controller's
     -- L1808 default; drains all mana) at or below 15%, each the def-int-beyond-wowsims review's default and a per-spec

@@ -688,8 +688,14 @@ local function cleanseCost()
         return 0.08
     end
 end
+-- Divine Favor is "cooldown on event" (spell attribute 0x02000000): unusable while its charge is held, and its 120 s
+-- cooldown starts when a heal or Holy Shock spends the charge, not at the press. The press leaves the client's flag
+-- ready, so the kit says both: `nobuff` on the ability, and the cooldown here, at the cast that consumes the charge.
 local function spendsFavor()
     return function()
+        if buff.divine_favor.up then
+            setCooldown("divine_favor", 120)
+        end
         removeBuff("divine_favor")
     end
 end
@@ -883,18 +889,14 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(HOLY_SHOCK),
 
-        now = function()
-            removeBuff("divine_favor")
-        end,
-
-        handler = function()
-            removeBuff("divine_favor")
-        end,
+        now = spendsFavor(),
+        handler = spendsFavor(),
     },
 
     divine_favor = selfBuff("divine_favor", { 20216 }, {
         cooldown = 120,
         gcd = "off",
+        nobuff = "divine_favor", -- unusable while the charge is held (cooldown on event, see spendsFavor)
         spend = 0.04,
         spendType = "mana",
         toggle = "cooldowns",
