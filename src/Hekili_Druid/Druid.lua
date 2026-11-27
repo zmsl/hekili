@@ -286,10 +286,14 @@ spec:RegisterResource(
             value = function()
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
-            -- shortcut: no width on a swing's crit, so 1/2 books no proc here (estimate 2.5 short, top a proc short until the
-            -- next pin); add a crit width in core if a ceiling read or L1852 (a) needs it (L1985)
+            -- shortcut: at 1/2 the floor and the estimate book no proc (estimate 2.5 short until the next pin); add a crit
+            -- width in core if L1852 (a) needs the mean (L1985)
             crit = function()
                 return BEAR_RAGE_RATE * BEAR_SWING + (talent.primal_fury.rank >= 2 and PRIMAL_FURY or 0)
+            end,
+            -- Primal Fury at 1/2 (a 50% chance): the top allows its rage on a white crit (L1969)
+            critMay = function()
+                return talent.primal_fury.rank == 1 and PRIMAL_FURY or 0
             end,
         },
 

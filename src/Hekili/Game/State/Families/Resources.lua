@@ -37,7 +37,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- off hand's own value when both hands pay it (0: none); `swingAura[r]` the player aura index its swings need (0: none;
 -- -1: named but not tracked, so no swing pays); `swingCrit[r]` / `swingOffCrit[r]` the extra a critical white hit of
 -- that hand adds (0: none); `swingWidth[r]` / `swingOffWidth[r]` the half-width of that hand's value, a random part the
--- belief cannot see (a proc's expected gain; 0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- belief cannot see (a proc's expected gain; 0: none); `swingCritMay[r]` / `swingOffCritMay[r]` what a crit of that hand
+-- may add besides (a proc at a chance under 1: 0 none), in the top only (L1969). Continuous regen is per second (regE/regL/regH); a swing-paid
 -- resource's step is the spec's model value of that hand x scale (spread around it), its floor step (value - width) x
 -- (scale - spread) and its top step (value + width) x (scale + spread). `restMax[r]`: a regenerating
 -- resource rests at its maximum (its pack's meta `rest = "max"`: energy, mana), the others at 0 (rage).
@@ -103,6 +104,8 @@ local R = {
     swingOffCrit = {},
     swingWidth = {},
     swingOffWidth = {},
+    swingCritMay = {},
+    swingOffCritMay = {},
     est0 = {},
     lo0 = {},
     hi0 = {},
@@ -734,6 +737,7 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.swingWidth[r], R.swingOffWidth[r] = d.swingWidth or 0, d.swingOffWidth or 0
+        R.swingCritMay[r], R.swingOffCritMay[r] = d.swingCritMay or 0, d.swingOffCritMay or 0
         apply(r, "build", R.rest[r], 0, R.max[r])
         estDebt[r] = 0
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
@@ -912,6 +916,18 @@ end
 --- cannot see), as I.SwingValue.
 function I.SwingWidth(r, hand, at)
     return perSwing(r, hand, R.swingWidth, R.swingOffWidth, at)
+end
+
+--- What a white crit of a swing-paid slot's `hand` may add besides its `crit` (its swing entry's `critMay`: a proc at a
+--- chance under 1; L1969: the top allows it, the floor and the estimate never count it), as I.SwingValue.
+function I.SwingCritMay(r, hand, at)
+    return perSwing(r, hand, R.swingCritMay, R.swingOffCritMay, at)
+end
+
+-- The most one landed swing of `hand` may pay slot r, for the top: (value + width) x the top factor, its crit and the
+-- crit's possible proc (L1969). Allocates nothing.
+local function topSwing(r, hand, fh)
+    return (I.SwingValue(r, hand) + I.SwingWidth(r, hand)) * fh + I.SwingCrit(r, hand) + I.SwingCritMay(r, hand)
 end
 
 -- Swing-paid slot r's step factors, floor and top: scale -/+ spread around the declared step (1), the floor's never
@@ -1286,7 +1302,9 @@ end
 -- Pins slot r at t to [v, v + width]; when this pin and the previous one both measure (exact, or `mid`), the regen
 -- between them is a measurement. `origin` is "pinned" (a usability flip) or "observed" (an exact read). A wide flip
 -- is a bound: it clamps the estimate into the range, never moves one already inside it; a read takes the midpoint.
-local function pin(r, v, width, t, origin, event, mid)
+-- `top` (optional): the top when above v + width, the ceiling only (the estimate, the midpoint and the floor's model keep
+-- v + width).
+local function pin(r, v, width, t, origin, event, mid, top)
     local exact = width <= 0
     local measures = exact or mid == true
     local vm = mid and v + width / 2 or v
@@ -1351,7 +1369,7 @@ local function pin(r, v, width, t, origin, event, mid)
     if origin == "pinned" then
         est = R.est0[r] < v and v or (R.est0[r] > v + width and v + width or R.est0[r])
     end
-    apply(r, "pin", est, v, v + width)
+    apply(r, "pin", est, v, top and top > v + width and top or v + width)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.pinOwn[r] = t, vm, 0, measures, false
     R.swOpenV[r] = 0
@@ -1544,6 +1562,9 @@ local function swingStep(r, hand, c, t, owed, at)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
         local de, dl, dh = v * s, (v > w and v - w or 0) * fl, (v + w) * fh
+        if c ~= 1 then
+            dh = dh + I.SwingCritMay(r, hand, at) -- the crit's possible proc: the top only (L1969)
+        end
         if owed then
             de, R.liftE[r] = net(de, R.liftE[r])
             dl, R.liftL[r] = net(dl, R.liftL[r])
@@ -1876,12 +1897,15 @@ I.On(Obs.Usable, function(o, t, lag)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
                 -- midpoint. The value, not value + width: the crossing's expected overshoot is half the expected step,
-                -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1)
+                -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1).
+                -- The top holds the most either hand's swing may have paid, unheard: its width, a crit and the crit's
+                -- possible proc (L1969, L1992 round 4).
                 local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
                 local _, fh = stepFactors(r)
                 local step = (v > off and v or off) * fh
+                local top, topOff = topSwing(r, 1, fh), R.swingOff[r] ~= 0 and topSwing(r, 2, fh) or 0
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
-                pin(r, c, step, t, "pinned", Obs.Usable, true)
+                pin(r, c, step, t, "pinned", Obs.Usable, true, c + (top > topOff and top or topOff))
                 owe(r, e, lo, hi, o.t) -- that swing's wound, if still in flight, must not pay it again
             end
         else
