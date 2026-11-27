@@ -388,7 +388,7 @@ local OP = {
     band = "set", -- a live band (bound's BAND)
     assumed = "add", -- Obs.Swing c = 5
     confirmed = "add", -- Obs.Swing c = 7
-    taken = "add", -- a hit on the player
+    taken = "put", -- a hit on the player, summed in its own order
     rest = "set", -- combat end: lo at rest at most
     window = "add", -- the five-second rule's window moved
     shift = "add", -- our own cast's change (I.ResourceShift)
@@ -1976,12 +1976,8 @@ local function applyBand(r, lo, hi, bt, t)
         pin(r, lo, 0, t, "observed", Obs.Band)
         R.pinValid[r], R.exactT[r] = false, bt
     else
-        local floor0, ceil0 = lo, top
-        if l <= top and h >= lo then
-            floor0, ceil0 = l > lo and l or lo, h < top and h or top
-        end
-        local est = e < floor0 and floor0 or (e > ceil0 and ceil0 or e)
-        R.est0[r], R.lo0[r], R.hi0[r] = est, floor0, ceil0
+        local est, floor0, ceil0 = bound(e, l, h, nil, nil, true, lo, top, false, R.max[r])
+        apply(r, "band", est, floor0, ceil0)
         R.assume[r], R.over[r] = false, 0
         I.Sample(R.power[r], "observed", est, t, Obs.Band)
     end
@@ -2147,7 +2143,7 @@ I.On(Obs.Swing, function(o, t)
         end
         for r = 1, R.n do
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
-                local v, sc, sp, max = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r], R.max[r]
+                local v, sc, sp = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r]
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
@@ -2163,7 +2159,7 @@ I.On(Obs.Swing, function(o, t)
                         de, R.liftE[r] = net(de, R.liftE[r])
                         dh, R.liftH[r] = net(dh, R.liftH[r])
                     end
-                    R.est0[r], R.hi0[r] = clamp(e + de, max), clamp(hi + dh, max)
+                    apply(r, "assumed", de, nil, dh)
                     if k > 0 then
                         recAsm[k] = f
                         predict(k, r, hand, e, lo, hi, 0, e, math.huge)
@@ -2183,9 +2179,7 @@ I.On(Obs.Swing, function(o, t)
                         dh, R.liftH[r] = net(dh > 0 and dh or 0, R.liftH[r])
                         dl, R.liftL[r] = net(dl, R.liftL[r])
                     end
-                    R.est0[r] = clamp(e + de, max)
-                    R.hi0[r] = clamp(hi + (dh > 0 and dh or 0), max)
-                    R.lo0[r] = clamp(lo + dl, max)
+                    apply(r, "confirmed", de, dl, dh > 0 and dh or 0)
                     local h = hitRate[hand] + HIT_ALPHA
                     h = h < 1 and h or 1
                     predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], h - hitRate[hand], recX0[k], math.huge)
@@ -2300,10 +2294,8 @@ I.On(Obs.PlayerHit, function(o, t)
                 unteach(o.t) -- a paying block or avoid too (re-review N4)
                 if not R.bandOn[r] then
                     width = type(width) == "number" and width > 0 and width or 0
-                    local max = R.max[r]
-                    R.est0[r] = clamp(R.est0[r] + gain, max)
-                    R.lo0[r] = clamp(R.lo0[r] + (gain > width and gain - width or 0), max)
-                    R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
+                    local lo = R.lo0[r] + (gain > width and gain - width or 0)
+                    apply(r, "taken", R.est0[r] + gain, lo, R.hi0[r] + gain + width)
                     norm(r)
                     -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                     R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
@@ -2443,7 +2435,7 @@ I.On(Obs.CombatEnd, function(o, t)
             setMax(r, maxOf(r))
         end
         if R.rest[r] < R.lo0[r] then
-            R.lo0[r] = R.rest[r]
+            apply(r, "rest", nil, R.rest[r])
         end
         R.pinValid[r] = false
         moved(r, t)
@@ -2464,10 +2456,7 @@ local function window(r, t, u)
     local _, b1 = spans(r, t, late)
     local d = b0 - b1
     if d ~= 0 then
-        local max = R.max[r]
-        R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
-        R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * d, max)
-        R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * d, max)
+        apply(r, "window", -(R.spE[r] * d), -(R.spL[r] * d), -(R.spH[r] * d)) -- x + -(p) is x - p in doubles
         R.pinB[r] = R.pinB[r] - d
         norm(r)
     end
