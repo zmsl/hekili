@@ -2643,6 +2643,32 @@ describe("now handlers", function()
             assert.are.equal(28, rage(7.5).est)
         end)
 
+        -- L2005 fix round 1 (review finding 1): the recast's own-frame avoid undoes its write (lit since the cast, F4b:
+        -- no refund) and its light's open folds after it in the same drain; still our recast: the refund stands
+        it("our recast undone in its frame, its light folded after the undo: no strike, the refund stands", function()
+            begin(40)
+            cast(fs.SPENDER_C, 5)
+            for t = 5.3, 6.3, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(38, rage(6.3).est)
+            ctl.now = 6.5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- pressed again: 10 more
+            ctl.now = 6.525
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- in the recast's frame: credited to it
+            ctl.ViewerAura(ti, "target") -- it landed and lights before the drain
+            for t = 6.7, 7.5, 0.2 do
+                drain(t)
+            end
+            assert.are.equal(1, I.avoidsRun)
+            assert.are.same({ 0, 0, 1, 28 }, {
+                I.auraVerdict.strikes[k],
+                I.auraVerdict.back[k],
+                I.auraVerdict.refunds[k],
+                rage(7.5).est,
+            })
+        end)
+
         -- aura families (L727) and other player auras: the refund is for our missed cast's target aura only
         local function player(family)
             h.Class.abilities.spender_a.refundOnAvoid = true
