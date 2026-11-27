@@ -593,8 +593,13 @@ M.FLICKER = {
     -- INTEG re-measured: batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not
     -- re-measured): heldReady 447 -> 443, loOver 2374 -> 428; flicker 0.30 (floor kept: the one rule's 0.31 would
     -- loosen it; forever read 0.29, the 0.30 already at stage 1 e59706ac9, untraced on this arm)
+    -- wave-2 integration (L1984 / L1988; seeds 1-20 on integ/1.0.0-w2 952767330, the reading: loOver 1023, flicker
+    -- 0.26, heldReady 443): loOver 428 -> 1023. Cause: the world now rolls Primal Fury (L1984: the fixed world paid the
+    -- belief's 2.5 expectation; the pack line lowers it); residue untraced (L1990, L1992). Three trees, seeds 1-20 /
+    -- 21-40 / 41-60: loOver (a) 428 / 2160 / 945, (b) 1372 / 1896 / 1877, (c) 1023 / 1869 / 1403; flicker 0.30 / 0.18 /
+    -- 0.19 -> 0.31 / 0.11 / 0.30 -> 0.26 / 0.23 / 0.37. The cause field stays untraced (L1504 rule, L1988)
     ["Guardian"] = {
-        loOver = 428,
+        loOver = 1023,
         flicker = 0.30,
         retracted = 0,
         readyShort = 0,
