@@ -3,6 +3,7 @@
 -- replayed through the real Rows.lua, with the weapon damage the character had (main 36-50, off 24-32). Every
 -- outcome on the target is fed once as the token "target" (a few were recorded only under softinteract or nameplate1),
 -- as in game Rows.lua reads only "target", which dedupes the tokens.
+local rt = require("Game.State.helpers.rule_trace") -- lane 9: the deciding rules
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local alloc = require("Game.State.helpers.alloc")
@@ -139,6 +140,7 @@ describe("swing/outcome pairing", function()
         end
 
         it("gives an on-next-swing strike its own wound and drops the frame's WOUND 0, in either order", function()
+            rt.on(I)
             fire(10, "PLAYER_SWING", 2.2, 0) -- the brief's order: swing, WOUND 0, success, the strike's wound
             fire(10, "UNIT_COMBAT", "target", "WOUND", "", 0, 1)
             fire(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
@@ -160,6 +162,10 @@ describe("swing/outcome pairing", function()
                 { got[4][1], got[4][2], got[4][3], got[4][4] },
             })
             assert.are.equal(4, #got)
+            assert.are.equal(
+                "wound_zero>cast_narrow>pay_cast>=cast>wound_zero>cast_narrow>pay_cast>=cast",
+                rt.chain("wound_zero")
+            )
         end)
 
         it("gives a wound in our cast's frame to the cast, though it fits a pending swing (Overpower)", function()

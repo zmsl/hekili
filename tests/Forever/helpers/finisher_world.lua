@@ -280,6 +280,9 @@ end
 --- missing point's fact at `c.pointFact`, run to T + `c.span` (3.5). Returns W, T.
 function M.case(c)
     local W = M.world(c)
+    if c.onWorld then -- a spec's hook on the new world (pairing_matrix_spec's rule trace, lane 9)
+        c.onWorld(W)
+    end
     local T = M.prelude(W, c)
     M.run(W, T - 0.5)
     local b = c.bleed or "rip"

@@ -1,6 +1,7 @@
 -- tests/Game/Events/tickets_spec.lua (unit-registry spec §3): the ticket pool's lifecycle. One ticket per commit
 -- (swing, success mapped or not, a hard cast at its START); payment in expected-closure order on the row's GUID;
 -- closes and their counters; the conservation identity.
+local rt = require("Game.State.helpers.rule_trace") -- lane 9: the deciding rules
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -56,6 +57,54 @@ describe("the ticket pool", function()
         for k, v in pairs(saved) do
             _G[k] = v or nil
         end
+    end)
+
+    -- Pr-2 (refactor lane 9, L1827): the claim record. A swing holds the avoid it took from a cast's own frame by the
+    -- tie (Gap AS); one release ends it, and hands back the cast still waiting for the avoid.
+    describe("the claim record (refactor lane 9)", function()
+        local function pair()
+            local c = T.OpenCast(10, I.ab.bySpell[fs.SPENDER_P], fs.SPENDER_P, "Creature-1")
+            local s = T.OpenSwing(10.02, 1, "Creature-1", 1.5, 0, false, false)
+            return c, s
+        end
+
+        it("T.Hold records the claim; T.Release hands back the cast still waiting and the row's time, once", function()
+            local c, s = pair()
+            T.Hold(s, c, 10.03, 12)
+            assert.are.same({ c, 10.03, 12 }, { T.claimRival[s], T.claimRowT[s], T.claimRule[s] })
+            assert.are.same({ c, 10.03 }, { T.Release(s) })
+            assert.are.same({ 0, 0 }, { T.Release(s) })
+            assert.are.equal(0, T.claimRival[s])
+        end)
+
+        it("T.Release hands back nothing once the cast closed or its slot holds another ticket", function()
+            local c, s = pair()
+            T.Hold(s, c, 10.03, 12)
+            T.Close(c, 10.5, "expired")
+            assert.are.same({ 0, 0 }, { T.Release(s) })
+            c, s = pair()
+            T.Hold(s, c, 10.03, 12)
+            T.Close(c, 10.5, "expired")
+            local again = T.OpenCast(10.6, I.ab.bySpell[fs.SPENDER_P], fs.SPENDER_P, "Creature-1")
+            assert.are.equal(c, again) -- the cast's slot, another ticket (its anchor differs)
+            assert.are.same({ 0, 0 }, { T.Release(s) })
+        end)
+
+        it("the holder's close (its window, a replacement, the pool's overflow) releases its claim", function()
+            local c, s = pair()
+            T.Hold(s, c, 10.03, 12)
+            T.Close(s, 11.6, "expired")
+            assert.are.equal(0, T.claimRival[s])
+        end)
+
+        it("holds and releases without allocating", function()
+            local c, s = pair()
+            local bytes = alloc.bytes(function()
+                T.Hold(s, c, 10.03, 12)
+                T.Release(s)
+            end, 200)
+            assert.are.equal(0, bytes)
+        end)
     end)
 
     it("opens one ticket per commit: a swing, a mapped success, an unmapped one; NONE closes at once", function()
@@ -165,6 +214,7 @@ describe("the ticket pool", function()
     end)
 
     it("lets an unmapped success's window absorb an avoid past a cast's frame as nobody's", function()
+        rt.on(I)
         ctl.now = 4
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
         ctl.now = 5
@@ -173,6 +223,7 @@ describe("the ticket pool", function()
         ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
         assert.are.equal(1, T.absorbed)
         assert.are.equal(0, T.paid[X.FRAME])
+        assert.are.equal("cast_avoid_wide>unmapped_excuse", rt.chain("unmapped_excuse"))
     end)
 
     it("claims for the registry a row an open ticket on a unit still owes", function()
@@ -329,6 +380,7 @@ describe("the ticket pool", function()
     end)
 
     it("pays a row past a learned ticket's widened band inside its hard window: Overdue (decision 46)", function()
+        rt.on(I)
         I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 40 -- H = 2.15
         T.Learn("Creature-1", 20, 1.5, 9) -- d = 2.5 s at the 10 s anchor: widened band [10.313, 11.9375]
         ctl.now = 10
@@ -341,6 +393,7 @@ describe("the ticket pool", function()
         assert.are.same({ "SPELL_DAMAGE", 10 }, { got[#got][2], got[#got][1] })
         -- an Overdue payment teaches neither the lag nor the amount band (spec §1.1: only once final)
         assert.are.same({ 1.5, lagN, bandN }, { T.lagE[r], T.lagN[r], T.bandN[a] })
+        assert.are.equal("overdue>pay_cast>=cast", rt.chain("overdue"))
     end)
 
     it("never pays an early row at pass (d): under a learned ticket's widened band stays foreign", function()
@@ -518,6 +571,7 @@ describe("the ticket pool", function()
         end)
 
         it("holds a provisional spell payment's crit and drops it on replacement by the cast's own avoid", function()
+            rt.on(I)
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65] for the 10 s cast
             ctl.now = 10
@@ -530,6 +584,10 @@ describe("the ticket pool", function()
             assert.are.same({ 1, 1 }, { T.replaced, T.foreign })
             assert.are.same({ 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Avoided) })
             assert.are.equal(1, T.paid[X.FLIGHT])
+            assert.are.equal(
+                "cast_wound_wide>pay_cast>=cast>replace_provisional>reroute>pay_cast>=cast",
+                rt.chain("replace_provisional")
+            )
         end)
 
         -- Rows' tie hand-back (f8ebe1545) keeps pass 1 for a T.Replaceable match: the refused row replaces there
@@ -578,6 +636,7 @@ describe("the ticket pool", function()
         it(
             "gives a strike's same-frame avoid to the strike when the swing's own wound came first and was refused",
             function()
+                rt.on(I)
                 local h = fs.new(9, false, false, true)
                 h.Class.abilities.spender_m.school = "physical"
                 I.Build(fs.def(h), 1)
@@ -627,6 +686,10 @@ describe("the ticket pool", function()
                 I.CreditVerdict(id, true, 75.3)
             end
             assert.is_true(I.Log.theta[5] < th)
+            assert.are.equal(
+                "wound_remembered>foreign>cast_narrow>swing_wound_first>=swing1>pay_cast>=cast",
+                rt.chain("swing_wound_first")
+            )
         end)
 
         it("remembers no wound for a swing anchored at 0 that never had one", function()
@@ -703,6 +766,7 @@ describe("the ticket pool", function()
             end)
 
             it("goes back to the cast when that swing's own wound lands after it (a true avoid of the cast)", function()
+                rt.on(I)
                 ctl.now = 50
                 ctl.damage = { 40, 50, 10, 12 } -- 45 is the main hand's (exact), not the off hand's
                 ctl.Fire("PLAYER_REGEN_ENABLED")
@@ -711,6 +775,10 @@ describe("the ticket pool", function()
                 ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1)
                 assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing landed
                 assert.are.equal(1, count(VS.Obs.Avoided)) -- the miss was the cast's: its effect undone
+                assert.are.equal(
+                    "cast_avoid_wide>swing_owes_row>credit_swing>=swing1>swing_score>credit_swing>=swing1>give_back>=cast",
+                    rt.chain("give_back")
+                )
             end)
 
             -- fix round 1 I1: a row held on a committed instant (fix A) is scored at its own time, so the tie may give it
@@ -809,6 +877,7 @@ describe("the ticket pool", function()
             -- dodge at 70.404 (lag 0.501, its core band) in Rip's own frame: the narrow-band row replaces the swing's
             -- provisional credit, never Rip's refund
             it("gives a cast's own-frame avoid to a provisionally credited swing whose core band holds it", function()
+                rt.on(I)
                 ctl.now = 50
                 ctl.damage = { 40, 50, 10, 12 }
                 ctl.Fire("PLAYER_REGEN_ENABLED")
@@ -824,6 +893,10 @@ describe("the ticket pool", function()
                 ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
                 assert.are.equal(0, count(VS.Obs.Avoided))
                 assert.are.same({ T.PROV, "DODGE", 1 }, { T.state[mh], T.avoid[mh], T.replaced })
+                assert.are.equal(
+                    "swing_score>credit_swing>=swing1>cast_narrow>credit_core_band>reroute>swing_replaces_credit>credit_swing>=swing1",
+                    rt.chain("credit_core_band")
+                )
             end)
 
             -- L1810, integ5 tracer C (shape B's mirror, Protection seed 6 t43.4): the cast's MISS stamped at its own
@@ -927,6 +1000,7 @@ describe("the ticket pool", function()
         -- gap AS, the tie's wound (ledger L80, Rend): the cast's own-frame dodge went to the swing in flight by the
         -- MELEE tie; the swing's own wound 6 ms later falls in the cast's frame too, and the cast's open ticket took it
         it("gives the swing its own wound in the tied cast's frame, and the dodge back to the cast (L80)", function()
+            rt.on(I)
             ctl.now = 150
             ctl.damage = { 25, 35, 10, 12 } -- 30 is the main hand's (exact)
             ctl.Fire("PLAYER_REGEN_ENABLED")
@@ -942,6 +1016,10 @@ describe("the ticket pool", function()
             assert.are.equal(1, count(VS.Obs.Swing, 1)) -- the swing's own wound
             assert.are.equal(1, count(VS.Obs.Avoided)) -- the dodge was the cast's: its effect undone
             assert.are.equal(0, count(VS.Obs.Landed)) -- the cast never landed
+            assert.are.equal(
+                "cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1>cast_narrow>tied_wound>credit_swing>=swing1>give_back>=cast",
+                rt.chain("tied_wound")
+            )
         end)
 
         -- gap AS (ledger L629, Feral Rake): the same tie, the swing's own wound outside its core band (lag 0.674) and

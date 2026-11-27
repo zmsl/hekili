@@ -2,6 +2,7 @@
 -- a COMBAT_LOG_EVENT_UNFILTERED subscriber after the client event that completed it, with the slot table's tuple (no
 -- nil up to its last slot, so ns.callHook's rebuild keeps it whole), and with Facade.GetTime answering the row's
 -- observed time while it is delivered.
+local rt = require("Game.State.helpers.rule_trace") -- lane 9: the deciding rules
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local alloc = require("Game.State.helpers.alloc")
@@ -462,6 +463,7 @@ describe("the synthesized combat log", function()
         )
 
         it("gives an off-hand avoid at the main swing's lag (ref 3) to its swing, not a bolt's widened band", function()
+            rt.on(I)
             ctl.ranges[fs.SPENDER_P] = { 0, 30 }
             I.Build(fs.def(fs.new(9, nil, nil, true)), 1)
             local T = I.Tickets
@@ -490,6 +492,10 @@ describe("the synthesized combat log", function()
             for _, g in ipairs(got) do
                 assert.are_not.equal("SPELL_MISSED", g.row[2])
             end
+            assert.are.equal(
+                "swing_score>credit_swing>=swing1>cast_wound_wide>pay_cast>=cast>cast_avoid_wide>swing_wins_tie>swing_score>credit_swing>=swing2",
+                rt.chain("cast_wound_wide")
+            )
         end)
 
         it("marks a foreign row's school on its unit for the crowd gate", function()
