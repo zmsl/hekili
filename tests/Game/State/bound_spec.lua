@@ -23,13 +23,27 @@ describe("the bound helper (refactor lane 11)", function()
     local function cases()
         return {
             -- (1) a live band sets the floor and the ceiling
-            { "band: a wider range narrows to the band", { 455, 400, 500 }, nil, nil, { 450, 460 }, { 455, 450, 460 } },
-            { "band: bounds inside it stand", { 455, 453, 458 }, nil, nil, { 450, 460 }, { 455, 453, 458 } },
-            { "band: one end inside, the other clipped", { 440, 430, 455 }, nil, nil, { 450, 460 }, { 450, 450, 455 } },
+            {
+                "band: a wider range narrows to the band",
+                { 455, 400, 500 },
+                "band",
+                nil,
+                { 450, 460 },
+                { 455, 450, 460 },
+            },
+            { "band: bounds inside it stand", { 455, 453, 458 }, "band", nil, { 450, 460 }, { 455, 453, 458 } },
+            {
+                "band: one end inside, the other clipped",
+                { 440, 430, 455 },
+                "band",
+                nil,
+                { 450, 460 },
+                { 450, 450, 455 },
+            },
             {
                 "band: disjoint above, the band wins both ends",
                 { 485, 480, 490 },
-                nil,
+                "band",
                 nil,
                 { 450, 460 },
                 { 460, 450, 460 },
@@ -37,40 +51,40 @@ describe("the bound helper (refactor lane 11)", function()
             {
                 "band: disjoint below, the band wins both ends",
                 { 400, 380, 420 },
-                nil,
+                "band",
                 nil,
                 { 450, 460 },
                 { 450, 450, 460 },
             },
-            { "band: touching its top meets it", { 470, 460, 480 }, nil, nil, { 450, 460 }, { 460, 460, 460 } },
+            { "band: touching its top meets it", { 470, 460, 480 }, "band", nil, { 450, 460 }, { 460, 460, 460 } },
             -- (2) a usable answer is a one-sided bound about now and wins: a yes raises lo and est to c
-            { "yes, no band: lo and est up to c", { 30, 20, 60 }, true, 40, nil, { 40, 40, 60 } },
-            { "yes, no band: a top under c opens to the maximum", { 30, 20, 35 }, true, 40, nil, { 40, 40, MAX } },
+            { "yes, no band: lo and est up to c", { 30, 20, 60 }, "yes", 40, nil, { 40, 40, 60 } },
+            { "yes, no band: a top under c opens to the maximum", { 30, 20, 35 }, "yes", 40, nil, { 40, 40, MAX } },
             {
                 "yes, a band: a top under c opens to the band's top",
                 { 30, 20, 35 },
-                true,
+                "yes",
                 40,
                 { 30, 50 },
                 { 40, 40, 50 },
             },
-            { "yes, c past the band: lo = hi = c", { 30, 20, 35 }, true, 60, { 30, 50 }, { 60, 60, 60 } },
-            { "yes under the floor: nothing moves", { 30, 20, 60 }, true, 10, nil, { 30, 20, 60 } },
+            { "yes, c past the band: lo = hi = c", { 30, 20, 35 }, "yes", 60, { 30, 50 }, { 60, 60, 60 } },
+            { "yes under the floor: nothing moves", { 30, 20, 60 }, "yes", 10, nil, { 30, 20, 60 } },
             -- a short answer lowers hi and est under c; lo past it yields to the bound, or to the band's low end
-            { "short, no band: hi and est under c", { 50, 20, 60 }, false, 40, nil, { 40 - EPS, 20, 40 - EPS } },
+            { "short, no band: hi and est under c", { 50, 20, 60 }, "short", 40, nil, { 40 - EPS, 20, 40 - EPS } },
             {
                 "short, no band: lo past it to the bound",
                 { 50, 45, 60 },
-                false,
+                "short",
                 40,
                 nil,
                 { 40 - EPS, 40 - EPS, 40 - EPS },
             },
-            { "short, no band: a bound under 0 is 0", { 0.5, 0.5, 1 }, false, 0, nil, { -EPS, 0, -EPS } },
+            { "short, no band: a bound under 0 is 0", { 0.5, 0.5, 1 }, "short", 0, nil, { -EPS, 0, -EPS } },
             {
                 "short, a band: lo to the band's low end",
                 { 50, 45, 60 },
-                false,
+                "short",
                 40,
                 { 30, 50 },
                 { 40 - EPS, 30, 40 - EPS },
@@ -78,7 +92,7 @@ describe("the bound helper (refactor lane 11)", function()
             {
                 "short, a band at the edge (L1946): lo to the bound",
                 { 50, 45, 60 },
-                false,
+                "short",
                 40,
                 { 30, 50 },
                 { 40 - EPS, 40 - EPS, 40 - EPS },
@@ -87,7 +101,7 @@ describe("the bound helper (refactor lane 11)", function()
             {
                 "short, a band whose low end is over the bound: the bound",
                 { 50, 45, 60 },
-                false,
+                "short",
                 40,
                 { 42, 50 },
                 { 40 - EPS, 40 - EPS, 40 - EPS },
@@ -96,9 +110,9 @@ describe("the bound helper (refactor lane 11)", function()
     end
 
     local function run(c)
-        local before, side, cost, band, edge = c[2], c[3], c[4], c[5], c[7]
+        local before, ruling, cost, band, edge = c[2], c[3], c[4], c[5], c[7]
         local bLo, bTop = band and band[1] or 0, band and band[2] or 0
-        return I.Bound(before[1], before[2], before[3], side, cost, band ~= nil, bLo, bTop, edge == true, MAX)
+        return I.Bound(before[1], before[2], before[3], ruling, cost, band ~= nil, bLo, bTop, edge == true, MAX)
     end
 
     it("states the three rulings once (the ruling table)", function()
@@ -107,6 +121,17 @@ describe("the bound helper (refactor lane 11)", function()
             local want = c[6]
             assert.are.same(want, { e, l, h }, c[1])
         end
+    end)
+
+    it("names its ruling: any other value raises, so a nil never means the band", function()
+        for _, ruling in ipairs({ "nope", true, false }) do
+            assert.error_matches(function()
+                I.Bound(30, 20, 60, ruling, 40, false, 0, 0, false, MAX)
+            end, "bound: unknown ruling")
+        end
+        assert.error_matches(function()
+            I.Bound(30, 20, 60, nil, 40, false, 0, 0, false, MAX)
+        end, "bound: unknown ruling nil")
     end)
 
     -- Today's lines (base aca0ff977) as functions of the range before and the source.
@@ -174,12 +199,12 @@ describe("the bound helper (refactor lane 11)", function()
                                 check(
                                     "yes",
                                     { oldYes(e, l, h, c, band, bLo, bTop, MAX) },
-                                    I.Bound(e, l, h, true, c, band, bLo, bTop, edge, MAX)
+                                    I.Bound(e, l, h, "yes", c, band, bLo, bTop, edge, MAX)
                                 )
                                 check(
                                     "short",
                                     { oldShort(e, l, h, c, band, bLo, edge) },
-                                    I.Bound(e, l, h, false, c, band, bLo, bTop, edge, MAX)
+                                    I.Bound(e, l, h, "short", c, band, bLo, bTop, edge, MAX)
                                 )
                             end
                         end
@@ -188,7 +213,7 @@ describe("the bound helper (refactor lane 11)", function()
                         check(
                             "band",
                             { oldBand(e, l, h, b[1], b[2]) },
-                            I.Bound(e, l, h, nil, nil, true, b[1], b[2], false, MAX)
+                            I.Bound(e, l, h, "band", nil, true, b[1], b[2], false, MAX)
                         )
                     end
                 end
@@ -313,9 +338,9 @@ describe("the bounded writer (refactor lane 11)", function()
 
     it("an order kind keeps lo <= est <= hi its own way", function()
         put(30, 40, 20)
-        I.ResourceApply(1, "refund.estUp")
+        I.ResourceApply(1, "refund.est_over_lo")
         assert.are.same({ 40, 40, 20 }, got()) -- est up to lo
-        I.ResourceApply(1, "refund.hiUp")
+        I.ResourceApply(1, "refund.hi_over_est")
         assert.are.same({ 40, 40, 40 }, got()) -- hi up to est
         put(30, 40, 20)
         I.ResourceApply(1, "unrefund", 0, 0, 0)
@@ -343,65 +368,149 @@ describe("the writer's source check (refactor lane 11)", function()
         end
         return out
     end
-    -- Whether a line (its code, comments cut) assigns one of est0/lo0/hi0: a slot array left of the line's first `=`
-    -- that is no comparison.
-    local function writes(l)
-        local code = l:gsub("%-%-.*$", "")
-        local i = 1
+    local SLOTS = { "est0", "lo0", "hi0" }
+    -- Whether the code from p on ends an assignment's target list: `=` (no `==`), or `,` and a further target first.
+    local function assigned(code, p)
         while true do
-            local s = code:find("=", i, true)
-            if not s then
+            p = select(2, code:find("^%s*", p)) + 1
+            local ch = code:sub(p, p)
+            if ch == "=" then
+                return code:sub(p + 1, p + 1) ~= "="
+            elseif ch ~= "," then
                 return false
             end
-            local before, after = code:sub(s - 1, s - 1), code:sub(s + 1, s + 1)
-            if after == "=" then
-                i = s + 2
-            elseif before == "<" or before == ">" or before == "~" or before == "=" then
-                i = s + 1
-            else
-                local lhs = code:sub(1, s - 1)
-                return lhs:find("%f[%w_]est0%[") ~= nil
-                    or lhs:find("%f[%w_]lo0%[") ~= nil
-                    or lhs:find("%f[%w_]hi0%[") ~= nil
+            local _, q = code:find("^%s*[%a_][%w_]*", p + 1)
+            if not q then
+                return false
+            end
+            p = q + 1
+            while true do -- the target's fields, indexes and calls
+                local _, m = code:find("^%s*%.%s*[%a_][%w_]*", p)
+                if not m then
+                    _, m = code:find("^%s*%b[]", p)
+                end
+                if not m then
+                    _, m = code:find("^%s*:%s*[%a_][%w_]*%s*%b()", p)
+                end
+                if not m then
+                    _, m = code:find("^%s*%b()", p)
+                end
+                if not m then
+                    break
+                end
+                p = m + 1
             end
         end
     end
+    -- What in a source (comments cut, lines kept) writes est0/lo0/hi0 or lets the array escape: an indexed slot that is
+    -- an assignment's target, even split over lines or after a first statement on its line; the array itself
+    -- un-indexed (an alias `local E = R.est0`, a call `f(R.est0)`); a string key (`R["est0"]`); rawset on it.
+    -- TargetHealth's own est0/lo0/hi0 are scalars (H, I.th), not slots.
+    -- shortcut: an alias of I.res named H or th escapes the alias rule (none exists); upgrade if one ever does.
+    local function escapes(src)
+        local code = src:gsub("%-%-[^\n]*", "")
+        local hits = {}
+        local function hit(at, what)
+            local _, n = code:sub(1, at):gsub("\n", "")
+            hits[#hits + 1] = (n + 1) .. ": " .. what
+        end
+        for _, name in ipairs(SLOTS) do
+            local pat = "%f[%w_]" .. name .. "%f[^%w_]"
+            local i = 1
+            while true do
+                local s, e = code:find(pat, i)
+                if not s then
+                    break
+                end
+                i = e + 1
+                local _, b = code:find("^%s*%b[]", e + 1)
+                if b then
+                    if assigned(code, b + 1) then
+                        hit(s, "write " .. name)
+                    end
+                else
+                    local base = code:sub(1, s - 1):match("([%w_]+)%s*[%.:]%s*$")
+                    if base and base ~= "H" and base ~= "th" then
+                        hit(s, "alias " .. name)
+                    end
+                end
+            end
+            for at in code:gmatch("()%[%s*[\"']" .. name .. "[\"']%s*%]") do
+                hit(at, "string key " .. name)
+            end
+            for at in code:gmatch("()rawset%s*%([^,%)]-" .. pat) do
+                hit(at, "rawset " .. name)
+            end
+        end
+        return hits
+    end
+
+    it("the check catches each way out, and passes reads and comparisons", function()
+        for _, c in ipairs({
+            { "R.est0[r] = v", true },
+            { "R.est0[r], R.lo0[r] = e, l", true },
+            { "x, R.hi0[r] = 1, 2", true },
+            { "R.est0[r],\n    R.lo0[r] = e, l", true }, -- a target list over two lines
+            { "R.est0[r]\n    = v", true },
+            { "local x = 1; R.lo0[r] = v", true }, -- a second statement on the line
+            { "local x = R.max[r] R.hi0[r] = v", true },
+            { "local E = R.est0", true }, -- an alias
+            { "local E = I.res.lo0", true },
+            { "f(R.hi0)", true },
+            { 'R["est0"][r] = v', true }, -- a string key
+            { "R['lo0'][r] = v", true },
+            { "rawset(R.hi0, r, v)", true },
+            { 'rawset(R["est0"], r, v)', true },
+            { "local e, l, h = R.est0[r], R.lo0[r], R.hi0[r]", false },
+            { "local e = R.est0[r]\nx = 1", false },
+            { "if R.est0[r] == x or R.lo0[r] <= x or R.hi0[r] >= x or R.est0[r] ~= x then end", false },
+            { "f(R.est0[r], y)", false },
+            { "H.est0, H.lo0, H.hi0 = 1, 0, 1", false }, -- TargetHealth's scalars
+            { "v = I.th.est0", false },
+            { "local R = { est0 = {}, lo0 = {}, hi0 = {} }", false }, -- the arrays' constructor
+            { "-- R.est0[r] = v", false },
+        }) do
+            assert.are.equal(c[2], #escapes(c[1]) > 0, c[1])
+        end
+    end)
 
     it("every write of est0, lo0 and hi0 in Families/Resources.lua is apply's", function()
-        local found, inApply = {}, false
-        for n, l in ipairs(lines(load.ROOT .. "Game/State/Families/Resources.lua")) do
+        local out, inApply = {}, false
+        for _, l in ipairs(lines(load.ROOT .. "Game/State/Families/Resources.lua")) do
             if l:find("^local function apply%(") then
                 inApply = true
             elseif inApply and l:find("^end") then
                 inApply = false
-            elseif not inApply and writes(l) then
-                found[#found + 1] = n .. ": " .. l
             end
+            out[#out + 1] = inApply and "" or l -- apply's own lines blanked, the rest kept at their line numbers
         end
-        assert.are.same({}, found)
+        assert.are.same({}, escapes(table.concat(out, "\n")))
     end)
 
     it("no other belief file writes a resource slot's est0, lo0 or hi0 #pin", function()
         local found = {}
         for _, path in ipairs(load.files()) do
             if not path:find("Families/Resources%.lua$") then
-                for n, l in ipairs(lines(path)) do
-                    if writes(l) then
-                        found[#found + 1] = path .. ":" .. n .. ": " .. l
-                    end
+                for _, h in ipairs(escapes(table.concat(lines(path), "\n"))) do
+                    found[#found + 1] = path .. ":" .. h
                 end
             end
         end
         assert.are.same({}, found)
     end)
 
-    it("the refund's nine clamps are nine named steps, in order", function()
+    it("the refund's nine clamps are nine named steps, in order, each its own kind", function()
         local src = table.concat(lines(load.ROOT .. "Game/State/Families/Resources.lua"), "\n")
         local body = assert(src:match("\nfunction I%.Refund%(.-\nend\n"), "I.Refund")
-        local names = {}
-        for k, name in body:gmatch("%-%- step (%d) ([%u ]+):") do
-            names[#names + 1] = k .. " " .. name:gsub("%s+$", "")
+        local names, kinds = {}, {}
+        for k, name, kind in body:gmatch('%-%- step (%d) (%u[%u ]*%u):.-apply%(r, "([^"]+)"') do
+            names[#names + 1] = k .. " " .. name
+            kinds[#kinds + 1] = kind
+            assert.are.equal("refund." .. name:lower():gsub(" ", "_"), kind, "step " .. k .. "'s kind")
+            local _, uses = src:gsub('apply%(r, "' .. kind:gsub("%.", "%%.") .. '"', "")
+            assert.are.equal(1, uses, kind .. " is step " .. k .. "'s alone")
         end
+        assert.are.equal(9, #kinds)
         assert.are.same({
             "1 KEEP LO",
             "2 KEEP EST",

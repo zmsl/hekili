@@ -393,17 +393,28 @@ local OP = {
     window = "add", -- the five-second rule's window moved
     shift = "add", -- our own cast's change (I.ResourceShift)
     ["refund.give"] = "put", -- a `now`'s give-back, from before the refund
-    refund = "set", -- the refund's keeps and tops
-    ["refund.floor"] = "put",
-    ["refund.estUp"] = "set",
-    ["refund.hiUp"] = "set",
+    -- the refund's nine named steps (I.Refund), one kind each
+    ["refund.keep_lo"] = "set",
+    ["refund.keep_est"] = "set",
+    ["refund.floor_lo"] = "put",
+    ["refund.floor_est"] = "put",
+    ["refund.top_hi"] = "set",
+    ["refund.top_est"] = "set",
+    ["refund.top_lo"] = "set",
+    ["refund.est_over_lo"] = "set",
+    ["refund.hi_over_est"] = "set",
     unrefund = "add",
     set = "put", -- I.ResourceSet
     spread = "put", -- I.ResourceGainSpread
     ["spread.keep"] = "set",
 }
-local ORDER =
-    { retract = "top", debt = "floor", ["refund.estUp"] = "floor", ["refund.hiUp"] = "top", unrefund = "down" }
+local ORDER = {
+    retract = "top",
+    debt = "floor",
+    ["refund.est_over_lo"] = "floor",
+    ["refund.hi_over_est"] = "top",
+    unrefund = "down",
+}
 
 local function apply(r, kind, e, l, h)
     local op, max = OP[kind], R.max[r]
@@ -472,23 +483,24 @@ I.ResourceApply = apply
 
 --- The bound helper (Pr-8): the three band rulings, stated once (owner L1672, L1675; lhv-live-band-is-fact). From the
 --- range (e, l, h) it returns the new e, l, h. Allocates nothing.
----  BAND (side nil): a live band [bLo, bTop] sets the floor and the ceiling: where the range meets it, the band's ends
+--- `ruling` names which: "band", "yes" or "short"; any other value raises (a nil never means "band").
+---  BAND ("band"): a live band [bLo, bTop] sets the floor and the ceiling: where the range meets it, the band's ends
 ---    clamped into the range (what the range already holds narrows it), else the band's ends (it wins both); est inside.
----  USABLE (side true: a yes at c; false: short at c): a one-sided bound about now that wins over the band. A yes takes
+---  USABLE ("yes" at c, or "short" at c): a one-sided bound about now that wins over the band. A yes takes
 ---    lo and est up to c, and a top under c opens to the band's top (c past it: c), or with no band to `max`; a short
 ---    one takes hi and est under c, and a floor past it to the bound (0 at least) or, with a band, to the band's low end
 ---    under that: only the side it contradicts yields (L1675), unless `edge`: the floor's own regen explains the answer (L1946).
 ---  REFINE: an exact read, a death or our own spend refines it, at its caller: a band at most a point wide is a pin
 ---    (applyBand), a plain read in the band's drain drops the band (Obs.Band: unband), our own change holds a band stamped
 ---    before it (holdsBack), and a death ends the target's (Families/TargetHealth.lua, TargetGone).
-local function bound(e, l, h, side, c, band, bLo, bTop, edge, max)
-    if side == nil then
+local function bound(e, l, h, ruling, c, band, bLo, bTop, edge, max)
+    if ruling == "band" then
         local f, g = bLo, bTop
         if l <= bTop and h >= bLo then
             f, g = l > bLo and l or bLo, h < bTop and h or bTop
         end
         return e < f and f or (e > g and g or e), f, g
-    elseif side then
+    elseif ruling == "yes" then
         if l < c then
             l = c
         end
@@ -502,6 +514,8 @@ local function bound(e, l, h, side, c, band, bLo, bTop, edge, max)
             end
         end
         return e, l, h
+    elseif ruling ~= "short" then
+        error("bound: unknown ruling " .. tostring(ruling))
     end
     local top = c - I.EPS
     if h > top then
@@ -1363,8 +1377,18 @@ local function ladder(r, c, affordable, t, lag)
     local e0, h0, bLo = R.est0[r], R.hi0[r], R.bandLo[r]
     -- a yes above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put the
     -- slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
-    local e, l, h =
-        bound(e0, R.lo0[r], h0, affordable, c, R.bandOn[r], bLo, bandTop(bLo, R.bandHi[r]), edgeFloor, R.max[r])
+    local e, l, h = bound(
+        e0,
+        R.lo0[r],
+        h0,
+        affordable and "yes" or "short",
+        c,
+        R.bandOn[r],
+        bLo,
+        bandTop(bLo, R.bandHi[r]),
+        edgeFloor,
+        R.max[r]
+    )
     apply(r, "rung", e, l, h)
     local snapped = affordable and e0 < c or not affordable and e0 > c - I.EPS
     if snapped then
@@ -1976,7 +2000,7 @@ local function applyBand(r, lo, hi, bt, t)
         pin(r, lo, 0, t, "observed", Obs.Band)
         R.pinValid[r], R.exactT[r] = false, bt
     else
-        local est, floor0, ceil0 = bound(e, l, h, nil, nil, true, lo, top, false, R.max[r])
+        local est, floor0, ceil0 = bound(e, l, h, "band", nil, true, lo, top, false, R.max[r])
         apply(r, "band", est, floor0, ceil0)
         R.assume[r], R.over[r] = false, 0
         I.Sample(R.power[r], "observed", est, t, Obs.Band)
@@ -2611,40 +2635,40 @@ function I.Refund(r, d, t, held, dL, dH, fE, fL)
     -- The nine clamps (CLAMP-r1), each a ruling. Keeps: an answer heard since the cast already holds the refund.
     -- step 1 KEEP LO: a usable answer since the cast raised lo, or `held` (a late refund, L1096): lo stays
     if held or R.sinceYes[r] then
-        apply(r, "refund", nil, lo)
+        apply(r, "refund.keep_lo", nil, lo)
     end
     -- step 2 KEEP EST: one raised est, or `held`: est stays
     if held or R.sinceSnap[r] then
-        apply(r, "refund", e)
+        apply(r, "refund.keep_est", e)
     end
     -- Floors: the give-back's own (L1237, L1295 I1: before the tops, so an answer only bounds it from below).
     -- step 3 FLOOR LO: lo at least fL
     if fL and R.lo0[r] < fL then
-        apply(r, "refund.floor", nil, fL)
+        apply(r, "refund.floor_lo", nil, fL)
         norm(r)
     end
     -- step 4 FLOOR EST: est at least fE
     if fE and R.est0[r] < fE then
-        apply(r, "refund.floor", fE)
+        apply(r, "refund.floor_est", fE)
     end
     -- Tops: the lowest top a short answer set since the cast, plus what the slot gained since (it saw the refunded pool).
     -- step 5 TOP HI: hi at most the top
     if R.hi0[r] > top then
-        apply(r, "refund", nil, nil, top)
+        apply(r, "refund.top_hi", nil, nil, top)
     end
     -- step 6 TOP EST: est at most the top
     if R.est0[r] > top then
-        apply(r, "refund", top)
+        apply(r, "refund.top_est", top)
     end
     -- step 7 TOP LO: lo at most the top
     if R.lo0[r] > top then
-        apply(r, "refund", nil, top)
+        apply(r, "refund.top_lo", nil, top)
     end
     -- The order (D-R3): a floor or a keep may have left lo over est, or est over hi.
     -- step 8 EST OVER LO: est up to lo
-    apply(r, "refund.estUp")
+    apply(r, "refund.est_over_lo")
     -- step 9 HI OVER EST: hi up to est
-    apply(r, "refund.hiUp")
+    apply(r, "refund.hi_over_est")
     if dL then -- a `now`'s give-back explains a flip (R.gain) by what est took, not by the whole take
         local took = R.est0[r] - e
         R.gain[r] = R.gain[r] - d + (took > 0 and took or 0)
