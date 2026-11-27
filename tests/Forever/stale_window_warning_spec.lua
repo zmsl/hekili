@@ -12,10 +12,11 @@ describe("the stale window read warning", function()
         return { spec = H.Hekili.State.spec.id, builtIn = false, lists = lists }
     end
 
-    local function warned()
+    -- the warnings naming priority `name` (the session dedupe and the profile outlive a test: each test owns its names)
+    local function warned(name)
         local out = {}
         for key in pairs(H.Hekili.ErrorDB) do
-            if key:find("never fire", 1, true) then
+            if key:find("never fire", 1, true) and key:find("'" .. name .. "'", 1, true) then
                 out[#out + 1] = key
             end
         end
@@ -50,7 +51,8 @@ describe("the stale window read warning", function()
                 default = { { enabled = true, action = "maul", criteria = "window.stalew.down" } },
             })
             H.Hekili.Scripts:LoadScripts()
-            local w = warned()
+            local w = warned("Old Copy")
+            assert.are.same({}, warned("Own"))
             assert.are.equal(1, #w, table.concat(w, "\n"))
             for _, s in ipairs({ "Old Copy", "default", "line 2", "stalew" }) do
                 assert.is_truthy(w[1]:find(s, 1, true), w[1])
@@ -60,11 +62,54 @@ describe("the stale window read warning", function()
         end
     )
 
+    it("names the first line by list, then line number, when several read the stale window", function()
+        local packs = H.Hekili.DB.profile.packs
+        packs["Declarer"] = pack({
+            windows = { { action = "window", window_name = "stalew", duration = "6", enabled = true } },
+            default = { { enabled = true, action = "maul", criteria = "window.stalew.up" } },
+        })
+        packs["Two Lines"] = pack({
+            default = {
+                { enabled = true, action = "maul", criteria = "rage>1" },
+                { enabled = true, action = "maul", criteria = "window.stalew.up" },
+                { enabled = true, action = "maul", criteria = "window.stalew.down" },
+            },
+        })
+        H.Hekili.Scripts:LoadScripts()
+        local w = warned("Two Lines")
+        assert.are.equal(1, #w, table.concat(w, "\n"))
+        assert.is_truthy(w[1]:find("line 2 ", 1, true), w[1])
+    end)
+
+    it("is silent for a disabled line, a class window, a priority's own window, and a longer name", function()
+        local packs = H.Hekili.DB.profile.packs
+        packs["Declarer"] = pack({
+            windows = { { action = "window", window_name = "stalew", duration = "6", enabled = true } },
+            default = { { enabled = true, action = "maul", criteria = "window.stalew.up" } },
+        })
+        packs["Quiet"] = pack({
+            default = {
+                { enabled = false, action = "maul", criteria = "window.stalew.up" },
+                { enabled = true, action = "maul", criteria = "mywindow.stalew.up" },
+            },
+        })
+        H.Hekili.Scripts:LoadScripts()
+        assert.are.same({}, warned("Quiet"))
+        assert.are.same({}, warned("(wowsims.com)")) -- every shipped priority reads only its own or a class window
+        -- a class window (registered by a pack's spec) another priority also declares: still silent
+        H.Hekili.Class.kit:RegisterWindow("classw", { duration = 6 })
+        H.Hekili.DB.profile.packs["Class Reader"] = pack({
+            default = { { enabled = true, action = "maul", criteria = "window.classw.up" } },
+        })
+        H.Hekili.Scripts:LoadScripts()
+        assert.are.same({}, warned("Class Reader"))
+    end)
+
     it("is silent for a window nobody declares (the compile error)", function()
         H.Hekili.DB.profile.packs["Nobody"] = pack({
             default = { { enabled = true, action = "maul", criteria = "window.nowhere_at_all.up" } },
         })
         H.Hekili.Scripts:LoadScripts()
-        assert.are.same({}, warned())
+        assert.are.same({}, warned("Nobody"))
     end)
 end)

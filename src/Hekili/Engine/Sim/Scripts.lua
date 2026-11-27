@@ -2202,6 +2202,16 @@ function scripts:LoadScripts()
 
     state.reset()
 
+    -- (windows design v6 §9) every priority's windows before any line compiles: a line reading one compiles against a
+    -- known name, whatever order the priorities load in (a window another priority declares reads closed)
+    for pack, pData in pairs( settings.packs ) do
+        if pData.spec and class.specs[ pData.spec ] then
+            local cw = scripts.CheckWindows( pData.lists, pack )
+            self.Windows[ pack ] = cw
+            for _, d in ipairs( cw.decls ) do self.declaredWindows[ d.name ] = true end
+        end
+    end
+
     for pack, pData in pairs( settings.packs ) do
         local specData = pData.spec and class.specs[ pData.spec ]
 
@@ -2214,10 +2224,7 @@ function scripts:LoadScripts()
             }
 
             self:MarkPure( pack )
-            -- (windows design v6 §9) the priority's windows first: a line reading one compiles against a known name
-            local cw = scripts.CheckWindows( pData.lists, pack )
-            self.Windows[ pack ] = cw
-            for _, d in ipairs( cw.decls ) do self.declaredWindows[ d.name ] = true end
+            local cw = self.Windows[ pack ]
 
             for list, lData in pairs( pData.lists ) do
                 for action, _ in ipairs( lData ) do
@@ -2244,20 +2251,31 @@ function scripts:LoadScripts()
     -- a line reading a window another priority declares, but neither its own priority nor a class pack does, reads it
     -- closed and never fires (a copy of a priority whose windows moved into the priority); a name nobody declares is a
     -- compile error already. Every pack has loaded here, so declaredWindows is complete.
+    local stale = {}
     for id, script in pairs( self.DB ) do
         local reads = script.WindowReads
-        if reads then
-            local pack, list, line = id:match( "^(.-):([^:]*):(%d+)$" )
-            local cw = pack and self.Windows[ pack ]
-            if cw and not script.Error then
-                for w in pairs( reads ) do
-                    local seen = pack .. ":" .. w
-                    if self.declaredWindows[ w ] and not cw.byName[ w ] and not luaWindow( w ) and not reportedStaleWindows[ seen ] then
-                        reportedStaleWindows[ seen ] = true
-                        Hekili:Error( L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."], pack, list, tonumber( line ), w )
-                    end
+        local pack, list, line = id:match( "^(.-):([^:]*):(%d+)$" )
+        local cw = reads and pack and self.Windows[ pack ]
+        if cw and not script.Error then
+            for w in pairs( reads ) do
+                if self.declaredWindows[ w ] and not cw.byName[ w ] and not luaWindow( w ) then
+                    stale[ #stale + 1 ] = { pack = pack, list = list, line = tonumber( line ), w = w }
                 end
             end
+        end
+    end
+    -- the message names the first line in list name, then line order, whatever order the table held them in
+    table.sort( stale, function( x, y )
+        if x.pack ~= y.pack then return x.pack < y.pack end
+        if x.list ~= y.list then return x.list < y.list end
+        if x.line ~= y.line then return x.line < y.line end
+        return x.w < y.w
+    end )
+    for _, r in ipairs( stale ) do
+        local seen = r.pack .. ":" .. r.w
+        if not reportedStaleWindows[ seen ] then
+            reportedStaleWindows[ seen ] = true
+            Hekili:Error( L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."], r.pack, r.list, r.line, r.w )
         end
     end
 
@@ -2508,9 +2526,9 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     script.ReadsWindow = lua ~= nil and lua:find( "window%." ) ~= nil -- its recheck adds the windows' times (State.lua)
 
     if lua then
-        if script.ReadsWindow then
+        if script.ReadsWindow and data.enabled ~= false then
             local reads = {}
-            for w in lua:gmatch( "window%.([A-Za-z_][A-Za-z_0-9]*)" ) do reads[ w ] = true end
+            for w in lua:gmatch( "%f[%w_]window%.([A-Za-z_][A-Za-z_0-9]*)" ) do reads[ w ] = true end
             script.WindowReads = reads
         end
 
