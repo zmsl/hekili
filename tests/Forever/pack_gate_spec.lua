@@ -203,7 +203,7 @@ describe("pack_gate's floor causes", function()
         table.sort(listed)
         assert.are.same(listed, only)
         -- the FLICKER rows whose reading equals the floor (gate-ab default arm, 672c0df31): the rule's + 0.01 would loosen them
-        for _, at in ipairs({ { "Combat", "flicker" }, { "Guardian", "flicker" }, { "Fury L60", "retracted" } }) do
+        for _, at in ipairs({ { "Combat", "flicker" }, { "Fury L60", "retracted" } }) do
             local found
             for _, e in ipairs(pack_gate.ONE_RULE_EXCEPTIONS) do
                 found = found or (e[1] == "FLICKER" and e[2] == at[1] and e[3] == at[2])

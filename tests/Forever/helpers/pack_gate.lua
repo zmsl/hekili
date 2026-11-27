@@ -598,9 +598,13 @@ M.FLICKER = {
     -- belief's 2.5 expectation; the pack line lowers it); residue untraced (L1990, L1992). Three trees, seeds 1-20 /
     -- 21-40 / 41-60: loOver (a) 428 / 2160 / 945, (b) 1372 / 1896 / 1877, (c) 1023 / 1869 / 1403; flicker 0.30 / 0.18 /
     -- 0.19 -> 0.31 / 0.11 / 0.30 -> 0.26 / 0.23 / 0.37. The cause field stays untraced (L1504 rule, L1988)
+    -- wave-2 stage 2 (fable-primal-fury-decision.md decision 3, owner-accepted reading L1988; seeds 1-20 on integ/1.0.0-w2
+    -- 7805f5676, the reading: flicker 0.26, unchanged since 952767330): flicker 0.30 -> 0.27 (the one rule L1814, reading
+    -- + 0.01). Cause: the pack line (L1984) lowered the gated reading 0.30 -> 0.26; the seeds 41-60 spread 0.37 is the
+    -- swing-window class (L1989, L1990), not floored here. The cause field stays untraced (L1504 rule, L1988)
     ["Guardian"] = {
         loOver = 1023,
-        flicker = 0.30,
+        flicker = 0.27,
         retracted = 0,
         readyShort = 0,
         heldReady = 443,
@@ -1582,12 +1586,6 @@ M.ONE_RULE_EXCEPTIONS = {
         "Marksmanship Turret",
         "loOver",
         why = "reads 0, kept at 196 (batch-5 ruling): at 0 the bands / shipped arms' untraced 15 need rows (L1853)",
-    },
-    {
-        "FLICKER",
-        "Guardian",
-        "flicker",
-        why = "reads its floor 0.30: the one rule's + 0.01 would loosen it, and a floor only moves down",
     },
     {
         "FLICKER",
