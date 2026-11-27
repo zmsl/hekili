@@ -1041,7 +1041,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "Die Zeitachse der Sp
 
 -- Hekili/Engine/Sim/Scripts.lua
 L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = "Diese Priorität vergleicht %s mit %d exakten Werten; Hekili kann %d beobachten. Diese Bedingungen nutzen stattdessen den nächsten 1-%%-Schritt."
--- L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."] = ""
+-- L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare, so that window reads as closed and the line may never fire, or fire differently. If this is a copy of a built-in priority, copy it again."] = ""
 L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = "Priorität %s, Liste %s, Zeile %d liest deine Gesundheit ohne vorangestelltes health.known. Solange Hekili deine Gesundheit nicht lesen kann, gilt sie als voll, daher kann diese Zeile erscheinen, wenn sie es nicht sollte: Beginne ihre Bedingung mit health.known&."
 
 -- Hekili/Engine/Sim/Core.lua
