@@ -1505,9 +1505,9 @@ s7 #1504 102.6446 102.6446 SWING_MISSED false Player-1 "" 1297 0 Creature-1 "" 2
 s7 #1505 105.0000 105 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
 s7 #1506 105.0629 105.0629 SWING_DAMAGE false Creature-1 "" 2632 0 Player-1 "" 1297 0 10 0 1 0 0 0 false false false false via=UNIT_COMBAT
 s7 #1507 104.5829 104.5829 SWING_MISSED false Player-1 "" 1297 0 Creature-1 "" 2632 0 MISS false 0 false via=tick
-s7 #1508 107.0000 107 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
-s7 #1509 107.0629 107.0629 SWING_DAMAGE false Creature-1 "" 2632 0 Player-1 "" 1297 0 14 0 1 0 0 0 false false false false via=UNIT_COMBAT
-s7 #1510 105.1446 105.1446 SWING_MISSED false Player-1 "" 1297 0 Creature-1 "" 2632 0 MISS true 0 false via=tick
+s7 #1508 105.1446 105.1446 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 29 0 1 0 0 0 false false false true via=UNIT_COMBAT
+s7 #1509 107.0000 107 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
+s7 #1510 107.0629 107.0629 SWING_DAMAGE false Creature-1 "" 2632 0 Player-1 "" 1297 0 14 0 1 0 0 0 false false false false via=UNIT_COMBAT
 s7 #1511 106.7829 106.7829 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 84 0 1 0 0 0 true false false false via=UNIT_COMBAT
 s7 #1512 107.6446 107.6446 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 50 0 1 0 0 0 true false false true via=UNIT_COMBAT
 s7 #1513 109.0000 109 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
