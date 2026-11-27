@@ -39,6 +39,7 @@ An ability that needs a toggle that is off, such as **Major Cooldowns** for a co
    - a condition that fails to compile, with the list and entry number;
    - an unknown talent or an action the specialization does not have;
    - a variable that is read but never set;
+   - a line that reads a window the priority does not declare, such as a copy of a built-in priority made before its windows moved into it: the window reads as closed, so the line never fires. Copy the built-in priority again;
 3. If the priority came from the importer, open its **Source** tab and read the **Import Log**. It lists every conversion the importer made and every line it switched off.
 
 ## Common causes

@@ -2034,6 +2034,7 @@ function scripts:BandWarning( pack, nameOf )
 end
 
 local reportedWindowErrors = {} -- LoadScripts: the window compile errors already reported this session
+local reportedStaleWindows = {} -- LoadScripts: the stale window reads already warned this session
 local reportedHealthLines = {} -- LoadScript: the custom lines warned this session for an unguarded health read (L1808)
 
 local function scriptLoader()
@@ -2235,6 +2236,26 @@ function scripts:LoadScripts()
                 if not reportedWindowErrors[ seen ] then -- once per line and error a session: every options edit loads again
                     reportedWindowErrors[ seen ] = true
                     Hekili:Error( "Priority '%s' list '%s' line %d: %s: %s; the line is skipped.", pack, e.list, e.line, e.code, e.text )
+                end
+            end
+        end
+    end
+
+    -- a line reading a window another priority declares, but neither its own priority nor a class pack does, reads it
+    -- closed and never fires (a copy of a priority whose windows moved into the priority); a name nobody declares is a
+    -- compile error already. Every pack has loaded here, so declaredWindows is complete.
+    for id, script in pairs( self.DB ) do
+        local reads = script.WindowReads
+        if reads then
+            local pack, list, line = id:match( "^(.-):([^:]*):(%d+)$" )
+            local cw = pack and self.Windows[ pack ]
+            if cw and not script.Error then
+                for w in pairs( reads ) do
+                    local seen = pack .. ":" .. w
+                    if self.declaredWindows[ w ] and not cw.byName[ w ] and not luaWindow( w ) and not reportedStaleWindows[ seen ] then
+                        reportedStaleWindows[ seen ] = true
+                        Hekili:Error( L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."], pack, list, tonumber( line ), w )
+                    end
                 end
             end
         end
@@ -2487,6 +2508,12 @@ function Hekili:LoadScript( pack, list, id, entries, scriptID )
     script.ReadsWindow = lua ~= nil and lua:find( "window%." ) ~= nil -- its recheck adds the windows' times (State.lua)
 
     if lua then
+        if script.ReadsWindow then
+            local reads = {}
+            for w in lua:gmatch( "window%.([A-Za-z_][A-Za-z_0-9]*)" ) do reads[ w ] = true end
+            script.WindowReads = reads
+        end
+
         for aura in lua:gmatch( "d?e?buff%.([a-z_0-9]+)" ) do
             scripts.PackInfo[ pack ].auras[ aura ] = true
         end
