@@ -515,24 +515,23 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
             local why = flicker.changes(f, O)
             return loop.flips(seq, f.n, nil, why), why, flicker.ledger(f, O)
         end
-        local cross = { [3] = { bands = { mana = { 670, 680, 675 } } }, [4] = { bands = { mana = { 680, 690, 684 } } } }
-        cross[5] = { bands = { mana = { 690, 700, 695 } } } -- the return on the next crossing (b's resource, L1791)
+        local cross = { [3] = { bands = { mana = { 60, 70, 65 } } }, [4] = { bands = { mana = { 70, 80, 74 } } } }
+        cross[5] = { bands = { mana = { 80, 90, 85 } } } -- the return on the next crossing (b's resource, L1791)
         local n, why, led = spender(cross)
         assert.are.same({ 0, "band", "band" }, { n, why[4], why[5] })
         local dip = led.entries[1]
         assert.are.same({ "dip", "band", "band", true }, { dip.kind, dip.fact, dip.back, dip.justified })
         -- the same change with no crossing of any relevant resource: mana's band holds, a resource neither spends moves
         local still = {
-            [3] = { bands = { mana = { 680, 690, 684 }, rage = { 1, 2, 1 } } },
-            [4] = { bands = { mana = { 680, 690, 684 }, rage = { 5, 6, 5 } } },
-            [5] = { bands = { mana = { 680, 690, 685 }, rage = { 9, 10, 9 } } },
+            [3] = { bands = { mana = { 70, 80, 74 }, rage = { 1, 2, 1 } } },
+            [4] = { bands = { mana = { 70, 80, 74 }, rage = { 5, 6, 5 } } },
+            [5] = { bands = { mana = { 70, 80, 76 }, rage = { 9, 10, 9 } } },
         }
         n, why, led = spender(still)
         assert.are.same({ 1, false, false }, { n, why[4], why[5] })
         assert.are.same({ "dip", false }, { led.entries[1].kind, led.entries[1].justified })
         -- a crossing the belief lies outside (an answer older than the band) is no fact
-        local outside =
-            { [3] = { bands = { mana = { 670, 680, 675 } } }, [4] = { bands = { mana = { 680, 690, 660 } } } }
+        local outside = { [3] = { bands = { mana = { 60, 70, 65 } } }, [4] = { bands = { mana = { 70, 80, 50 } } } }
         n, why = spender(outside)
         assert.are.same({ 1, false }, { n, why[4] })
     end)
