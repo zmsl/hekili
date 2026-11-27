@@ -915,7 +915,7 @@ describe("resources", function()
             I.Fold(23.5, false)
             obs(Obs.Read, 24, 1, v, I.ReadOf.Resource) -- the next instant's first pin closes the window at 23.5
             I.Fold(24, false)
-            within(1 + I.ALPHA * (v / 13.5 / per - 1), I.res.scale[1])
+            within(1 + I.ALPHA * (v / 45 - 1), I.res.scale[1]) -- per booked step (L1992): five landed steps of 9
         end)
 
         it(
@@ -1046,7 +1046,7 @@ describe("resources", function()
                     I.Fold(t + 1.3, false)
                     check()
                 end
-                assert.is_true(I.res.scale[1] ~= 1, "no window closed") -- the chain measured
+                assert.is_true(R.regen[1].last.modelled.t > 10, "no window closed") -- the chain measured
                 return worstLo, worstHi
             end
 
@@ -1060,15 +1060,18 @@ describe("resources", function()
                 assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
             end)
 
-            it("keeps them there when the swings an on-next-swing strike took are held out with a known gain", function()
-                local lo, hi = chain(function()
-                    return false
-                end, function(k)
-                    return k % 3 == 0
-                end)
-                assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
-                assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
-            end)
+            it(
+                "keeps them there when the swings an on-next-swing strike took are held out with a known gain",
+                function()
+                    local lo, hi = chain(function()
+                        return false
+                    end, function(k)
+                        return k % 3 == 0
+                    end)
+                    assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
+                    assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
+                end
+            )
         end)
 
         describe("a white crit (Swing c = 3 after the landed swing)", function()
