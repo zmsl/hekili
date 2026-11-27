@@ -1041,6 +1041,7 @@ L["The lane's time axis, the ruler and the focus zone."] = "L'asse del tempo del
 
 -- Hekili/Engine/Sim/Scripts.lua
 -- L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."] = ""
+-- L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."] = ""
 -- L["Priority %s, list %s, line %d reads your health without health.known first. While Hekili cannot read your health it counts as full, so this line can show when it should not: start its condition with health.known&."] = ""
 
 -- Hekili/Engine/Sim/Core.lua
