@@ -37,7 +37,7 @@ A=$(tree "$BASE" base) || exit 2
 B=$(tree "$HEAD" head) || exit 2
 
 run() { # run <tree> <side>
-    (cd "$1" && FLOORS_LABEL=$LABEL FLOORS_OUT=$TMP/$2.tsv FLOORS_SEEDS=$SEEDS FLOORS_MODE=chain \
+    (cd "$1" && FLOORS_LABEL=$LABEL FLOORS_OUT=$TMP/$2.tsv FLOORS_SEEDS=1-${SEEDS#*-} FLOORS_MODE=chain \
         "$BUSTED" --helper="$ROOT/tools/floors_trace.lua" "$SPEC" >"$TMP/$2.log" 2>&1)
 }
 run "$A" base &

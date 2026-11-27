@@ -5,10 +5,10 @@
 -- "skipped" so the run stays short. The arm is HEKILI_AB's, as in the gate; no .ab row is written.
 --   FLOORS_LABEL  the label (pack_gate.solo's first argument, e.g. "Fury L24")
 --   FLOORS_OUT    the dump file (tab-separated; tools/floors.lua diverge reads it)
---   FLOORS_MODE   chain (default): seeds 1..last on one boot, as the gate runs them, the clock and the pools carried
---                 from fight to fight; alone: each seed of FLOORS_SEEDS on its own fresh boot (a new clock, full pools,
+--   FLOORS_MODE   chain (default): seeds a..b on one fresh boot, as the gate (a = 1) or the accuracy wrap's later sets
+--                 (a = 21, 41) run them, the clock and the pools carried from fight to fight; alone: each seed of FLOORS_SEEDS on its own fresh boot (a new clock, full pools,
 --                 nothing learned): the per-fight clock
---   FLOORS_SEEDS  "a-b" or "s" (default 1-20; chain runs 1..b)
+--   FLOORS_SEEDS  "a-b" or "s" (default 1-20)
 -- Dump rows: "T seed n t ours theirs pressed lo est hi truth" per in-combat tick n (t from the fight's start; the
 -- belief's power lo / est / hi as the flicker ledger recorded it; truth the world's power), then "F seed boot ticks
 -- held loOver readyShort flips agree" per fight (boot: the instance's clock at the fight's start; flips press-only).
@@ -111,7 +111,7 @@ function pack_gate.solo(label, world, n, seed0)
             m = loop.tally(loop.new(world), 1, o)
         end
     else
-        m = loop.tally(loop.new(world), s1, { seed0 = 0 })
+        m = loop.tally(loop.new(world), s1 - s0 + 1, { seed0 = s0 - 1 })
     end
     fh:close()
     fh = nil
