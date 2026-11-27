@@ -251,6 +251,17 @@ describe("the tracked set", function()
         end
     )
 
+    it("forwards each hand's `critMay` (L1969), the off hand's as the paying hand's when it pays alone", function()
+        local model = h.Class.resources.rage.state.regenModel
+        model.mainhand.critMay = 5
+        model.offhand = { swing = "offhand", value = 4, critMay = 2 }
+        ns.BuildTracked()
+        assert.are.same({ 5, 2 }, { I.res.swingCritMay[1], I.res.swingOffCritMay[1] })
+        model.mainhand = nil
+        ns.BuildTracked()
+        assert.are.same({ 2, 2, 0 }, { I.res.swing[1], I.res.swingCritMay[1], I.res.swingOffCritMay[1] })
+    end)
+
     it("forwards the paying entry's `taken`, bound to the `now` context, and no other entry's", function()
         local model = h.Class.resources.rage.state.regenModel
         local function taken()

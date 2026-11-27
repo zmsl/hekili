@@ -1227,6 +1227,25 @@ describe("resources", function()
                 within(landed[2], confirmed[2])
             end)
 
+            -- (L1969, L1992 round 4) a crit's possible proc (`critMay`: a chance under 1, the Guardian's Primal Fury at
+            -- 1/2) is in the top, never in the floor or the estimate: the range holds the truth either way
+            it("lets the top allow a crit's possible proc (`critMay`), the floor and the estimate never", function()
+                local function crit(may)
+                    crits(7)
+                    I.res.swingCritMay[1] = may
+                    I.res.hi0[1] = 0 -- the top from 0 too (it starts at the maximum)
+                    obs(Obs.Swing, 7.6, 1, 2.6, 1)
+                    obs(Obs.Swing, 7.6, 1, 0, 3)
+                    I.Fold(7.6, false)
+                    local r = VS.Power(fs.RAGE, 7.6)
+                    return r.lo, r.est, r.hi
+                end
+                local lo0, est0, hi0 = crit(0)
+                local lo, est, hi = crit(5)
+                assert.are.same({ lo0, est0 }, { lo, est })
+                within(hi0 + 5, hi)
+            end)
+
             it("changes nothing for a swing entry without `crit`", function()
                 crits(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)
@@ -1307,6 +1326,8 @@ describe("resources", function()
                 assert.is_true(R.lo0[1] <= 10 + I.EPS, "lo " .. R.lo0[1]) -- the rung, not 6 + 7 x 0.98
             end)
 
+            -- the top holds the most that one swing may have paid (its width; L1969, L1992 round 4), the midpoint
+            -- stays on the value step
             it("pins a swing's crossing to one value step, measured at its midpoint: no width (review M1)", function()
                 widths(2)
                 local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
@@ -1316,10 +1337,35 @@ describe("resources", function()
                 I.Fold(10, false)
                 obs(Obs.Usable, 11, A, 1, 0) -- usable at the same cost, no gain of ours: a swing crossed it
                 I.Fold(11, false)
-                local step = 9 * (1 + R.spread[1])
+                local fh = 1 + R.spread[1]
+                local step = 9 * fh
                 within(10, R.lo0[1])
-                within(10 + step, R.hi0[1])
+                within(10 + (9 + 2) * fh, R.hi0[1])
                 within(10 + step / 2, R.pinV[1])
+            end)
+
+            -- (L1969, L1992 round 4) the swing that crossed is not heard yet: it may have been a crit with its proc, so
+            -- the top allows the largest hand's whole possible step; the floor, the estimate and the midpoint (the
+            -- scale's measurement) stay on the value step
+            it("lets a crossing pin's top hold the width, crit and crit proc, nothing else", function()
+                local function cross(crit, may)
+                    widths(2, 1)
+                    local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+                    R.swingCrit[1], R.swingCritMay[1], R.swingOffCrit[1] = crit, may, 3
+                    R.scale[1] = 1
+                    R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 20
+                    obs(Obs.Usable, 10, A, 0, 1) -- short of 10
+                    I.Fold(10, false)
+                    obs(Obs.Usable, 11, A, 1, 0)
+                    I.Fold(11, false)
+                    return R.lo0[1], R.est0[1], R.pinV[1], R.hi0[1]
+                end
+                local lo0, est0, v0, hi0 = cross(0, 0)
+                local lo, est, v, hi = cross(7, 5)
+                assert.are.same({ lo0, est0, v0 }, { lo, est, v })
+                local fh = 1 + I.res.spread[1]
+                within(10 + (9 + 2) * fh, hi0)
+                within(10 + (9 + 2) * fh + 7 + 5, hi) -- the main hand's, over the off hand's (4.5 + 1) x fh + 3
             end)
 
             it("changes nothing for a swing entry without `width`", function()
