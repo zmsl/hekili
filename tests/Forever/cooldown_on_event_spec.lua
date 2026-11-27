@@ -141,6 +141,70 @@ describe("a cooldown that starts when its aura ends (cooldownAfter)", function()
     end)
 end)
 
+-- Each declared holder and one spender its pack models (the `now` in the read, the handler in the forecast): the
+-- spend takes the aura down and starts the cooldown from it. Combustion (no spender modelled: its charges go on crits)
+-- and Shadowform (only cancelled) have none.
+describe("each declared holder's spend", function()
+    local CASES = {
+        { "mage_world", "Frost", "presence_of_mind", "frostbolt", 180 },
+        { "druid_loop_world", "Balance", "natures_swiftness", "wrath", 180 },
+        { "druid_loop_world", "Feral", "prowl", "ravage", 10 },
+        { "shaman_world", "Elemental", "natures_swiftness", "lightning_bolt", 180 },
+        { "rogue_world", "Combat", "cold_blood", "sinister_strike", 180 },
+        { "rogue_world", "Subtlety", "stealth", "ambush", 10 },
+        { "priest_world", "Shadow", "inner_focus", "mind_blast", 180 },
+        { "warlock_world", "Affliction", "amplify_curse", "bane_of_agony", 180 },
+    }
+    for _, c in ipairs(CASES) do
+        local holder, spender, cd = c[3], c[4], c[5]
+        it(holder .. " is held, then runs from " .. spender .. " (read and forecast)", function()
+            local C = require("Forever.helpers." .. c[1])[c[2]]
+            local ch = C.character()
+            local H0 = headless.new({ character = ch, pack = C.PACK })
+            local ab = H0.Hekili.Class.abilities
+            for _, key in ipairs({ holder, spender }) do -- known, whatever the content's kit
+                ch.known[#ch.known + 1] = ab[key].id
+            end
+            local H = headless.new({ character = ch, pack = C.PACK })
+            assert.are.same({}, H.loadErrors)
+            H.ctl.inRange.target, H.ctl.level.target = true, 60
+            H.Fire("PLAYER_TARGET_CHANGED")
+            local t = H.ctl.now + 0.2
+            assert(headless.cycle(H, t))
+            local st = H.Hekili.State
+            ab = H.Hekili.Class.abilities
+
+            -- the forecast
+            st.reset("Primary", true)
+            st.setCooldown(holder, cd)
+            st.runHandler(holder)
+            assert.is_true(st.cooldown[holder].remains > cd, "forecast hold")
+            st.advance(2)
+            H.ns.spendResources(spender) -- as the forecast's press does (Engine/Sim/Core.lua): a cost charge's spend
+            st.runHandler(spender)
+            assert.is_false(st.buff[holder].up, "forecast spend")
+            near(cd, st.cooldown[holder].remains, 0.01)
+
+            -- the read (in combat but Prowl and Stealth, used before it)
+            if holder ~= "prowl" and holder ~= "stealth" then
+                H.Fire("PLAYER_REGEN_DISABLED")
+            end
+            cast(H, t + 1, 1, ab[holder].id)
+            st.reset("Primary", true)
+            assert.is_true(st.cooldown[holder].remains > cd, "read hold")
+            t = t + 5
+            H.ctl.cooldown[H.ns.VirtualState.KnownID(ab[holder].id)] = RUNNING -- the client answers the known rank
+            cast(H, t, 2, ab[spender].id)
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            assert(headless.cycle(H, t + 0.2))
+            st.reset("Primary", true)
+            assert.is_false(st.buff[holder].up, "read spend")
+            near(cd - 0.2, st.cooldown[holder].remains)
+            assert.are.same({}, H.errors)
+        end)
+    end
+end)
+
 -- Every modelled spell of the class (wowsims pin ab0f00e4fc spells_auto_gen.go, Attr[0] & 0x02000000) declares its aura.
 describe("the packs' cooldown-on-event spells", function()
     local DECLARED = {
