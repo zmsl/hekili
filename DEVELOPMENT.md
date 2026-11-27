@@ -332,7 +332,8 @@ display still.
   refund arrive with it), an aura edge, a death or a retarget. Where the Cooldown Manager is on, two late facts also
   count: an aura edge one poll late (its light), and a miss of our own press found late by the Cooldown Manager
   verdict (a ranged auto shot's miss is not a press). Where the belief reads a power band, a crossing of that band is
-  a fact too. Corrections are never held back and never counted against a lane.
+  a fact too: the displayed power's band, or the band of the resource the changed ability itself spends (a mana
+  spell in Cat Form, under the displayed energy). Corrections are never held back and never counted against a lane.
 - **A stale answer is not a fact.** If the band crosses and the belief stays outside it, the belief is following an
   answer older than the band. That poll excuses nothing except our own press.
 - **A return needs its own new fact.** In A, B, A the change to B and the return to A must each follow a new fact.

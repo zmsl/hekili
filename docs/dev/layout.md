@@ -185,7 +185,8 @@ The flicker columns (the flicker ledger, `tests/Game/harness/flicker.lua`; what 
 headless loop design §5.1). `flicker X/min (oracle Y)` stays where it was: the first icon's A->B->A within 3 ticks,
 excused when B was pressed or, under the jitter rule (L1762 round 2, L1791), when the change to B and the return to A
 each follow a fact at their own poll (`flicker.changes`: the ledger's facts below, plus a crossing of the belief's
-power band that the belief follows; an aura edge's late light at the next poll is not a second fact) and neither poll
+power band, or (L2004) of the band of the resource the changed ability spends, that the belief follows; an aura
+edge's late light at the next poll is not a second fact) and neither poll
 is stale (the band crossed and the belief lies outside it). The oracle's takes the world's facts only. Before the
 ledger's fields comes `flicker press-only X (oracle Y) excused [press n; avoid n; aura n; target n; band n; verdict
 n]`: the count under the old press-only rule, and our flips the facts excused, by the change's fact. The

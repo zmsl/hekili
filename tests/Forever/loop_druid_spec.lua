@@ -286,3 +286,20 @@ describe("the Balance loop at a hard cast's end (gap BD) #slow", function()
         assert.are.same({}, flips)
     end)
 end)
+
+-- L2004: the flicker ledger's frames carry each slot's spend resource (the cost declaration's key) and the band the
+-- belief applied to every banded resource under that key, so a Cat's mana spell takes its mana band's crossing as a
+-- fact beside the displayed energy's (flicker.lua fact).
+describe("the Feral loop's ledger frames, the spend resource's band (L2004) #slow", function()
+    it("records a mana spender in slot 1 and the mana band beside the energy band (shipped arm)", function()
+        local loop = require("Game.harness.loop")
+        local a = loop.fight(loop.new(dlw.Feral), 2, { trace = false, arm = "shipped" })
+        local f, mana, energy = a.frames[1], 0, 0
+        for n = 1, a.combat do
+            local r, b = f.res[1][n], f.bands[f.res[1][n] or ""]
+            mana = mana + ((r == "mana" and b and b.bLo[n]) and 1 or 0)
+            energy = energy + ((r == "energy" and b and b.bLo[n] and b.bLo[n] == f.bLo[n]) and 1 or 0)
+        end
+        assert.is_true(mana > 0 and energy > 0, ("mana %d energy %d"):format(mana, energy))
+    end)
+end)
