@@ -32,9 +32,10 @@
 -- The return (L1791, the owner 2026-11-23: "new facts are always required"): in a, b, a the return to a needs its own
 -- new fact too, in loop.flips and in the ledger's dips; one aura edge is one fact, so its late light at the next poll
 -- does not excuse the change after the one it already excused.
--- The spend resource (L2004, the owner 2026-11-27): a crossing of the band of the resource the slot's ability before or
--- after the change spends (its cost declaration's), the belief inside it, is the band fact too (a Cat's mana spell
--- under the displayed energy); outside it, no fact (the displayed power's alone is `stale`).
+-- The spend resource (L2004, the owner's rulings 2026-11-27): a crossing of the band of the resource the ability the
+-- change brings in spends at that poll (its cost there above 0: loop.lua queue), the belief inside it, is the band fact
+-- too (a Cat's mana spell under the displayed energy); outside it, no fact. Staleness counts per resource: a stale
+-- displayed band vetoes the poll's facts (`stale`) but not that fresh crossing of the incoming ability's own resource.
 local M = {}
 
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
@@ -108,14 +109,14 @@ end
 
 -- The jitter rule's fact at poll c of slot s beyond the cause classes (L1762): a death or retarget, an aura edge now or
 -- (`viewer`: the Cooldown Manager on, its light late) one poll before, a band crossing the belief follows: of the
--- displayed power, or (L2004) of the resource the slot's ability before or after the change spends, else nil.
+-- displayed power, or (L2004) of the resource the ability the change brings in spends, else nil.
 local function fact(f, c, viewer, s)
     local ev = f.ev
     if ev.target[c] then
         return "target"
     elseif ev.aura[c] or (viewer and c > 1 and ev.aura[c - 1]) then
         return "aura"
-    elseif band(f, c) == true or crossed(f, f.res[s][c - 1], c) or crossed(f, f.res[s][c], c) then
+    elseif band(f, c) == true or crossed(f, f.res[s][c], c) then
         return "band"
     end
     return nil
@@ -123,8 +124,8 @@ end
 
 --- The jitter rule on slot 1's changes (L1762 round 2: the gated flicker, loop.flips): by poll c where the first icon
 --- changed, the fact it follows ("press", "avoid", fact()'s, or in a `viewer` arm "verdict": the first change left
---- without one within LATE after a miss of our press), "stale" (a band crossing the belief lies outside: every fact
---- but our press vetoed), else false. o: tick, viewer.
+--- without one within LATE after a miss of our press), "stale" (a displayed band crossing the belief lies outside: every fact
+--- but our press and the incoming ability's own fresh spend crossing vetoed, L2004 A), else false. o: tick, viewer.
 function M.changes(f, o)
     local why, ev, name = {}, f.ev, f.name[1]
     for c = 2, f.n do
@@ -133,7 +134,8 @@ function M.changes(f, o)
             if ev.press[c] then -- our cast or spend, a ranged auto shot's not (loop.lua `press`)
                 w = "press"
             elseif band(f, c) == "stale" then
-                w = "stale"
+                -- staleness counts per resource (L2004 A): the incoming ability's own fresh crossing stands
+                w = crossed(f, f.res[1][c], c) and "band" or "stale"
             elseif ev.outcome[c] then -- an avoid row of ours, a ranged auto shot's not (loop.lua `outcome`)
                 w = "avoid"
             else

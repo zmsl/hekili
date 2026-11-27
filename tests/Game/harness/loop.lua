@@ -628,6 +628,7 @@ local function queue(H, q, n, res)
     end
     return k
 end
+M.queue = queue -- loop_spec pins the spend resource rule (L2004 C)
 
 -- Our events in the world's truth from index `from` into `e` (flicker.EVENTS flags, OR-ed in); the next index.
 local function events(W, us, from, e)

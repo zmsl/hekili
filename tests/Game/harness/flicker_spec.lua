@@ -496,31 +496,45 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
         assert.are.equal(1, (flip(up)))
     end)
 
-    -- L2004: an ability spending another resource than the displayed one (a mana spell in an energy form) takes its
-    -- own resource's band crossing as a fact
-    it("excuses a change at a band crossing of the resource the changed ability spends (L2004)", function()
-        local function spender(mod)
-            local rows = {}
-            for i, x in ipairs({ "a", "a", "a", "b", "a", "a" }) do
-                rows[i] = { s = { x == "a" and { "a", 0.2, 10, "energy" } or { "b", 0.2, 0, "mana" } } }
-                for k, v in pairs(mod[i] or {}) do
-                    rows[i][k] = v
-                end
+    -- L2004 (owner rulings 2026-11-27): the ability a change brings in takes a fresh crossing of the band of the
+    -- resource it spends as a fact (a mana spell in an energy form); the ability leaving does not (B)
+    local function spender(mod, bRes)
+        local rows = {}
+        for i, x in ipairs({ "a", "a", "a", "b", "a", "a" }) do
+            rows[i] = { s = { x == "a" and { "a", 0.2, 10, "energy" } or { "b", 0.2, 0, bRes or "mana" } } }
+            for k, v in pairs(mod[i] or {}) do
+                rows[i][k] = v
             end
-            local f = build(rows)
-            local seq = {}
-            for i = 1, f.n do
-                seq[i] = f.name[1][i]
-            end
-            local why = flicker.changes(f, O)
-            return loop.flips(seq, f.n, nil, why), why, flicker.ledger(f, O)
         end
-        local cross = { [3] = { bands = { mana = { 60, 70, 65 } } }, [4] = { bands = { mana = { 70, 80, 74 } } } }
-        cross[5] = { bands = { mana = { 80, 90, 85 } } } -- the return on the next crossing (b's resource, L1791)
+        local f = build(rows)
+        local seq = {}
+        for i = 1, f.n do
+            seq[i] = f.name[1][i]
+        end
+        local why = flicker.changes(f, O)
+        return loop.flips(seq, f.n, nil, why), why, flicker.ledger(f, O)
+    end
+
+    it("excuses a change at a band crossing of the resource the incoming ability spends (L2004)", function()
+        -- b comes in on its mana's crossing; a comes back on its energy's (no displayed band here: spend bands only)
+        local cross = {
+            [3] = { bands = { mana = { 60, 70, 65 }, energy = { 10, 11, 10 } } },
+            [4] = { bands = { mana = { 70, 80, 74 }, energy = { 10, 11, 10.5 } } },
+            [5] = { bands = { mana = { 70, 80, 76 }, energy = { 12, 13, 12 } } },
+        }
         local n, why, led = spender(cross)
         assert.are.same({ 0, "band", "band" }, { n, why[4], why[5] })
         local dip = led.entries[1]
         assert.are.same({ "dip", "band", "band", true }, { dip.kind, dip.fact, dip.back, dip.justified })
+        -- the leaving ability's crossing is none (B): a's energy crosses as b comes in, b's mana as a comes back
+        local leaving = {
+            [3] = { bands = { mana = { 60, 70, 65 }, energy = { 10, 11, 10 } } },
+            [4] = { bands = { mana = { 60, 70, 66 }, energy = { 12, 13, 12 } } },
+            [5] = { bands = { mana = { 70, 80, 74 }, energy = { 12, 13, 12.5 } } },
+        }
+        n, why, led = spender(leaving)
+        assert.are.same({ 1, false, false }, { n, why[4], why[5] })
+        assert.are.same({ "dip", false }, { led.entries[1].kind, led.entries[1].justified })
         -- the same change with no crossing of any relevant resource: mana's band holds, a resource neither spends moves
         local still = {
             [3] = { bands = { mana = { 70, 80, 74 }, rage = { 1, 2, 1 } } },
@@ -535,6 +549,24 @@ describe("the jitter rule on the gated flicker (flicker.changes, loop.flips, L17
         n, why = spender(outside)
         assert.are.same({ 1, false }, { n, why[4] })
     end)
+
+    it(
+        "judges staleness per resource: a stale displayed band does not veto the incoming spend's crossing (L2004)",
+        function()
+            -- the displayed band crosses to 33-34 with the belief at 29.99 (stale) while b's mana crosses fresh
+            local A = {
+                [3] = { band = { 28, 29 }, bands = { mana = { 60, 70, 65 } } },
+                [4] = { band = { 33, 34 }, lo = 29.99, bands = { mana = { 70, 80, 74 } } },
+                [5] = { band = { 33, 34 }, lo = 29.99, ev = { press = true } },
+            }
+            local n, why = spender(A)
+            assert.are.same({ 0, "band" }, { n, why[4] })
+            -- b spending the displayed power itself: its own band is the stale one (frames key it beside bLo/bHi)
+            A[3].bands, A[4].bands = { energy = { 28, 29, 28.5 } }, { energy = { 33, 34, 29.99 } }
+            n, why = spender(A, "energy")
+            assert.are.same({ 1, "stale" }, { n, why[4] })
+        end
+    )
 
     it("does not excuse a change that follows a stale answer, older than the band crossing at its poll", function()
         -- B4 round 4's class A: the band crosses to 33-34, the belief sits at 29.99 (a short answer from before it)
