@@ -217,7 +217,7 @@ tools-test:
 # does; `make gate` runs every tag itself, so a plain check-full leaves it out (`make gate FULL=1` runs the Warlock gate twice, plain gate once).
 # shortcut: a failed or killed run leaves its start manifest in /tmp; harmless, write is the only reader.
 STAMP_START := $(shell mktemp -u /tmp/hekili-check-start.XXXXXX)
-STAMP_OFF := $(strip $(filter-out FULL=%,$(MAKEOVERRIDES)) $(findstring i,$(firstword -$(MAKEFLAGS))) $(findstring e,$(firstword -$(MAKEFLAGS))))
+STAMP_OFF := $(strip $(filter-out FULL=%,$(MAKEOVERRIDES)) $(findstring i,$(firstword $(filter-out --%,$(MAKEFLAGS)))) $(findstring e,$(firstword $(filter-out --%,$(MAKEFLAGS)))))
 check:
 	@if [ -z "$(FULL)$(STAMP_OFF)" ] && scripts/check_stamp.sh test; then :; else $(MAKE) check-full; fi
 
