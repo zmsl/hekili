@@ -915,7 +915,26 @@ describe("resources", function()
             I.Fold(23.5, false)
             obs(Obs.Read, 24, 1, v, I.ReadOf.Resource) -- the next instant's first pin closes the window at 23.5
             I.Fold(24, false)
-            within(1 + I.ALPHA * (v / 13.5 / per - 1), I.res.scale[1])
+            within(1 + I.ALPHA * (v / 45 - 1), I.res.scale[1]) -- per booked step (L1992): five landed steps of 9
+        end)
+
+        -- (L2011 (4)) the boot spread is the scale's deviation before any window: one window's ratio moves it by alpha,
+        -- it does not replace it (a deviation booted at 0 left alpha x |ratio - scale|, 0.1 -> ~0.03 on the first close)
+        it("keeps the boot spread's weight through the swing scale's first window", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            for k = 0, 4 do
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 0, 1)
+            end
+            I.Fold(21, false)
+            local v = 45 * 1.05 -- five landed steps of 9, 5% over the model
+            obs(Obs.Read, 23.5, 1, v, I.ReadOf.Resource)
+            I.Fold(23.5, false)
+            obs(Obs.Read, 24, 1, v, I.ReadOf.Resource)
+            I.Fold(24, false)
+            local s = 1 + I.ALPHA * 0.05
+            within(s, I.res.scale[1])
+            within(I.REGEN_SPREAD + I.ALPHA * (math.abs(1.05 - s) - I.REGEN_SPREAD), I.res.spread[1])
         end)
 
         it(
@@ -1003,6 +1022,162 @@ describe("resources", function()
             assert.are.same({ 1, 0, 0 }, { I.res.scale[1], I.res.swAccT[1], I.res.swAccG[1] })
         end)
 
+        -- (L1992, owner L1947 + L1969) a world whose landed swing pays exactly the model's 9: a landed swing's floor step
+        -- (value x (scale - spread)) never above 9 and its top step (value x (scale + spread)) never under it, whatever
+        -- else the hand did. Exact reads, so every window's gain is the truth: any lift is the scale's reference.
+        describe("on a fixed-step world (L1992)", function()
+            -- 40 swings 2.6 s apart from t 12.6; `avoided(k)` swings land nothing (settled as a dodge), `held(k)` ones are
+            -- a swing an on-next-swing strike took (no white step) inside an interval held out by a known gain of 5. An
+            -- exact read 0.1 s after each swing (the flip a swing's rage causes, before its credit's row, ~0.35 s on)
+            -- and 1.3 s after it; each landed credit folds after the first read. Returns the worst floor and top factors.
+            local function chain(avoided, held)
+                local R, truth, worstLo, worstHi = I.res, 0, -math.huge, math.huge
+                local function check()
+                    local s, sp = R.scale[1], R.spread[1]
+                    worstLo = math.max(worstLo, s - sp)
+                    worstHi = math.min(worstHi, s + sp)
+                end
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                I.Fold(10, false)
+                for k = 1, 40 do
+                    local t = 10 + 2.6 * k
+                    obs(Obs.Swing, t, 1, 2.6, 4)
+                    I.Fold(t, false)
+                    local landed = not avoided(k) and not held(k)
+                    if landed then
+                        truth = truth + 9
+                    elseif held(k) then
+                        I.ResourceShift(1, 5, t, Obs.CastSuccess)
+                        truth = truth + 5
+                    end
+                    obs(Obs.Read, t + 0.1, 1, truth, I.ReadOf.Resource)
+                    I.Fold(t + 0.1, false)
+                    check()
+                    if landed then
+                        obs(Obs.Swing, t, 1, 0, 1)
+                        obs(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.WOUND)
+                    elseif avoided(k) then
+                        obs(Obs.SwingSettled, t + 0.45, 1, t, I.HitKind.DODGE)
+                    end
+                    I.Fold(t + 0.45, false)
+                    check()
+                    obs(Obs.Read, t + 1.3, 1, truth, I.ReadOf.Resource)
+                    I.Fold(t + 1.3, false)
+                    check()
+                end
+                assert.is_true(R.regen[1].last.modelled.t > 10, "no window closed") -- the chain measured
+                return worstLo, worstHi
+            end
+
+            it("keeps the floor and top steps around the true step with a quarter of the swings avoided", function()
+                local lo, hi = chain(function(k)
+                    return k % 4 == 0
+                end, function()
+                    return false
+                end)
+                assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
+                assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
+            end)
+
+            -- (L1992 hull) a scale that reads off the declared step (source C: usable pins are bracket middles) still
+            -- leaves the declared step inside the range: a landed swing's floor step at most value x 1, its top step at
+            -- least value x 1, and the regen's lo / hi around the declared rate.
+            local function hull(s, sp)
+                local R = I.res
+                R.scale[1], R.spread[1] = s, sp
+                R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 0, 1)
+                I.Fold(11, false)
+                local v, w, per = I.SwingValue(1, 1), I.SwingWidth(1, 1), I.SwingPerSecond(1)
+                local fl, fh = math.min(s - sp, 1), math.max(s + sp, 1)
+                within(20 + (v - w) * fl, R.lo0[1], 1e-9)
+                within(20 + (v + w) * fh, R.hi0[1], 1e-9)
+                local g = VS.Regen(fs.RAGE, 11)
+                within(per * fl, g.lo, 1e-9)
+                within(per * fh, g.hi, 1e-9)
+            end
+
+            it("keeps a landed swing's floor step at most the declared step when the scale reads high", function()
+                hull(1.2, 0.05)
+            end)
+
+            it("keeps a landed swing's top step at least the declared step when the scale reads low", function()
+                hull(0.8, 0.05)
+            end)
+
+            it("books a landed step whose row is heard after the pin into the window that holds its swing", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Read, 10.6, 1, 9, I.ReadOf.Resource) -- the flip its rage caused, before its row
+                I.Fold(10.6, false)
+                assert.are.same({ 0, 9 }, { R.swAccV[1], R.swAccG[1] })
+                obs(Obs.Swing, 10.5, 1, 0, 1)
+                I.Fold(11, false)
+                assert.are.equal(9, R.swAccV[1])
+            end)
+
+            it("books an assumed share and its confirmation's rest: one whole step", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 2, 5) -- record 2 assumed at the hit rate's share
+                obs(Obs.Swing, 10.5, 1, 2, 7) -- and confirmed
+                obs(Obs.Read, 11, 1, 9, I.ReadOf.Resource)
+                I.Fold(11, false)
+                within(9, R.swAccV[1], 1e-9)
+            end)
+
+            it("closes no window while a swing inside it has no outcome yet", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                I.Fold(10, false)
+                for k = 1, 5 do
+                    local t = 10 + 2.6 * k
+                    obs(Obs.Swing, t, 1, 2.6, 4)
+                    obs(Obs.Swing, t, 1, 0, 1)
+                end
+                obs(Obs.Swing, 25.6, 1, 2.6, 4) -- a sixth swing, its row still out at the next two pins
+                obs(Obs.Read, 25.7, 1, 6 * 10.8, I.ReadOf.Resource) -- 20% over the model
+                I.Fold(25.7, false)
+                obs(Obs.Read, 26, 1, 6 * 10.8, I.ReadOf.Resource)
+                I.Fold(26, false)
+                assert.are.equal(1, R.scale[1]) -- the window ends at 25.7 and holds the sixth swing: no close
+                obs(Obs.Swing, 25.6, 1, 0, 1)
+                I.Fold(26.1, false)
+                obs(Obs.Read, 26.5, 1, 6 * 10.8, I.ReadOf.Resource)
+                I.Fold(26.5, false)
+                within(1 + I.ALPHA * (6 * 10.8 / 54 - 1), R.scale[1]) -- six booked steps of 9, the truth's 10.8 each
+            end)
+
+            it("drops the window and holds the open interval out when a credit is taken back", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 1, 1) -- record 1 credited
+                obs(Obs.Read, 11, 1, 9, I.ReadOf.Resource)
+                I.Fold(11, false)
+                assert.is_true(R.swAccT[1] > 0)
+                obs(Obs.Swing, 11.2, 1, 1, 6) -- taken back
+                I.Fold(11.2, false)
+                assert.are.same({ 0, 0, 0, true }, { R.swAccG[1], R.swAccT[1], R.swAccV[1], R.pinOwn[1] })
+            end)
+
+            it(
+                "keeps them there when the swings an on-next-swing strike took are held out with a known gain",
+                function()
+                    local lo, hi = chain(function()
+                        return false
+                    end, function(k)
+                        return k % 3 == 0
+                    end)
+                    assert.is_true(lo <= 1 + 1e-9, ("floor factor %.4f over the true step"):format(lo))
+                    assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
+                end
+            )
+        end)
+
         describe("a white crit (Swing c = 3 after the landed swing)", function()
             local function crits(crit)
                 local def = fs.def(fs.new(9))
@@ -1021,7 +1196,7 @@ describe("resources", function()
                 I.Fold(7.6, false)
                 local r = VS.Power(fs.RAGE, 7.6)
                 within(2 * 9 * 1.2 + 7, r.est)
-                within(2 * 9 * (1.2 - I.REGEN_SPREAD) + 7, r.lo)
+                within(2 * 9 * math.min(1.2 - I.REGEN_SPREAD, 1) + 7, r.lo) -- the floor's factor at most 1 (L1992 hull)
             end)
 
             it("loses the bonus above the cap", function()
@@ -1052,6 +1227,25 @@ describe("resources", function()
                 within(landed[2], confirmed[2])
             end)
 
+            -- (L1969, L1992 round 4) a crit's possible proc (`critMay`: a chance under 1, the Guardian's Primal Fury at
+            -- 1/2) is in the top, never in the floor or the estimate: the range holds the truth either way
+            it("lets the top allow a crit's possible proc (`critMay`), the floor and the estimate never", function()
+                local function crit(may)
+                    crits(7)
+                    I.res.swingCritMay[1] = may
+                    I.res.hi0[1] = 0 -- the top from 0 too (it starts at the maximum)
+                    obs(Obs.Swing, 7.6, 1, 2.6, 1)
+                    obs(Obs.Swing, 7.6, 1, 0, 3)
+                    I.Fold(7.6, false)
+                    local r = VS.Power(fs.RAGE, 7.6)
+                    return r.lo, r.est, r.hi
+                end
+                local lo0, est0, hi0 = crit(0)
+                local lo, est, hi = crit(5)
+                assert.are.same({ lo0, est0 }, { lo, est })
+                within(hi0 + 5, hi)
+            end)
+
             it("changes nothing for a swing entry without `crit`", function()
                 crits(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)
@@ -1080,13 +1274,13 @@ describe("resources", function()
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
                 within(9 * 1.2, r.est)
-                within(7 * (1.2 - sp), r.lo)
+                within(7 * math.min(1.2 - sp, 1), r.lo) -- the floor's factor at most 1 (L1992 hull)
                 within(11 * (1.2 + sp), r.hi)
                 obs(Obs.Swing, 5.5, 2, 2.6, 1) -- the off hand: its own width
                 I.Fold(5.5, false)
                 r = VS.Power(fs.RAGE, 5.5)
                 within((9 + 4.5) * 1.2, r.est)
-                within((7 + 3.5) * (1.2 - sp), r.lo)
+                within((7 + 3.5) * math.min(1.2 - sp, 1), r.lo)
             end)
 
             it("lifts lo by the step without the width when a provider's assumed hit is confirmed", function()
@@ -1097,7 +1291,7 @@ describe("resources", function()
                 assert.are.equal(0, R.lo0[1])
                 obs(Obs.Swing, 5, 1, 3, 7) -- its row
                 I.Fold(5.1, false)
-                within(7 * (1.2 - sp), R.lo0[1])
+                within(7 * math.min(1.2 - sp, 1), R.lo0[1])
                 within(9 * 1.2, R.est0[1])
             end)
 
@@ -1132,6 +1326,8 @@ describe("resources", function()
                 assert.is_true(R.lo0[1] <= 10 + I.EPS, "lo " .. R.lo0[1]) -- the rung, not 6 + 7 x 0.98
             end)
 
+            -- the top holds the most that one swing may have paid (its width; L1969, L1992 round 4), the midpoint
+            -- stays on the value step
             it("pins a swing's crossing to one value step, measured at its midpoint: no width (review M1)", function()
                 widths(2)
                 local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
@@ -1141,10 +1337,35 @@ describe("resources", function()
                 I.Fold(10, false)
                 obs(Obs.Usable, 11, A, 1, 0) -- usable at the same cost, no gain of ours: a swing crossed it
                 I.Fold(11, false)
-                local step = 9 * (1 + R.spread[1])
+                local fh = 1 + R.spread[1]
+                local step = 9 * fh
                 within(10, R.lo0[1])
-                within(10 + step, R.hi0[1])
+                within(10 + (9 + 2) * fh, R.hi0[1])
                 within(10 + step / 2, R.pinV[1])
+            end)
+
+            -- (L1969, L1992 round 4) the swing that crossed is not heard yet: it may have been a crit with its proc, so
+            -- the top allows the largest hand's whole possible step; the floor, the estimate and the midpoint (the
+            -- scale's measurement) stay on the value step
+            it("lets a crossing pin's top hold the width, crit and crit proc, nothing else", function()
+                local function cross(crit, may)
+                    widths(2, 1)
+                    local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+                    R.swingCrit[1], R.swingCritMay[1], R.swingOffCrit[1] = crit, may, 3
+                    R.scale[1] = 1
+                    R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 20
+                    obs(Obs.Usable, 10, A, 0, 1) -- short of 10
+                    I.Fold(10, false)
+                    obs(Obs.Usable, 11, A, 1, 0)
+                    I.Fold(11, false)
+                    return R.lo0[1], R.est0[1], R.pinV[1], R.hi0[1]
+                end
+                local lo0, est0, v0, hi0 = cross(0, 0)
+                local lo, est, v, hi = cross(7, 5)
+                assert.are.same({ lo0, est0, v0 }, { lo, est, v })
+                local fh = 1 + I.res.spread[1]
+                within(10 + (9 + 2) * fh, hi0)
+                within(10 + (9 + 2) * fh + 7 + 5, hi) -- the main hand's, over the off hand's (4.5 + 1) x fh + 3
             end)
 
             it("changes nothing for a swing entry without `width`", function()
@@ -1152,7 +1373,7 @@ describe("resources", function()
                 obs(Obs.Swing, 5, 1, 2.6, 1)
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
-                within(9 * (1.2 - I.res.spread[1]), r.lo)
+                within(9 * math.min(1.2 - I.res.spread[1], 1), r.lo)
                 within(9 * (1.2 + I.res.spread[1]), r.hi)
             end)
         end)

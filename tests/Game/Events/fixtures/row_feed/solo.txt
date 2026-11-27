@@ -830,9 +830,9 @@ s4 #829 99.0000 99 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 263
 s4 #830 97.9050 97.9050 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 0 0 1 0 0 0 false false false false via=tick
 s4 #831 98.0049 98.0049 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 26 0 1 0 0 0 false false false true via=UNIT_COMBAT
 s4 #832 100.3850 100.3850 SWING_MISSED false Creature-1 "" 2632 0 Player-1 "" 1297 0 MISS false 0 false via=UNIT_COMBAT
-s4 #833 101.0000 101 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
-s4 #834 100.5049 100.5049 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 25 0 1 0 0 0 false false false true via=UNIT_COMBAT
-s4 #835 100.1050 100.1050 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 0 0 1 0 0 0 false false false false via=tick
+s4 #833 100.1050 100.1050 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 94 0 1 0 0 0 true false false false via=UNIT_COMBAT
+s4 #834 101.0000 101 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
+s4 #835 100.5049 100.5049 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 25 0 1 0 0 0 false false false true via=UNIT_COMBAT
 s4 #836 102.3850 102.3850 SWING_DAMAGE false Creature-1 "" 2632 0 Player-1 "" 1297 0 10 0 1 0 0 0 false false false false via=UNIT_COMBAT
 s4 #837 102.3050 102.3050 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 40 0 1 0 0 0 false false false false via=UNIT_COMBAT
 s4 #838 103.0000 103 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
@@ -2995,7 +2995,7 @@ s14 #2994 86.6751 86.6751 SWING_MISSED false Player-1 "" 1297 0 Creature-1 "" 26
 s14 #2995 89.0000 89 SPELL_CAST_SUCCESS false Player-1 "" 1297 0 Creature-1 "" 2632 0 1001 "" 1 via=UNIT_SPELLCAST_SUCCEEDED
 s14 #2996 88.8751 88.8751 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 40 0 1 0 0 0 false false false false via=UNIT_COMBAT
 s14 #2997 89.9669 89.9669 SWING_DAMAGE false Creature-1 "" 2632 0 Player-1 "" 1297 0 10 0 1 0 0 0 false false false false via=UNIT_COMBAT
-s14 #2998 89.5146 89.5146 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 0 0 1 0 0 0 false false false true via=tick
+s14 #2998 89.5146 89.5146 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 32 0 1 0 0 0 false false false true via=UNIT_COMBAT
 s14 #2999 91.9669 91.9669 SWING_MISSED false Creature-1 "" 2632 0 Player-1 "" 1297 0 DODGE false 0 false via=UNIT_COMBAT
 s14 #3000 91.0751 91.0751 SWING_MISSED false Player-1 "" 1297 0 Creature-1 "" 2632 0 DODGE false 0 false via=tick
 s14 #3001 92.0146 92.0146 SWING_DAMAGE false Player-1 "" 1297 0 Creature-1 "" 2632 0 30 0 1 0 0 0 false false false true via=UNIT_COMBAT

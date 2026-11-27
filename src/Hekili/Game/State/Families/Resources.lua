@@ -25,7 +25,9 @@ I.BAND_STAMP = I.Lat.lag("band.stamp")
 --- correct, so they do not count (both raised the loops' flicker: Guardian 3.35 -> 3.52, Fury 1.77 -> 1.96).
 --- One row with the core's def.oracleMin (Latency.lua's usable.shows, re-read at the build).
 I.GAIN_SHOWS = I.Lat.lag("usable.shows")
---- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
+--- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC), booked
+--- landed steps (L1992: a step's value is what the scale measures, so the hit rate's noise and the swings held out with
+--- an interval stay out of it).
 I.SWING_STEPS = 5
 
 -- Usability as observed: unknown, not usable, usable, not usable for lack of its resource.
@@ -35,7 +37,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- off hand's own value when both hands pay it (0: none); `swingAura[r]` the player aura index its swings need (0: none;
 -- -1: named but not tracked, so no swing pays); `swingCrit[r]` / `swingOffCrit[r]` the extra a critical white hit of
 -- that hand adds (0: none); `swingWidth[r]` / `swingOffWidth[r]` the half-width of that hand's value, a random part the
--- belief cannot see (a proc's expected gain; 0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- belief cannot see (a proc's expected gain; 0: none); `swingCritMay[r]` / `swingOffCritMay[r]` what a crit of that hand
+-- may add besides (a proc at a chance under 1: 0 none), in the top only (L1969). Continuous regen is per second (regE/regL/regH); a swing-paid
 -- resource's step is the spec's model value of that hand x scale (spread around it), its floor step (value - width) x
 -- (scale - spread) and its top step (value + width) x (scale + spread). `restMax[r]`: a regenerating
 -- resource rests at its maximum (its pack's meta `rest = "max"`: energy, mana), the others at 0 (rage).
@@ -101,6 +104,8 @@ local R = {
     swingOffCrit = {},
     swingWidth = {},
     swingOffWidth = {},
+    swingCritMay = {},
+    swingOffCritMay = {},
     est0 = {},
     lo0 = {},
     hi0 = {},
@@ -141,6 +146,8 @@ local R = {
     pinSkip = {},
     swAccG = {},
     swAccT = {},
+    swAccV = {}, -- the window's booked landed steps (model value, unscaled; L1992), and the open interval's (since the pin)
+    swOpenV = {},
     snapT = {},
     readT = {},
     readable = {},
@@ -301,6 +308,21 @@ local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, 
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
+-- Per hand, the swing before the latest (swT) and the latest swing whose outcome the belief has (a credit, an assumption,
+-- a settled row): a swing-scale window closes only when the hand's last swing inside it is in (settled), or a landed step
+-- still on its way would be in the pins' gain only.
+local swPrev, swDone = { -1, -1 }, { -1, -1 }
+
+-- Whether every swing of either hand at or before t (a window's end) has its outcome. Allocates nothing.
+local function settled(t)
+    for h = 1, 2 do
+        local s = swT[h] <= t and swT[h] or (swPrev[h] <= t and swPrev[h] or swT[h])
+        if s > swDone[h] + 1e-6 then
+            return false
+        end
+    end
+    return true
+end
 -- Per hand, its latest SWN swings (a ring at (hand - 1) x SWN + 1..SWN, keyed by the swing's time: an off-hand row
 -- settles after that hand's next swing): the slot's R.liftCE/L/H at that swing plus what its own steps covered since (a
 -- reaction's gain covers only the rest: I.ResourceShift).
@@ -715,6 +737,7 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.swingWidth[r], R.swingOffWidth[r] = d.swingWidth or 0, d.swingOffWidth or 0
+        R.swingCritMay[r], R.swingOffCritMay[r] = d.swingCritMay or 0, d.swingOffCritMay or 0
         apply(r, "build", R.rest[r], 0, R.max[r])
         estDebt[r] = 0
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
@@ -731,11 +754,13 @@ I.OnBuild(function(def, now)
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.spDecl[r], R.spDev[r] = spirit, 0
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
-        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] = 0, 1, I.REGEN_SPREAD, 0, 0
+        -- a swing-paid slot's scale deviation starts at its boot spread: one window's ratio must not collapse it (L2011)
+        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] =
+            R.swing[r] > 0 and I.REGEN_SPREAD or 0, 1, I.REGEN_SPREAD, 0, 0
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.mayT[r] = -1e9
-        R.swAccG[r], R.swAccT[r] = 0, 0
+        R.swAccG[r], R.swAccT[r], R.swAccV[r], R.swOpenV[r] = 0, 0, 0, 0
         R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
         R.crossT[r], R.crossLo[r] = -1e9, 0
         R.pinN[r], R.pinErr[r] = 0, 0
@@ -893,11 +918,32 @@ function I.SwingWidth(r, hand, at)
     return perSwing(r, hand, R.swingWidth, R.swingOffWidth, at)
 end
 
--- The floor step of a landed swing of `hand` at `at` for slot r: its value without the width (never below 0) x
--- (scale - spread). Allocates nothing.
+--- What a white crit of a swing-paid slot's `hand` may add besides its `crit` (its swing entry's `critMay`: a proc at a
+--- chance under 1; L1969: the top allows it, the floor and the estimate never count it), as I.SwingValue.
+function I.SwingCritMay(r, hand, at)
+    return perSwing(r, hand, R.swingCritMay, R.swingOffCritMay, at)
+end
+
+-- The most one landed swing of `hand` may pay slot r, for the top: (value + width) x the top factor, its crit and the
+-- crit's possible proc (L1969). Allocates nothing.
+local function topSwing(r, hand, fh)
+    return (I.SwingValue(r, hand) + I.SwingWidth(r, hand)) * fh + I.SwingCrit(r, hand) + I.SwingCritMay(r, hand)
+end
+
+-- Swing-paid slot r's step factors, floor and top: scale -/+ spread around the declared step (1), the floor's never
+-- above it and the top's never under it (L1992 hull: the range holds the declared step while the learned scale wanders;
+-- a usable pin's bracket error, source C, stays inside the range). Allocates nothing.
+local function stepFactors(r)
+    local s, sp = R.scale[r], R.spread[r]
+    local l, h = s - sp, s + sp
+    return l < 1 and l or 1, h > 1 and h or 1
+end
+
+-- The floor step of a landed swing of `hand` at `at` for slot r: its value without the width (never below 0) x the
+-- floor factor (stepFactors). Allocates nothing.
 local function lowStep(r, hand, at)
     local v = I.SwingValue(r, hand, at) - I.SwingWidth(r, hand, at)
-    return (v > 0 and v or 0) * (R.scale[r] - R.spread[r])
+    return (v > 0 and v or 0) * stepFactors(r)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
@@ -1219,7 +1265,7 @@ local function rescale(r, ratio, t, event)
 end
 
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
--- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
+-- calibrate); a swing-paid slot's step scale is measured per booked step instead (pin's window, rescale). A shaped
 -- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
 -- window it measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside, the
 -- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement. On an `fsr` slot an interval
@@ -1248,23 +1294,17 @@ local function calibrate(r, m, t, a, b, from, event, low)
         end
         return
     end
-    if R.swing[r] == 0 then
-        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev, nil, R.regQ, high) then
-            I.Sample(R.regen[r], "modelled", R.regE[r], t, event)
-        end
-        return
+    if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev, nil, R.regQ, high) then
+        I.Sample(R.regen[r], "modelled", R.regE[r], t, event)
     end
-    local ref = I.SwingPerSecond(r)
-    if ref == 0 then
-        return
-    end
-    rescale(r, m / ref, t, event) -- nonzero: ref ~= 0 checked
 end
 
 -- Pins slot r at t to [v, v + width]; when this pin and the previous one both measure (exact, or `mid`), the regen
 -- between them is a measurement. `origin` is "pinned" (a usability flip) or "observed" (an exact read). A wide flip
 -- is a bound: it clamps the estimate into the range, never moves one already inside it; a read takes the midpoint.
-local function pin(r, v, width, t, origin, event, mid)
+-- `top` (optional): the top when above v + width, the ceiling only (the estimate, the midpoint and the floor's model keep
+-- v + width).
+local function pin(r, v, width, t, origin, event, mid, top)
     local exact = width <= 0
     local measures = exact or mid == true
     local vm = mid and v + width / 2 or v
@@ -1279,10 +1319,9 @@ local function pin(r, v, width, t, origin, event, mid)
             -- pins at one instant (several cost thresholds flipping at once) re-estimate one value: the window's ends
             -- are each instant's latest (it closes at the next instant's first pin, before that pin adds its interval)
             if dt > 1e-6 then
-                if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * step then
-                    local g, d = R.swAccG[r], R.swAccT[r] -- nonzero: step > 0, so the window's time is too
-                    calibrate(r, g / d, t, R.pinA[r], R.pinB[r], R.pinT[r], Obs.Usable)
-                    R.swAccG[r], R.swAccT[r] = 0, 0
+                if R.swAccV[r] >= I.SWING_STEPS * step and settled(R.pinT[r]) then
+                    rescale(r, R.swAccG[r] / R.swAccV[r], t, Obs.Usable) -- nonzero: SWING_STEPS x step > 0
+                    R.swAccG[r], R.swAccT[r], R.swAccV[r] = 0, 0, 0
                 end
                 -- an interval holding a gain the belief knows besides the swings (our cast's, a refund, a periodic or
                 -- decay step, a hit taken, a crit's extra), or a refund it has not booked yet (I.RefundPending, L1832),
@@ -1299,6 +1338,7 @@ local function pin(r, v, width, t, origin, event, mid)
                         R.swFrom[r] = R.pinT[r]
                     end
                     R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
+                    R.swAccV[r] = R.swAccV[r] + R.swOpenV[r]
                 end
             elseif R.pinOwn[r] or I.RefundPending(r, t) then
                 R.pinSkip[r] = true -- a known gain between pins of one instant: its re-estimate is none of the window's
@@ -1306,7 +1346,7 @@ local function pin(r, v, width, t, origin, event, mid)
                 R.swAccG[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r]
             end
         else
-            R.swAccG[r], R.swAccT[r], R.pinSkip[r] = 0, 0, false
+            R.swAccG[r], R.swAccT[r], R.swAccV[r], R.pinSkip[r] = 0, 0, 0, false
         end
     elseif
         measures
@@ -1329,9 +1369,10 @@ local function pin(r, v, width, t, origin, event, mid)
     if origin == "pinned" then
         est = R.est0[r] < v and v or (R.est0[r] > v + width and v + width or R.est0[r])
     end
-    apply(r, "pin", est, v, v + width)
+    apply(r, "pin", est, v, top and top > v + width and top or v + width)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.pinOwn[r] = t, vm, 0, measures, false
+    R.swOpenV[r] = 0
     R.pinA[r], R.pinB[r] = 0, 0
     remeasure(r, was, origin == "pinned" and v + width or -1) -- an exact read leaves no model above it
     I.Sample(R.power[r], origin, R.est0[r], t, event)
@@ -1497,24 +1538,41 @@ local function ownCover(r, h, at, pE, pL, pH)
     end
 end
 
--- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
--- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
--- slot's rung lift (R.liftE/L/H). Allocates nothing.
+-- A landed step of model value v (unscaled) of slot r's swing at `at`, into the swing-scale window it belongs to: the
+-- open interval's (after the last pin) or, a row heard after the pin, the window's when its interval is in it (as a
+-- crit's extra comes out). Allocates nothing.
+local function booked(r, v, at)
+    if at > R.pinT[r] then
+        R.swOpenV[r] = R.swOpenV[r] + v
+    elseif R.swAccT[r] > 0 and at > R.swFrom[r] and not (at > R.skipFrom[r] and at <= R.skipTo[r]) then
+        R.swAccV[r] = R.swAccV[r] + v
+    end
+end
+
+-- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, its floor and top by
+-- stepFactors), c = 3 its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step
+-- first covers the slot's rung lift (R.liftE/L/H). Allocates nothing.
 local function swingStep(r, hand, c, t, owed, at)
-    local v, s, sp, w = 0, 1, 0, 0
+    local v, s, fl, fh, w = 0, 1, 1, 1, 0
     if c == 1 then
-        v, s, sp, w = I.SwingValue(r, hand, at), R.scale[r], R.spread[r], I.SwingWidth(r, hand, at)
+        v, s, w = I.SwingValue(r, hand, at), R.scale[r], I.SwingWidth(r, hand, at)
+        fl, fh = stepFactors(r)
     else
         v = I.SwingCrit(r, hand, at)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
-        local de, dl, dh = v * s, (v > w and v - w or 0) * (s - sp), (v + w) * (s + sp)
+        local de, dl, dh = v * s, (v > w and v - w or 0) * fl, (v + w) * fh
+        if c ~= 1 then
+            dh = dh + I.SwingCritMay(r, hand, at) -- the crit's possible proc: the top only (L1969)
+        end
         if owed then
             de, R.liftE[r] = net(de, R.liftE[r])
             dl, R.liftL[r] = net(dl, R.liftL[r])
             dh, R.liftH[r] = net(dh, R.liftH[r])
         end
-        if c ~= 1 then
+        if c == 1 then
+            booked(r, v, at)
+        else
             -- a crit's extra (exact and unscaled, a talent's rage with it) is no step the scale measures: its interval
             -- adds nothing to the window, or, already in it (after the window's start, outside an excluded interval),
             -- comes back out
@@ -1620,6 +1678,8 @@ local function retract(k, t)
     end
     apply(s, "retract", nil, back(R.lo0[s], recLo[k], recLo0[k]), back(R.hi0[s], recHi[k], recHi0[k])) -- hi down to est at most
     estDebt[s] = estDebt[s] + recEst[k]
+    -- its step may be in the window or the open interval: the window measures nothing, the open interval adds nothing
+    R.swAccG[s], R.swAccT[s], R.swAccV[s], R.pinOwn[s] = 0, 0, 0, true
     local hr = hitRate[recHand[k]] - recHit[k]
     hitRate[recHand[k]] = hr > 0 and hr or 0
     recA[k], recR[k] = 0, 0
@@ -1679,15 +1739,15 @@ I.OnSettle(function()
 end)
 
 -- The low step of `hand`'s swing still pending (VS.SwingPending) for slot r, at its swing, if an answer at t can show
--- it (ORACLE_MIN after it); else 0. `proc`: the step with its width's whole proc, (value + width) x (scale - spread):
--- what that hand alone may have paid. Allocates nothing.
+-- it (ORACLE_MIN after it); else 0. `proc`: the step with its width's whole proc, (value + width) x the floor factor
+-- (stepFactors): what that hand alone may have paid. Allocates nothing.
 local function pendingStep(r, hand, t, proc)
     local p = VS.SwingPending(hand)
     if p == 0 or t <= p + I.Log.ORACLE_MIN - 1e-6 then
         return 0
     end
     if proc then
-        return (I.SwingValue(r, hand, p) + I.SwingWidth(r, hand, p)) * (R.scale[r] - R.spread[r])
+        return (I.SwingValue(r, hand, p) + I.SwingWidth(r, hand, p)) * stepFactors(r)
     end
     return lowStep(r, hand, p)
 end
@@ -1837,11 +1897,15 @@ I.On(Obs.Usable, function(o, t, lag)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
                 -- midpoint. The value, not value + width: the crossing's expected overshoot is half the expected step,
-                -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1)
+                -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1).
+                -- The top holds the most either hand's swing may have paid, unheard: its width, a crit and the crit's
+                -- possible proc (L1969, L1992 round 4).
                 local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
-                local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
+                local _, fh = stepFactors(r)
+                local step = (v > off and v or off) * fh
+                local top, topOff = topSwing(r, 1, fh), R.swingOff[r] ~= 0 and topSwing(r, 2, fh) or 0
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
-                pin(r, c, step, t, "pinned", Obs.Usable, true)
+                pin(r, c, step, t, "pinned", Obs.Usable, true, c + (top > topOff and top or topOff))
                 owe(r, e, lo, hi, o.t) -- that swing's wound, if still in flight, must not pay it again
             end
         else
@@ -2044,6 +2108,9 @@ end
 -- A covered swing's outcome, as it settled: only a seen landed one teaches (a close with no row is none).
 I.On(Obs.SwingSettled, function(o)
     local h = o.a
+    if (h == 1 or h == 2) and o.b > swDone[h] then
+        swDone[h] = o.b
+    end
     if (h == 1 or h == 2) and smpR[h] > 0 and abs(smpAt[h] - o.b) < 1e-6 then
         if o.c == I.HitKind.WOUND then
             smpLand[h] = true
@@ -2135,6 +2202,7 @@ I.On(Obs.Swing, function(o, t)
         for r = 1, R.n do -- the estimate a credit of this swing is judged from (predict)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 seen(r, o.t, hand)
+                swPrev[hand] = swT[hand] ~= o.t and swT[hand] or swPrev[hand]
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
                 snI[hand] = snI[hand] % SWN + 1
@@ -2145,6 +2213,7 @@ I.On(Obs.Swing, function(o, t)
         end
         return
     elseif c == 1 then
+        swDone[hand] = o.t > swDone[hand] and o.t or swDone[hand]
         local h = hitRate[hand] + HIT_ALPHA
         h = h < 1 and h or 1
         hit, hitRate[hand] = h - hitRate[hand], h
@@ -2155,6 +2224,7 @@ I.On(Obs.Swing, function(o, t)
         end
         return
     elseif c == 5 or c == 7 then -- assumed (5) or its confirmation (7), attribution-recovery spec §3.2
+        swDone[hand] = o.t > swDone[hand] and o.t or swDone[hand]
         local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
         if k > 0 and c == 5 then
             recA[k], recR[k], recGone[k], recSw[k], recLook[k] = 0, 0, false, o.t, false -- a fresh record
@@ -2167,7 +2237,7 @@ I.On(Obs.Swing, function(o, t)
         end
         for r = 1, R.n do
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
-                local v, sc, sp = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r]
+                local v, sc = I.SwingValue(r, hand, o.t), R.scale[r]
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
@@ -2184,6 +2254,7 @@ I.On(Obs.Swing, function(o, t)
                         dh, R.liftH[r] = net(dh, R.liftH[r])
                     end
                     apply(r, "assumed", de, nil, dh)
+                    booked(r, v * f * keep, o.t)
                     if k > 0 then
                         recAsm[k] = f
                         predict(k, r, hand, e, lo, hi, 0, e, math.huge)
@@ -2196,7 +2267,8 @@ I.On(Obs.Swing, function(o, t)
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
                     R.liftRec[r] = owes and o.b or 0 -- as a landed swing's (c = 1): its crit pays the rest it owed
                     local w = I.SwingWidth(r, hand, o.t)
-                    local de, dh = v * sc * (1 - recAsm[k]) * keep, ((v + w) * (sc + sp) - v * sc * recAsm[k]) * keep
+                    local _, fh = stepFactors(r)
+                    local de, dh = v * sc * (1 - recAsm[k]) * keep, ((v + w) * fh - v * sc * recAsm[k]) * keep
                     local dl = lowStep(r, hand, o.t) * keep
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
@@ -2204,6 +2276,7 @@ I.On(Obs.Swing, function(o, t)
                         dl, R.liftL[r] = net(dl, R.liftL[r])
                     end
                     apply(r, "confirmed", de, dl, dh > 0 and dh or 0)
+                    booked(r, v * (1 - recAsm[k]) * keep, o.t)
                     local h = hitRate[hand] + HIT_ALPHA
                     h = h < 1 and h or 1
                     predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], h - hitRate[hand], recX0[k], math.huge)
@@ -2848,7 +2921,8 @@ function VS.Regen(powerType, now, mode)
     if R.swing[r] > 0 then
         local per = I.SwingPerSecond(r)
         local s, sp = R.scale[r], R.spread[r]
-        rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
+        local fl, fh = stepFactors(r)
+        rec.est, rec.lo, rec.hi = per * s, per * fl, per * fh
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
         local fa, fb, k = coefAt(r, now, R.fsr[r] and (mode == VS.CASTING or mode == nil and now < R.fsrUntil[r]))

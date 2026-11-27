@@ -28,6 +28,8 @@ local RESOURCE = {
     "swingOffCrit",
     "swingWidth",
     "swingOffWidth",
+    "swingCritMay",
+    "swingOffCritMay",
     "taken",
 }
 local ENTRY = { "spirit", "mp5", "share", "value", "mult", "when" }
