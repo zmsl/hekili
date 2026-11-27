@@ -2002,36 +2002,38 @@ describe("auras", function()
             -- L2005 fix round 1 (review finding 1): the recast's own-frame avoid undoes its write and its light's open
             -- folds after, in the same drain; the open takes the claim, but the recast still came since the verdict.
             for _, V in ipairs({ { 12.8, { 13, 13.2, 13.5, 14 } }, { 13.3, { 13.5, 13.7, 14, 14.5 } } }) do
-                it("L2005: a verdict, then a recast undone in its frame whose light folds after: no strike, no take-back "
-                    .. V[1], function()
-                    local def = fs.def(fs.new(9))
-                    for _, ab in ipairs(def.abilities) do
-                        ab.now = ab.funcs and ab.funcs.now
+                it(
+                    "L2005: a verdict, a recast undone in its frame, its light folded after: no strike " .. V[1],
+                    function()
+                        local def = fs.def(fs.new(9))
+                        for _, ab in ipairs(def.abilities) do
+                            ab.now = ab.funcs and ab.funcs.now
+                        end
+                        def.abilities[3].refundOnAvoid = 0.8
+                        start(def)
+                        prove()
+                        cast(2, REND, 11, 15) -- dodged
+                        drain(11.5)
+                        drain(12)
+                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict (correct)
+                        local refunds = I.auraVerdict.refunds[kT()]
+                        ctl.now = V[1]
+                        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                        ctl.now = V[1] + 0.025
+                        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- in the recast's frame: credited to it
+                        ctl.ViewerAura(ti, "target") -- the recast landed and lights before the drain
+                        for _, t in ipairs(V[2]) do
+                            drain(t)
+                        end
+                        assert.are.same({ 0, 0, 0, refunds }, {
+                            I.auraVerdict.strikes[kT()],
+                            I.PRESENCE.viewer.strikes[502] or 0,
+                            I.auraVerdict.back[kT()],
+                            I.auraVerdict.refunds[kT()],
+                        })
+                        assert.is_true(I.PRESENCE.viewer.proven[502])
                     end
-                    def.abilities[3].refundOnAvoid = 0.8
-                    start(def)
-                    prove()
-                    cast(2, REND, 11, 15) -- dodged
-                    drain(11.5)
-                    drain(12)
-                    assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict (correct)
-                    local refunds = I.auraVerdict.refunds[kT()]
-                    ctl.now = V[1]
-                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-                    ctl.now = V[1] + 0.025
-                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- in the recast's frame: credited to it
-                    ctl.ViewerAura(ti, "target") -- the recast landed and lights before the drain
-                    for _, t in ipairs(V[2]) do
-                        drain(t)
-                    end
-                    assert.are.same({ 0, 0, 0, refunds }, {
-                        I.auraVerdict.strikes[kT()],
-                        I.PRESENCE.viewer.strikes[502] or 0,
-                        I.auraVerdict.back[kT()],
-                        I.auraVerdict.refunds[kT()],
-                    })
-                    assert.is_true(I.PRESENCE.viewer.proven[502])
-                end)
+                )
             end
 
             -- Hotfix 0.8.6 (L1239 cause 2): an avoid credited to a cast that landed (its item lit) undoes the cast's
