@@ -624,14 +624,15 @@ M.FLICKER = {
     -- 0.26): loOver 1023 -> 12: the swing scale measures per booked landed step (its +15% reference bias gone) and the
     -- hull caps the floor factor at the declared step; the 12 are seed 8's truth falling under a flat floor at a spend
     -- (the pre-existing spend class). heldReady 443 -> 488: base's floor sat over the truth at cost crossings, so a press
-    -- went at the crossing; the honest floor waits out the usability lag (not the factor: factor-1 run 484; inferred)
+    -- went at the crossing; the honest floor waits out the usability lag (not the factor: factor-1 run 484; inferred).
+    -- loOver's cause field stays untraced: the 12 left are seed 8's spend class (L1504 rule, L1988), not this lane's
     ["Guardian"] = {
         loOver = 12,
         flicker = 0.27,
         retracted = 0,
         readyShort = 0,
         heldReady = 488,
-        cause = { loOver = "L1992", flicker = "untraced", heldReady = "L1992" },
+        cause = { loOver = "untraced", flicker = "untraced", heldReady = "L1992" },
     }, -- 0.77 / 0.91 / 1.03, 0.35 / 0.54 / 0.60
     -- regen phase lane, cause harness: seeded random regen phase per fight (ledger L667) (R6; seeds 1-20 / 21-40 /
     -- 41-60 flicker 0.00 / 0.00 / 0.00, retracted 0.00 / 0.00 / 0.00, readyShort 0 / 0 / 0, heldReady 159 / 156 / 150):
