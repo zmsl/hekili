@@ -73,6 +73,30 @@ describe("a cooldown that starts when its aura ends (cooldownAfter)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- the client's cooldown edge comes a poll after our spend (the flag still reads ready then): the run is from the spend
+    it("runs Divine Favor from the spend when the client's edge comes after it", function()
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        t = t + 11
+        cast(H, t, 2, HOLY_SHOCK) -- the fake's flag still ready (isActive false)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        H.ctl.now = t + 0.3
+        H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.4))
+        st.reset("Primary", true)
+        near(120 - 0.4, st.cooldown.divine_favor.remains)
+        t = t + 30
+        H.ctl.now = t
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t))
+        st.reset("Primary", true)
+        near(90, st.cooldown.divine_favor.remains)
+        assert.are.same({}, H.errors)
+    end)
+
     -- the forecast: a press holds it, a spend starts it from the spend
     it("holds Divine Favor after a forecast press and starts it at the forecast spend", function()
         local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)

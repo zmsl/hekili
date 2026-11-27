@@ -428,6 +428,16 @@ I.On(Obs.Cooldown, function(o, t)
     local a = o.a
     local was = A.flag[a]
     A.flag[a] = o.b == 1 and YES or NOT
+    if o.b == 0 and was == YES and A.waitsFor[a] > 0 then
+        -- cooldown on event: the client starts it at its aura's end. From our believed end (castT, Auras.lua) when that
+        -- came first (a ready flag read before this edge pulled it to now), else from this edge (an end not believed yet)
+        local len = I.CooldownOf(a, o.t)
+        local from = A.castT[a]
+        if not (from <= o.t and o.t - from < len) then
+            from = o.t
+        end
+        I.CooldownFrom(a, from, t, Obs.Cooldown)
+    end
     if o.b == 1 and was == NOT and A.castT[a] > 0 and o.t > A.castT[a] then
         -- a ready edge after our cast teaches the real length (talents included), but only near the registered one:
         -- a flag that also tracks something else (a kill window's usability) would teach minutes
