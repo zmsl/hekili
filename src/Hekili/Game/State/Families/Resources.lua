@@ -912,11 +912,20 @@ function I.SwingWidth(r, hand, at)
     return perSwing(r, hand, R.swingWidth, R.swingOffWidth, at)
 end
 
--- The floor step of a landed swing of `hand` at `at` for slot r: its value without the width (never below 0) x
--- (scale - spread). Allocates nothing.
+-- Swing-paid slot r's step factors, floor and top: scale -/+ spread around the declared step (1), the floor's never
+-- above it and the top's never under it (L1992 hull: the range holds the declared step while the learned scale wanders;
+-- a usable pin's bracket error, source C, stays inside the range). Allocates nothing.
+local function stepFactors(r)
+    local s, sp = R.scale[r], R.spread[r]
+    local l, h = s - sp, s + sp
+    return l < 1 and l or 1, h > 1 and h or 1
+end
+
+-- The floor step of a landed swing of `hand` at `at` for slot r: its value without the width (never below 0) x the
+-- floor factor (stepFactors). Allocates nothing.
 local function lowStep(r, hand, at)
     local v = I.SwingValue(r, hand, at) - I.SwingWidth(r, hand, at)
-    return (v > 0 and v or 0) * (R.scale[r] - R.spread[r])
+    return (v > 0 and v or 0) * stepFactors(r)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
@@ -1520,18 +1529,19 @@ local function booked(r, v, at)
     end
 end
 
--- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
--- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
--- slot's rung lift (R.liftE/L/H). Allocates nothing.
+-- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, its floor and top by
+-- stepFactors), c = 3 its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step
+-- first covers the slot's rung lift (R.liftE/L/H). Allocates nothing.
 local function swingStep(r, hand, c, t, owed, at)
-    local v, s, sp, w = 0, 1, 0, 0
+    local v, s, fl, fh, w = 0, 1, 1, 1, 0
     if c == 1 then
-        v, s, sp, w = I.SwingValue(r, hand, at), R.scale[r], R.spread[r], I.SwingWidth(r, hand, at)
+        v, s, w = I.SwingValue(r, hand, at), R.scale[r], I.SwingWidth(r, hand, at)
+        fl, fh = stepFactors(r)
     else
         v = I.SwingCrit(r, hand, at)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
-        local de, dl, dh = v * s, (v > w and v - w or 0) * (s - sp), (v + w) * (s + sp)
+        local de, dl, dh = v * s, (v > w and v - w or 0) * fl, (v + w) * fh
         if owed then
             de, R.liftE[r] = net(de, R.liftE[r])
             dl, R.liftL[r] = net(dl, R.liftL[r])
@@ -1706,15 +1716,15 @@ I.OnSettle(function()
 end)
 
 -- The low step of `hand`'s swing still pending (VS.SwingPending) for slot r, at its swing, if an answer at t can show
--- it (ORACLE_MIN after it); else 0. `proc`: the step with its width's whole proc, (value + width) x (scale - spread):
--- what that hand alone may have paid. Allocates nothing.
+-- it (ORACLE_MIN after it); else 0. `proc`: the step with its width's whole proc, (value + width) x the floor factor
+-- (stepFactors): what that hand alone may have paid. Allocates nothing.
 local function pendingStep(r, hand, t, proc)
     local p = VS.SwingPending(hand)
     if p == 0 or t <= p + I.Log.ORACLE_MIN - 1e-6 then
         return 0
     end
     if proc then
-        return (I.SwingValue(r, hand, p) + I.SwingWidth(r, hand, p)) * (R.scale[r] - R.spread[r])
+        return (I.SwingValue(r, hand, p) + I.SwingWidth(r, hand, p)) * stepFactors(r)
     end
     return lowStep(r, hand, p)
 end
@@ -1866,7 +1876,8 @@ I.On(Obs.Usable, function(o, t, lag)
                 -- midpoint. The value, not value + width: the crossing's expected overshoot is half the expected step,
                 -- and a midpoint a width higher would bias the scale where this pin chains with an exact read (review M1)
                 local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
-                local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
+                local _, fh = stepFactors(r)
+                local step = (v > off and v or off) * fh
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 pin(r, c, step, t, "pinned", Obs.Usable, true)
                 owe(r, e, lo, hi, o.t) -- that swing's wound, if still in flight, must not pay it again
@@ -2200,7 +2211,7 @@ I.On(Obs.Swing, function(o, t)
         end
         for r = 1, R.n do
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
-                local v, sc, sp = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r]
+                local v, sc = I.SwingValue(r, hand, o.t), R.scale[r]
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 local pE, pL, pH = R.liftE[r], R.liftL[r], R.liftH[r]
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
@@ -2230,7 +2241,8 @@ I.On(Obs.Swing, function(o, t)
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
                     R.liftRec[r] = owes and o.b or 0 -- as a landed swing's (c = 1): its crit pays the rest it owed
                     local w = I.SwingWidth(r, hand, o.t)
-                    local de, dh = v * sc * (1 - recAsm[k]) * keep, ((v + w) * (sc + sp) - v * sc * recAsm[k]) * keep
+                    local _, fh = stepFactors(r)
+                    local de, dh = v * sc * (1 - recAsm[k]) * keep, ((v + w) * fh - v * sc * recAsm[k]) * keep
                     local dl = lowStep(r, hand, o.t) * keep
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
@@ -2883,7 +2895,8 @@ function VS.Regen(powerType, now, mode)
     if R.swing[r] > 0 then
         local per = I.SwingPerSecond(r)
         local s, sp = R.scale[r], R.spread[r]
-        rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
+        local fl, fh = stepFactors(r)
+        rec.est, rec.lo, rec.hi = per * s, per * fl, per * fh
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
         local fa, fb, k = coefAt(r, now, R.fsr[r] and (mode == VS.CASTING or mode == nil and now < R.fsrUntil[r]))

@@ -1060,6 +1060,33 @@ describe("resources", function()
                 assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
             end)
 
+            -- (L1992 hull) a scale that reads off the declared step (source C: usable pins are bracket middles) still
+            -- leaves the declared step inside the range: a landed swing's floor step at most value x 1, its top step at
+            -- least value x 1, and the regen's lo / hi around the declared rate.
+            local function hull(s, sp)
+                local R = I.res
+                R.scale[1], R.spread[1] = s, sp
+                R.est0[1], R.lo0[1], R.hi0[1] = 20, 20, 20
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 0, 1)
+                I.Fold(11, false)
+                local v, w, per = I.SwingValue(1, 1), I.SwingWidth(1, 1), I.SwingPerSecond(1)
+                local fl, fh = math.min(s - sp, 1), math.max(s + sp, 1)
+                within(20 + (v - w) * fl, R.lo0[1], 1e-9)
+                within(20 + (v + w) * fh, R.hi0[1], 1e-9)
+                local g = VS.Regen(fs.RAGE, 11)
+                within(per * fl, g.lo, 1e-9)
+                within(per * fh, g.hi, 1e-9)
+            end
+
+            it("keeps a landed swing's floor step at most the declared step when the scale reads high", function()
+                hull(1.2, 0.05)
+            end)
+
+            it("keeps a landed swing's top step at least the declared step when the scale reads low", function()
+                hull(0.8, 0.05)
+            end)
+
             it("books a landed step whose row is heard after the pin into the window that holds its swing", function()
                 local R = I.res
                 obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
@@ -1150,7 +1177,7 @@ describe("resources", function()
                 I.Fold(7.6, false)
                 local r = VS.Power(fs.RAGE, 7.6)
                 within(2 * 9 * 1.2 + 7, r.est)
-                within(2 * 9 * (1.2 - I.REGEN_SPREAD) + 7, r.lo)
+                within(2 * 9 * math.min(1.2 - I.REGEN_SPREAD, 1) + 7, r.lo) -- the floor's factor at most 1 (L1992 hull)
             end)
 
             it("loses the bonus above the cap", function()
@@ -1209,13 +1236,13 @@ describe("resources", function()
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
                 within(9 * 1.2, r.est)
-                within(7 * (1.2 - sp), r.lo)
+                within(7 * math.min(1.2 - sp, 1), r.lo) -- the floor's factor at most 1 (L1992 hull)
                 within(11 * (1.2 + sp), r.hi)
                 obs(Obs.Swing, 5.5, 2, 2.6, 1) -- the off hand: its own width
                 I.Fold(5.5, false)
                 r = VS.Power(fs.RAGE, 5.5)
                 within((9 + 4.5) * 1.2, r.est)
-                within((7 + 3.5) * (1.2 - sp), r.lo)
+                within((7 + 3.5) * math.min(1.2 - sp, 1), r.lo)
             end)
 
             it("lifts lo by the step without the width when a provider's assumed hit is confirmed", function()
@@ -1226,7 +1253,7 @@ describe("resources", function()
                 assert.are.equal(0, R.lo0[1])
                 obs(Obs.Swing, 5, 1, 3, 7) -- its row
                 I.Fold(5.1, false)
-                within(7 * (1.2 - sp), R.lo0[1])
+                within(7 * math.min(1.2 - sp, 1), R.lo0[1])
                 within(9 * 1.2, R.est0[1])
             end)
 
@@ -1281,7 +1308,7 @@ describe("resources", function()
                 obs(Obs.Swing, 5, 1, 2.6, 1)
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
-                within(9 * (1.2 - I.res.spread[1]), r.lo)
+                within(9 * math.min(1.2 - I.res.spread[1], 1), r.lo)
                 within(9 * (1.2 + I.res.spread[1]), r.hi)
             end)
         end)
