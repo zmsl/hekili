@@ -1999,6 +1999,43 @@ describe("auras", function()
                 assert.are.same({ 1, 1 }, { I.auraVerdict.strikes[kT()], I.PRESENCE.viewer.strikes[502] })
             end)
 
+            -- L2005 fix round 1 (review finding 1): the recast's own-frame avoid undoes its write and its light's open
+            -- folds after, in the same drain; the open takes the claim, but the recast still came since the verdict.
+            for _, V in ipairs({ { 12.8, { 13, 13.2, 13.5, 14 } }, { 13.3, { 13.5, 13.7, 14, 14.5 } } }) do
+                it(
+                    "L2005: a verdict, a recast undone in its frame, its light folded after: no strike " .. V[1],
+                    function()
+                        local def = fs.def(fs.new(9))
+                        for _, ab in ipairs(def.abilities) do
+                            ab.now = ab.funcs and ab.funcs.now
+                        end
+                        def.abilities[3].refundOnAvoid = 0.8
+                        start(def)
+                        prove()
+                        cast(2, REND, 11, 15) -- dodged
+                        drain(11.5)
+                        drain(12)
+                        assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12)) -- the verdict (correct)
+                        local refunds = I.auraVerdict.refunds[kT()]
+                        ctl.now = V[1]
+                        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                        ctl.now = V[1] + 0.025
+                        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- in the recast's frame: credited to it
+                        ctl.ViewerAura(ti, "target") -- the recast landed and lights before the drain
+                        for _, t in ipairs(V[2]) do
+                            drain(t)
+                        end
+                        assert.are.same({ 0, 0, 0, refunds }, {
+                            I.auraVerdict.strikes[kT()],
+                            I.PRESENCE.viewer.strikes[502] or 0,
+                            I.auraVerdict.back[kT()],
+                            I.auraVerdict.refunds[kT()],
+                        })
+                        assert.is_true(I.PRESENCE.viewer.proven[502])
+                    end
+                )
+            end
+
             -- Hotfix 0.8.6 (L1239 cause 2): an avoid credited to a cast that landed (its item lit) undoes the cast's
             -- write; like any close it drops the debounce's memory, so the still-lit item re-opens at the next poll
             -- instead of HOLD past the undone cast's expiry.
@@ -2075,6 +2112,61 @@ describe("auras", function()
                 for k = 1, 4 do
                     assert.is_nil(VS.Aura("target", 1100 + k, 11.5)) -- down before, down after
                 end
+            end)
+
+            -- L2005 (feral-n1b-trace-report.md, Feral Rip): one drain holds our cast, its own-frame avoid and the light
+            -- the poll staged while the record was down. The fold runs the cast's write (ours = our cast), the undo (a
+            -- close, the LONG memory zeroed), then the staged open: a LONG record (the duration is a function) whose
+            -- claim was overwritten. Neither the item's DOWN (rule 1: not ours) nor its silence (the clamp: no LONG
+            -- memory) could close it: up for an hour.
+            local function orphan()
+                local def = fs.def(fs.new(9))
+                for _, ab in ipairs(def.abilities) do
+                    ab.now = ab.funcs and ab.funcs.now
+                end
+                def.abilities[3].refundOnAvoid = 0.8 -- spender_c: an avoid would give 8 of its 10 back
+                def.auras[REND] = {
+                    key = "spender_c",
+                    id = fs.SPENDER_C,
+                    duration = function() -- the pack's: no number for the CDM open (its `now` writes 15)
+                        return 15
+                    end,
+                }
+                start(def)
+                ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10: pinned at 10 before the cast
+                drain(10.5)
+                ctl.usable[fs.SPENDER_C] = nil
+                ctl.now = 11
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid: 0
+                ctl.now = 11.025
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- in the cast's frame: credited to it (the tie)
+                ctl.ViewerAura(ti, "target") -- it landed and lights before the drain
+                drain(11.2)
+                local long = est("target", fs.SPENDER_C, 11.2)
+                assert.is_true(math.abs(long - 3611.2) < 1e-9, long) -- the light's LONG open (applied 11.2)
+                assert.are.equal(1, I.avoidsRun)
+                assert.are.equal(0, VS.Power(fs.RAGE, 11.2).est) -- (L1810 F4b) lit since the cast: no refund
+                assert.are.equal(2, I.auraOurs[kT()]) -- the open's own claim (BY_CDM), not the undone cast's
+                return long
+            end
+
+            it("L2005: an undone cast's drain re-opens LONG from the light; the item's DOWN closes it", function()
+                local long = orphan()
+                drain(12)
+                assert.are.equal(long, est("target", fs.SPENDER_C, 12))
+                ctl.ViewerClear(ti) -- the aura falls off
+                drain(12.5)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.5))
+            end)
+
+            it("L2005: an undone cast's drain re-opens LONG from the light; the item's silence clamps it", function()
+                orphan()
+                ctl.ViewerRelease(ti) -- the item's evidence goes away: UNKNOWN
+                drain(12)
+                assert.are.equal(I.UNDECIDED, P.Presence(REND, 2))
+                assert.is_true(math.abs(est("target", fs.SPENDER_C, 12) - 12.35) < 1e-9) -- one HOLD (0.35 s)
+                drain(12.5)
+                assert.is_nil(VS.Aura("target", fs.SPENDER_C, 12.5))
             end)
 
             -- Hotfix 0.8.6 fix round 1 (review I1): a light that began before the undone cast is the earlier

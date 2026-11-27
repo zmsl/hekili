@@ -389,13 +389,27 @@ end)
 
 --- The Read a CDM UP or walk claimed at t folded up on key k with applied time ap (Families/Auras.lua): foldApplied's
 --- guess at the stage misses a close folded first in the same drain (the open is then a new application at t), so ours
---- names the application the fold wrote. Our cast's write since then (BY_CAST) stands. Allocates nothing.
-function I.AuraClaimFolded(k, t, ap)
-    if claimT[k] == t and ours[k] ~= BY_CAST then
+--- names the application the fold wrote. Our cast's write since then (BY_CAST) stands, except under an open (`b` its
+--- remaining, nil for any other Read): the fold writes an open only on a record down (F3 drops it otherwise), so a
+--- cast's write since the stage was closed first in this drain (an avoid's undo, L2005) and the open takes its whole
+--- claim back: ours, W and the LONG memory, so its DOWN closes it (rule 1) and its silence clamps it. A light pending
+--- a strike judgement (§2.5) whose undone cast came since the verdict is settled here as verdict() would have: no
+--- strike, no take-back (review M2's exemption, which reads the claim this replaces). Allocates nothing.
+function I.AuraClaimFolded(k, t, ap, b)
+    if claimT[k] == t and (b or ours[k] ~= BY_CAST) then
+        if b and ours[k] == BY_CAST and strikePend[k] > 0 and oursAp[k] >= verdictAt[k] then
+            strikePend[k], verdictAt[k], refPend[k] = 0, 0, 0
+        end
         if seedAp[k] == oursAp[k] and seedAp[k] ~= 0 then
             seedAp[k] = ap
         end
         oursAp[k] = ap
+        if b then
+            ours[k], W[k] = BY_CDM, W0
+            if b == LONG or b < 0 then
+                longE[k], anyLong = b < 0 and HUGE or t + b, true -- as apply() set it at the stage
+            end
+        end
     end
 end
 
