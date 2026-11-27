@@ -75,6 +75,8 @@ local format = string.format
 -- 18 (2026-11-26, lane 6, L1827): spec:RegisterTotemSlots and a resource meta's `onTarget`, `rest` and `points`, which
 -- the core no longer guesses from key names: an older core raises on the call, and this core gives an older pack's
 -- combo points no target binding, its energy and mana no rest at the maximum and its element names no slot.
+--   Since then, without a bump: the ability field `cooldownAfter` (cooldown on event, L2012); an older core ignores it
+--   and starts the cooldown at the press, as before.
 local CONTENT_API = 18
 
 local done, notice = false, nil

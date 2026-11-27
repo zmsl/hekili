@@ -451,6 +451,13 @@ row("ability", "charges", "number|fn", 1, "the charges it holds", { min = 1 })
 row("ability", "hasteCD", "bool", false, "true: the cooldown and recharge are haste-scaled")
 row(
     "ability",
+    "cooldownAfter",
+    "aura",
+    nil,
+    "a player aura its cooldown waits for: held while it is up, started when it is spent or runs out"
+)
+row(
+    "ability",
     "gcd",
     "enum|fn",
     "spell",

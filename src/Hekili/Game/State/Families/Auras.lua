@@ -225,6 +225,10 @@ local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
     local rec = U.rec[u][j]
     rec.est, rec.lo, rec.hi = expires, expires, expires
     I.Sample(rec, origin, expires, t, event)
+    local a = u == 1 and expires ~= was and I.cdAfter[j]
+    if a then -- cooldown on event: held to the aura's end, then from its fall (Casts.lua)
+        I.CooldownFrom(a, expires > 0 and expires or (was < t and was or t), t, event)
+    end
     if was ~= expires or wasStacks ~= stacks then
         changed(u)
     end

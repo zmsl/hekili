@@ -569,4 +569,41 @@ describe("the world's press", function()
             "2.00 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. c,
         }, casts())
     end)
+
+    -- cooldown on event (lane cooldown-on-event): a press whose cooldown waits for an aura (`heldBy`, its spell IDs) is
+    -- held while the aura is on us, and starts, in the truth and the client, when the aura leaves
+    it("holds a heldBy press's cooldown until its aura leaves us", function()
+        setup()
+        local AURA = 999001
+        local p = {
+            spell = fs.SPENDER_A,
+            cooldown = 6,
+            offGcd = true,
+            heldBy = { AURA },
+            effect = function(W_, e)
+                W_.applyAura(e, AURA, 3600)
+            end,
+        }
+        W.t = 1
+        assert.is_true(W.press(us, "spender_a", p))
+        assert.are.equal(math.huge, us.cdUntil.spender_a)
+        W.t = 100
+        assert.are.same({ false, "cooldown" }, { W.press(us, "spender_a", p) })
+        local cds = 0
+        for _, line in ipairs(seen()) do
+            cds = cds + (line:find("^@cooldown " .. fs.SPENDER_A) and 1 or 0)
+        end
+        assert.are.equal(0, cds) -- no cooldown at the press: the client's flag reads ready while held
+        us.auras[AURA] = nil
+        W.emit({ kind = "aura", dst = us, aura = AURA, stacks = 0, expires = 0, duration = 0 })
+        assert.are.equal(106, us.cdUntil.spender_a)
+        assert.is_nil(us.held[AURA])
+        local got = {}
+        for _, line in ipairs(seen()) do
+            if line:find("^@cooldown " .. fs.SPENDER_A) then
+                got[#got + 1] = line
+            end
+        end
+        assert.are.same({ "@cooldown " .. fs.SPENDER_A .. " SECRET", "@cooldown " .. fs.SPENDER_A .. " nil" }, got)
+    end)
 end)

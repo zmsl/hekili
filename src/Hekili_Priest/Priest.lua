@@ -588,6 +588,7 @@ spec:RegisterAbilities({
         id = 15473,
         cast = 0,
         cooldown = 1.5,
+        cooldownAfter = "shadowform", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "spell",
 
         spend = function()
@@ -805,13 +806,12 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- Off the GCD (DB2 start recovery 0); 180 s.
-    -- shortcut: the client starts the cooldown when the buff is spent (wowsims's OnExpire); here at the cast, the
-    -- client's cooldown read corrects it.
+    -- Off the GCD (DB2 start recovery 0); 180 s from the spend (wowsims's OnExpire).
     inner_focus = {
         id = 14751,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "inner_focus", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,

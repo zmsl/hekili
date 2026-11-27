@@ -861,6 +861,18 @@ I.OnBuild(function(def)
             NAMES.debuff[key] = setmetatable({ unit = "target", spell = auraSpell[j] }, auraMeta)
         end
     end
+    -- cooldown on event (`cooldownAfter`): the aura each ability's cooldown waits for (Families/Auras.lua's write
+    -- starts it, Casts.lua's settle holds it)
+    for j in pairs(I.cdAfter) do
+        I.cdAfter[j] = nil
+    end
+    for a = 1, A.n do
+        local j = auraByKey[def.abilities[a].cooldownAfter or false]
+        A.waitsFor[a] = j or 0
+        if j then
+            I.cdAfter[j] = a -- shortcut: one ability per aura (every pack today); a list if two ever share one
+        end
+    end
     for r = 1, #def.resources do
         local d = def.resources[r]
         rfT[r], rfOld[r] = -1, -1
@@ -907,7 +919,7 @@ local function automatic(a, t, kind, o)
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
         local cd = I.CooldownOf(a, at) -- a function cooldown in the belief's context (Families/Casts.lua)
-        if cd > 0 then
+        if cd > 0 and A.waitsFor[a] == 0 then -- one that waits for an aura starts from that aura's write (Auras.lua)
             I.CooldownModel(a, at + cd, cd, at, kind)
         end
     end

@@ -131,6 +131,16 @@ function M.new(seed)
     function W.emit(ev)
         ev.t = ev.t or W.t
         W.truth[#W.truth + 1] = ev
+        local h = ev.kind == "aura" and ev.stacks == 0 and ev.dst and ev.dst.held and ev.dst.held[ev.aura]
+        if h then -- a held cooldown's aura left: the cooldown starts now, in the truth and the client ("cooldown")
+            for id, x in pairs(ev.dst.held) do
+                if x == h then
+                    ev.dst.held[id] = nil
+                end
+            end
+            ev.dst.cdUntil[h.key] = ev.t + h.cd
+            W.emit({ kind = "cooldown", src = ev.dst, ids = h.ids, cd = h.cd })
+        end
         local me = W.ents[1]
         if me then -- who our target is, and whether it targets us, at this event (the tokens that fire for it)
             ev.ourTarget, ev.onUs = me.target, me.target ~= nil and me.target.target == me
@@ -343,7 +353,14 @@ function M.new(seed)
         if gcdLen then
             e.gcdUntil = t + gcdLen
         end
-        if (p.cooldown or 0) > 0 and not p.onNextSwing then -- a queued strike's starts at its swing
+        local held = p.heldBy and (p.cooldown or 0) > 0
+        if held then -- cooldown on event: held until its aura leaves us (W.emit), the client's flag ready meanwhile
+            e.cdUntil[key] = math.huge
+            local h = { key = key, cd = p.cooldown, ids = p.ids or { p.spell } }
+            for _, id in ipairs(p.heldBy) do
+                e.held[id] = h
+            end
+        elseif (p.cooldown or 0) > 0 and not p.onNextSwing then -- a queued strike's starts at its swing
             e.cdUntil[key] = t + p.cooldown
         end
         local hard = (p.cast or 0) > 0 and not p.onNextSwing
@@ -365,7 +382,7 @@ function M.new(seed)
                 ids = p.ids,
                 cost = p.cost,
                 pt = p.pt,
-                cd = p.cooldown,
+                cd = not held and p.cooldown or nil,
                 gcd = gcd,
                 order = gcd and order or nil,
                 hard = hard or nil, -- its UNIT_SPELLCAST_START came at the press

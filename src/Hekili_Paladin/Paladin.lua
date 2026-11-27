@@ -894,6 +894,7 @@ spec:RegisterAbilities({
 
     divine_favor = selfBuff("divine_favor", { 20216 }, {
         cooldown = 120,
+        cooldownAfter = "divine_favor", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
         spend = 0.04,
         spendType = "mana",

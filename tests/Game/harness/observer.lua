@@ -922,6 +922,10 @@ function M.new(W, k)
             if ev.hard then
                 castEv(tc, ev.onUs, "UNIT_SPELLCAST_STOP", guid, id, bar)
             end
+        elseif kind == "cooldown" and ev.src == us then -- a held cooldown starts (cooldown on event, W.emit)
+            for _, rid in ipairs(ev.ids) do
+                cooldown(t, rid, ev.cd)
+            end
         elseif kind == "castStart" and ev.src == us then -- our hard cast: SENT, UnitCastingInfo, START, the GCD
             castN = castN + 1
             hardN, castSpell, castOpen, castFrom, castTo = castN, ev.spell, true, t, ev.ends

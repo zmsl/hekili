@@ -40,8 +40,10 @@ local A = {
     -- the query ID's range in yards (C_Spell.GetSpellInfo's maxRange, Sources/Spellbook.lua; 5 for a hostile spell's
     -- 0); 0: no range check (self-cast, or on-next-swing: the client answers those in range at any distance)
     rMax = {},
+    waitsFor = {}, -- the aura index its cooldown waits for (`cooldownAfter`, Families/Now.lua), 0 none
 }
 I.ab = A
+I.cdAfter = {} -- by aura index: the ability whose cooldown waits for it (Families/Now.lua builds it)
 A.bySpell = {}
 A.idPos = {} -- by spell ID: its place among its ability's IDs (A.ids), the rank a cast of it was (Obs.CastSuccess `c`)
 A.byItem = {} -- by item ID: the ability whose `item` (a number) or `items` names it (VS.ItemCooldown)
@@ -454,6 +456,10 @@ end)
 I.OnSettle(function(now)
     for a = 1, A.n do
         local flag = A.flag[a]
+        local w = A.waitsFor[a]
+        if w > 0 and I.AuraUpAt(1, w, now) then
+            flag = UNKNOWN -- held while its aura is up: the client's flag reads ready (isActive false) all along
+        end
         if flag == YES then
             if A.ready0[a] > now then
                 A.ready0[a] = now
@@ -486,6 +492,14 @@ function I.CooldownModel(a, expires, duration, t, event)
         A.cdLen[a] = duration
     end
     I.Sample(A.cd[a], "modelled", expires, t, event)
+end
+
+--- Ability a's cooldown, waiting for an aura (`cooldownAfter`), starts at `from`: that aura's end, planned or seen
+--- (Families/Auras.lua's write); the ready edge then teaches the length from it. Allocates nothing.
+function I.CooldownFrom(a, from, t, event)
+    local ready = from + I.CooldownOf(a, t)
+    A.ready0[a], A.castT[a] = ready, from
+    I.Sample(A.cd[a], "modelled", ready, t, event)
 end
 
 --- Our own cast spent a charge (spec §5.3). Allocates nothing.

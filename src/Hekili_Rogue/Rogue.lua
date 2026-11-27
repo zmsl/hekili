@@ -620,6 +620,7 @@ spec:RegisterAbilities(rogue({
         id = 14177,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "cold_blood", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
@@ -1009,6 +1010,7 @@ spec:RegisterAbilities(rogue({
         cooldown = function()
             return 10 - 2 * talent.camouflage.rank -- Camouflage 13975's second effect: -2 / -4 / -6 s on Stealth's mask
         end,
+        cooldownAfter = "stealth", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,

@@ -47,6 +47,19 @@ function M.itemPress(class, key)
     }
 end
 
+--- The spell IDs of the aura ability `key`'s cooldown waits for (the pack's `cooldownAfter`: cooldown on event), or nil.
+function M.heldBy(class, key)
+    local aura = class.auras[class.abilities[key].cooldownAfter or false]
+    if not aura then
+        return nil
+    end
+    local ids = { aura.id }
+    for _, id in ipairs(type(aura.copy) == "table" and aura.copy or { aura.copy }) do
+        ids[#ids + 1] = id
+    end
+    return ids
+end
+
 -- (ttd arms, lane B8) A fight's time-to-die row: of the in-combat polls, how many answered (not 3600: the library
 -- live), and against the kill's time (killAt, the world's clock; nil: no kill, no error) the absolute error of each
 -- answer in seconds and relative to the truth: median and p90, and the share of them short of the truth (an end-of-fight
@@ -1375,6 +1388,7 @@ function M.run(L, seed, o, drivers)
             -- (the engine moved off the channel: a pack's interrupt_if, CheckChannel); W.press keeps the GCD and the
             -- queue's reach. A verdict arm's forced recast is not the engine's pick: refused "casting", as before.
             p.clip = not forced and us.channel ~= nil and us.channel.spell ~= p.spell
+            p.heldBy = M.heldBy(truth.Hekili.Class, key) -- the client holds its cooldown until that aura leaves us
             local pre = W.res(us, p.pt)
             local n0 = #W.truth
             local ok, why = W.press(us, key, p)

@@ -676,6 +676,7 @@ spec:RegisterAbilities({
         id = 12043,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "presence_of_mind", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
@@ -694,6 +695,7 @@ spec:RegisterAbilities({
         id = 11129,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "combustion", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
