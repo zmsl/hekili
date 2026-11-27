@@ -1060,6 +1060,64 @@ describe("resources", function()
                 assert.is_true(hi >= 1 - 1e-9, ("top factor %.4f under the true step"):format(hi))
             end)
 
+            it("books a landed step whose row is heard after the pin into the window that holds its swing", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Read, 10.6, 1, 9, I.ReadOf.Resource) -- the flip its rage caused, before its row
+                I.Fold(10.6, false)
+                assert.are.same({ 0, 9 }, { R.swAccV[1], R.swAccG[1] })
+                obs(Obs.Swing, 10.5, 1, 0, 1)
+                I.Fold(11, false)
+                assert.are.equal(9, R.swAccV[1])
+            end)
+
+            it("books an assumed share and its confirmation's rest: one whole step", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 2, 5) -- record 2 assumed at the hit rate's share
+                obs(Obs.Swing, 10.5, 1, 2, 7) -- and confirmed
+                obs(Obs.Read, 11, 1, 9, I.ReadOf.Resource)
+                I.Fold(11, false)
+                within(9, R.swAccV[1], 1e-9)
+            end)
+
+            it("closes no window while a swing inside it has no outcome yet", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                I.Fold(10, false)
+                for k = 1, 5 do
+                    local t = 10 + 2.6 * k
+                    obs(Obs.Swing, t, 1, 2.6, 4)
+                    obs(Obs.Swing, t, 1, 0, 1)
+                end
+                obs(Obs.Swing, 25.6, 1, 2.6, 4) -- a sixth swing, its row still out at the next two pins
+                obs(Obs.Read, 25.7, 1, 6 * 10.8, I.ReadOf.Resource) -- 20% over the model
+                I.Fold(25.7, false)
+                obs(Obs.Read, 26, 1, 6 * 10.8, I.ReadOf.Resource)
+                I.Fold(26, false)
+                assert.are.equal(1, R.scale[1]) -- the window ends at 25.7 and holds the sixth swing: no close
+                obs(Obs.Swing, 25.6, 1, 0, 1)
+                I.Fold(26.1, false)
+                obs(Obs.Read, 26.5, 1, 6 * 10.8, I.ReadOf.Resource)
+                I.Fold(26.5, false)
+                within(1 + I.ALPHA * (6 * 10.8 / 54 - 1), R.scale[1]) -- six booked steps of 9, the truth's 10.8 each
+            end)
+
+            it("drops the window and holds the open interval out when a credit is taken back", function()
+                local R = I.res
+                obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                obs(Obs.Swing, 10.5, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5, 1, 1, 1) -- record 1 credited
+                obs(Obs.Read, 11, 1, 9, I.ReadOf.Resource)
+                I.Fold(11, false)
+                assert.is_true(R.swAccT[1] > 0)
+                obs(Obs.Swing, 11.2, 1, 1, 6) -- taken back
+                I.Fold(11.2, false)
+                assert.are.same({ 0, 0, 0, true }, { R.swAccG[1], R.swAccT[1], R.swAccV[1], R.pinOwn[1] })
+            end)
+
             it(
                 "keeps them there when the swings an on-next-swing strike took are held out with a known gain",
                 function()
