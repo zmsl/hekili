@@ -32,6 +32,10 @@
 -- The return (L1791, the owner 2026-11-23: "new facts are always required"): in a, b, a the return to a needs its own
 -- new fact too, in loop.flips and in the ledger's dips; one aura edge is one fact, so its late light at the next poll
 -- does not excuse the change after the one it already excused.
+-- The spend resource (L2004, the owner's rulings 2026-11-27): a crossing of the band of the resource the ability the
+-- change brings in spends at that poll (its cost there above 0: loop.lua queue), the belief inside it, is the band fact
+-- too (a Cat's mana spell under the displayed energy); outside it, no fact. Staleness counts per resource: a stale
+-- displayed band vetoes the poll's facts (`stale`) but not that fresh crossing of the incoming ability's own resource.
 local M = {}
 
 M.WINDOW = 5 -- ticks (1 s at 5 Hz): an episode ends within this or is not one
@@ -54,11 +58,13 @@ end
 --- An empty frame over the run's events `ev`: per slot name, wait, cost (in the character's power, 0 otherwise); per
 --- tick lo, est, hi (the belief), truth (the world's power), pend (a swing pending: GAP AK), cd ({ [name] = believed
 --- cooldown remaining } for the abilities shown this tick or the last), gcd (the world's GCD remaining), t, bLo and
---- bHi (the power band the belief last applied, I.bandUsedLo/Hi; false or nil: none).
+--- bHi (the power band the belief last applied, I.bandUsedLo/Hi; false or nil: none); per slot res (the resource its
+--- ability spends, the cost declaration's lowercase key; false: none) and by that key bands[key] = { bLo, bHi, lo, hi }
+--- by tick (the band the belief applied to that resource, the belief's lo and hi; nil: none applied).
 function M.frame(ev)
-    local f = { n = 0, name = {}, wait = {}, cost = {}, ev = ev }
+    local f = { n = 0, name = {}, wait = {}, cost = {}, res = {}, bands = {}, ev = ev }
     for s = 1, M.SLOTS do
-        f.name[s], f.wait[s], f.cost[s] = {}, {}, {}
+        f.name[s], f.wait[s], f.cost[s], f.res[s] = {}, {}, {}, {}
     end
     f.lo, f.est, f.hi, f.truth, f.pend, f.cd, f.gcd, f.t = {}, {}, {}, {}, {}, {}, {}, {}
     f.bLo, f.bHi = {}, {}
@@ -91,15 +97,26 @@ local function band(f, c)
     return true
 end
 
--- The jitter rule's fact at poll c beyond the cause classes (L1762): a death or retarget, an aura edge now or (`viewer`:
--- the Cooldown Manager on, its light late) one poll before, a band crossing the belief follows, else nil.
-local function fact(f, c, viewer)
+-- A crossing at poll c of the band of resource `key` (f.bands) the belief follows (lies inside); outside it, none.
+local function crossed(f, key, c)
+    local b = key and f.bands[key]
+    local lo, hi = b and b.bLo[c], b and b.bHi[c]
+    if not lo or c < 2 or (lo == b.bLo[c - 1] and hi == b.bHi[c - 1]) then
+        return false
+    end
+    return b.hi[c] >= lo - EPS and b.lo[c] <= hi + EPS
+end
+
+-- The jitter rule's fact at poll c of slot s beyond the cause classes (L1762): a death or retarget, an aura edge now or
+-- (`viewer`: the Cooldown Manager on, its light late) one poll before, a band crossing the belief follows: of the
+-- displayed power, or (L2004) of the resource the ability the change brings in spends, else nil.
+local function fact(f, c, viewer, s)
     local ev = f.ev
     if ev.target[c] then
         return "target"
     elseif ev.aura[c] or (viewer and c > 1 and ev.aura[c - 1]) then
         return "aura"
-    elseif band(f, c) == true then
+    elseif band(f, c) == true or crossed(f, f.res[s][c], c) then
         return "band"
     end
     return nil
@@ -107,8 +124,8 @@ end
 
 --- The jitter rule on slot 1's changes (L1762 round 2: the gated flicker, loop.flips): by poll c where the first icon
 --- changed, the fact it follows ("press", "avoid", fact()'s, or in a `viewer` arm "verdict": the first change left
---- without one within LATE after a miss of our press), "stale" (a band crossing the belief lies outside: every fact
---- but our press vetoed), else false. o: tick, viewer.
+--- without one within LATE after a miss of our press), "stale" (a displayed band crossing the belief lies outside: every fact
+--- but our press and the incoming ability's own fresh spend crossing vetoed, L2004 A), else false. o: tick, viewer.
 function M.changes(f, o)
     local why, ev, name = {}, f.ev, f.name[1]
     for c = 2, f.n do
@@ -117,11 +134,12 @@ function M.changes(f, o)
             if ev.press[c] then -- our cast or spend, a ranged auto shot's not (loop.lua `press`)
                 w = "press"
             elseif band(f, c) == "stale" then
-                w = "stale"
+                -- staleness counts per resource (L2004 A): the incoming ability's own fresh crossing stands
+                w = crossed(f, f.res[1][c], c) and "band" or "stale"
             elseif ev.outcome[c] then -- an avoid row of ours, a ranged auto shot's not (loop.lua `outcome`)
                 w = "avoid"
             else
-                w = fact(f, c, o.viewer) or false
+                w = fact(f, c, o.viewer, 1) or false
                 -- the late light of the edge the change at c - 1 followed is that change's fact, not a new one (L1791)
                 if w == "aura" and not ev.aura[c] and why[c - 1] == "aura" then
                     w = false
@@ -219,12 +237,12 @@ function M.ledger(f, o)
         e.cause = e.cause or cause(f, p, c, e.from, e.to, tick)
         e.old = e.justified or JUSTIFIED[e.cause] or false -- the all-slot numbers' rule
         -- a retraction's fact is its ready run's (ledger below): fact() at c reaches back to the run's first poll
-        e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c, o.viewer))) or nil
+        e.fact = not e.old and (e.fact or (e.kind ~= "retracted" and fact(f, c, o.viewer, s))) or nil
         e.front = e.old or e.fact ~= nil
         if e.kind == "dip" then -- the return to `from` needs its own fact (L1791): a cause class or a fact at its poll
             local j = c + e.len
             local back = cause(f, j - 1, j, f.name[s][j - 1], e.from, tick)
-            back = JUSTIFIED[back] and back or fact(f, j, o.viewer)
+            back = JUSTIFIED[back] and back or fact(f, j, o.viewer, s)
             -- the late light of the change's own aura edge is the change's fact, not the return's
             if back == "aura" and not f.ev.aura[j] and j - 1 == c and (e.cause == "aura" or e.fact == "aura") then
                 back = nil
@@ -509,10 +527,10 @@ end
 
 --- A display hold's state (M.hold), one per instance per run.
 function M.newHold()
-    return { name = {}, time = {}, cost = {}, rawN = {}, rawT = {} }
+    return { name = {}, time = {}, cost = {}, res = {}, rawN = {}, rawT = {} }
 end
 
---- The display-side hold experiment (o.hold, off by default): queue `q` (slots 1..SLOTS: name, time, cost) as shown
+--- The display-side hold experiment (o.hold, off by default): queue `q` (slots 1..SLOTS: name, time, cost, res) as shown
 --- after holding each slot's change one poll. A slot shows its new state (icon, ready or not) once the raw queue
 --- has held it two polls; before that it shows the last shown one. Unheld: a retraction (the shown icon no longer
 --- ready: a hold never keeps a ready the engine withdrew) and any change after our own cast (`cast`: the addon sees
@@ -531,9 +549,9 @@ function M.hold(h, q, react, cast)
         end
         h.rawN[s], h.rawT[s] = n, w
         if keep then
-            q.name[s], q.time[s], q.cost[s] = hn, hw, h.cost[s]
+            q.name[s], q.time[s], q.cost[s], q.res[s] = hn, hw, h.cost[s], h.res[s]
         end
-        h.name[s], h.time[s], h.cost[s] = q.name[s], q.time[s], q.cost[s]
+        h.name[s], h.time[s], h.cost[s], h.res[s] = q.name[s], q.time[s], q.cost[s], q.res[s]
     end
 end
 

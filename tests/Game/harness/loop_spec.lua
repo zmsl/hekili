@@ -717,6 +717,21 @@ describe("the headless loop's ledger events (loop.events)", function()
         assert.are.same({ false, false, false }, flags({ kind = "spell", src = us, dst = mob, act = "WOUND" }))
         assert.are.same({ false, false, false }, flags({ kind = "spell", src = other, dst = us, act = "DODGE" }))
     end)
+
+    -- L2004 C (owner 2026-11-27): an ability spends a resource only while its cost in it, judged at that poll, is above
+    -- 0: a spell that declares mana but is free in an energy form spends nothing there, and mana out of it
+    it("records a slot's spend resource only while its cost at that poll is above 0 (loop.queue)", function()
+        local rec = { actionName = "x", time = 0, resource_type = "mana" }
+        local H = { Hekili = { Engine = { Output = { Primary = { count = 1, recs = { rec } } } } } }
+        local function res(cost)
+            local q = { name = {}, time = {}, cost = {}, res = {} }
+            rec.cost = cost
+            loop.queue(H, q, 3, "energy")
+            return { q.res[1], q.res[2], q.res[4], q.cost[1] }
+        end
+        assert.are.same({ false, false, false, 0 }, res(0)) -- free in the form: no resource
+        assert.are.same({ "mana", false, false, 0 }, res(55)) -- priced out of it: mana (not the displayed energy's cost)
+    end)
 end)
 
 describe("the headless loop's flicker counter (loop.flips)", function()

@@ -597,26 +597,29 @@ local function feed(H, obs, t, base, sink, sub, open)
 end
 M.feed = feed -- a spec with its own ticks over a world (a fight past a kill: tests/Forever/kill_rows_spec.lua)
 
--- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0) and its
--- focus entry into slot flicker.FOCUS (the display's focus: the best tier within the Timeline's 10 s horizon, then the
--- soonest); returns how many.
+-- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0, the resource
+-- each spends now: the cost declaration's key, false none or free, as a Cat's Faerie Fire) and its focus entry into
+-- slot flicker.FOCUS (the display's focus: the best tier within the Timeline's 10 s horizon, then the soonest); returns
+-- how many.
 local function queue(H, q, n, res)
     local out = H.Hekili.Engine.Output.Primary
     local k = math.min(n, out.count)
     for i = 1, k do
         local r = out.recs[i]
         q.name[i], q.time[i], q.cost[i] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
+        q.res[i] = (r.cost or 0) > 0 and r.resource_type or false
     end
     for i = k + 1, n do
-        q.name[i], q.time[i], q.cost[i] = false, 0, 0
+        q.name[i], q.time[i], q.cost[i], q.res[i] = false, 0, 0, false
     end
     local F = flicker.FOCUS
-    q.name[F], q.time[F], q.cost[F] = false, 0, 0
+    q.name[F], q.time[F], q.cost[F], q.res[F] = false, 0, 0, false
     local best -- the display's rule (Timeline.lua FOCUS_BEST_TIER): the best tier, then the soonest; focus=0 is no tier
     for i = 1, out.count do
         local r = out.recs[i]
         if type(r.focus) == "number" and r.focus >= 1 and (best == nil or r.focus < best) and (r.time or 0) <= 10 then
             q.name[F], q.time[F], q.cost[F] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
+            q.res[F] = (r.cost or 0) > 0 and r.resource_type or false
             best = r.focus
             if best == 1 then
                 break
@@ -625,6 +628,7 @@ local function queue(H, q, n, res)
     end
     return k
 end
+M.queue = queue -- loop_spec pins the spend resource rule (L2004 C)
 
 -- Our events in the world's truth from index `from` into `e` (flicker.EVENTS flags, OR-ed in); the next index.
 local function events(W, us, from, e)
@@ -670,6 +674,19 @@ local function band(VI, pt)
         end
     end
     return false, false
+end
+
+-- (L2004) The band the belief applied to each resource and the belief's lo and hi into frame `f`'s bands (by the
+-- resource's lowercase token: the cost declaration's key, flicker.frame) at tick n: an ability spending another
+-- resource than the displayed one takes that resource's band crossing as a fact.
+local function bands(f, n, VS, VI, now)
+    for r, d in ipairs(VI.def and VI.def.resources or {}) do
+        if (VI.bandUsed[r] or 0) > 0 then
+            local key, p = d.token:lower(), VS.Power(d.type, now)
+            local b = f.bands[key] or { bLo = {}, bHi = {}, lo = {}, hi = {} }
+            f.bands[key], b.bLo[n], b.bHi[n], b.lo[n], b.hi[n] = b, VI.bandUsedLo[r], VI.bandUsedHi[r], p.lo, p.hi
+        end
+    end
 end
 
 -- The believed cooldown remaining of ability `x` of instance `H` into `cd` (false: untracked), once a tick.
@@ -1017,7 +1034,7 @@ function M.run(L, seed, o, drivers)
             obs = observer.new(W, k),
             base = base,
             sink = {}, -- drive.op's reused records (the cast bar): one an instance, each on its own clock (gap BD)
-            q = { name = {}, time = {}, cost = {} },
+            q = { name = {}, time = {}, cost = {}, res = {} },
             plain = d.plain,
             hold = (hold and not d.plain) and flicker.newHold() or nil,
             layout = layout, -- the viewer arm's fight events and the next one's index (M.viewerLayout)
@@ -1451,7 +1468,8 @@ function M.run(L, seed, o, drivers)
                 local now = st.base + t
                 local cd = {}
                 for s = 1, flicker.SLOTS do
-                    f.name[s][n], f.wait[s][n], f.cost[s][n] = sq.name[s], sq.time[s], sq.cost[s]
+                    f.name[s][n], f.wait[s][n], f.cost[s][n], f.res[s][n] =
+                        sq.name[s], sq.time[s], sq.cost[s], sq.res[s]
                     cooldown(cd, st.H, sq.name[s], now)
                     cooldown(cd, st.H, n > 1 and f.name[s][n - 1], now)
                 end
@@ -1460,6 +1478,7 @@ function M.run(L, seed, o, drivers)
                 f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
                 -- the power band the belief applied (the jitter rule's band fact, L1762 round 2): its slot's last
                 f.bLo[n], f.bHi[n] = band(st.H.ns.VirtualStateInternal, L.power.type)
+                bands(f, n, VS, st.H.ns.VirtualStateInternal, now)
                 f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
             end
             for _, key in ipairs(ledger and flicker.EVENTS or {}) do
