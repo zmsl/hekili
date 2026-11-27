@@ -21,7 +21,7 @@ trap 'rm -rf "$OUT"' EXIT
 # not yet finished over the job count; none known, none printed. The report after the run does not depend on these lines.
 # eta_text <seconds> <jobs> <suffix>: ", about N min<suffix>" / ", under 1 min<suffix>"; nothing when no time is known (seconds <= 0).
 eta_text() {
-    awk -v s="$1" -v j="$2" -v w="$3" 'BEGIN { if (s > 0) { m = int(s / j / 60 + 0.5); printf ", %s%s", m < 1 ? "under 1 min" : "about " m " min", w } }'
+    awk -v s="$1" -v j="$2" -v w="$3" 'BEGIN { if (s > 0) { m = int(s / j / 60 + 0.5); printf ", %s%s", (m < 1 ? "under 1 min" : "about " m " min"), w } }'
 }
 # GitHub workflow-command escaping (data: % CR LF; property values also , and : in the awk below)
 esc() { local v=${1//%/%25}; v=${v//$'\r'/%0D}; echo "${v//$'\n'/%0A}"; }
