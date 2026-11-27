@@ -92,7 +92,7 @@ local PACKS = {
         "consecration=2",
     },
     -- Holy Shock (new pack): Hammer of Wrath's window 1; Consecration and the selected seal kept up 2; Holy Shock a strike
-    ["Paladin/APLs/Holy Shock"] = { "consecration=2", "hammer_of_wrath=1", "seal_of_righteousness=2" },
+    ["Paladin/APLs/Holy Shock"] = { "consecration=2", "hammer_of_wrath=1", "seal_of_righteousness=2", "seal_of_command=2" },
     -- the totems carry none (the user, 2026-10-21)
     ["Shaman/APLs/Enhancement"] = {
         "water_shield=2",
