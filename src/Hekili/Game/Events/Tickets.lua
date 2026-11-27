@@ -73,6 +73,50 @@ T.avoidT = {}
 for i = 1, CAP do
     T.avoidT[i] = 0
 end
+-- Pr-2 (refactor lane 9, L1827): the claim record, who holds a claim on an observed row, per ticket (struct of arrays,
+-- no allocation; Events/Rows.lua's RULES decide, this file keeps the state). Moved from Rows.lua's side memories with
+-- their sentinels and their anchor checks: a slot's fields are never cleared on reuse, a reader compares the anchor.
+-- The tie (Gap AS, owner ruling 2026-11-02): swing i holds the avoid it took by the MELEE tie in cast `claimRival`'s
+-- own frame (0 none); both anchors (claimRivalAt, claimAt: the slots' identities), the row's time and the rule that
+-- granted it (Rows.lua's RULES index). T.Release ends it.
+T.claimRival, T.claimRivalAt, T.claimAt, T.claimRowT, T.claimRule = {}, {}, {}, {}, {}
+local claimRival, claimRivalAt, claimAt, claimRowT, claimRule =
+    T.claimRival, T.claimRivalAt, T.claimAt, T.claimRowT, T.claimRule
+-- The evidence that swing i landed, for a cast's own-frame avoid after it: the white wound in its core band the LR
+-- refused (time, amount, flag, amount class; landAt the swing's anchor, 0 none) and (L1810 F1) its secret white wound
+-- in its core band (secretAt the swing's anchor, -1 none: a swing may be anchored at 0; secretT that wound's time).
+T.landT, T.landAmt, T.landFlag, T.landAt, T.landCls, T.secretAt, T.secretT = {}, {}, {}, {}, {}, {}, {}
+-- Fix A (L1763): the avoid row a COMMITTED instant ticket holds for its success (rowT 0 none): its unit, GUID,
+-- action, flag, amount (false: secret), school and the commit's castGUID. Rows.lua routes it again (its release).
+T.heldT, T.heldU, T.heldG, T.heldAct, T.heldFlag, T.heldAmt, T.heldSch, T.heldCast = {}, {}, {}, {}, {}, {}, {}, {}
+-- A TENT ticket's held payment is a divergent avoid: no row at T.onFinal either.
+T.quiet = {}
+for i = 1, CAP do
+    claimRival[i], claimRivalAt[i], claimAt[i], claimRowT[i], claimRule[i] = 0, 0, 0, 0, 0
+    T.landT[i], T.landAmt[i], T.landFlag[i], T.landAt[i], T.landCls[i] = 0, 0, "", 0, 0
+    T.secretAt[i], T.secretT[i] = -1, 0
+    T.heldT[i], T.heldU[i], T.heldG[i], T.heldAct[i], T.heldFlag[i], T.heldAmt[i], T.heldSch[i], T.heldCast[i] =
+        0, 0, "", "", "", 0, 0, ""
+    T.quiet[i] = false
+end
+
+--- Swing i holds the avoid row at rowT that it took by the tie in cast ticket `rival`'s own frame, by rule `rule`.
+--- Allocates nothing.
+function T.Hold(i, rival, rowT, rule)
+    claimRival[i], claimRivalAt[i], claimAt[i], claimRowT[i], claimRule[i] = rival, at[rival], at[i], rowT, rule
+end
+
+--- Ends swing i's claim, the one release every overturning fact calls (the swing's own row, its close). Returns the
+--- cast still waiting for the avoid (open, both anchors unchanged) and the row's time, else 0, 0. Allocates nothing.
+function T.Release(i)
+    local q = claimRival[i]
+    claimRival[i] = 0
+    if q > 0 and at[i] == claimAt[i] and state[q] == OPEN and at[q] == claimRivalAt[i] then
+        return q, claimRowT[i]
+    end
+    return 0, 0
+end
+
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
@@ -247,11 +291,12 @@ local function move(i, s)
     state[i] = s
 end
 
---- Closes ticket i at t for `why` (a T.closed key) and releases its unit. Allocates nothing.
+--- Closes ticket i at t for `why` (a T.closed key) and releases its unit and its claim. Allocates nothing.
 function T.Close(i, t, why)
     if state[i] == 0 then
         return
     end
+    T.Release(i) -- the window's close (a cast waiting for the avoid keeps none: its swing never landed)
     move(i, 0)
     lr[i], avoid[i] = 0, ""
     paidAt[i] = 0

@@ -38,22 +38,11 @@ local recNext = 0
 
 local lastMain, lastW0, fresh = 0, -1, false
 
--- Gap AS (owner ruling 2026-11-02): per swing ticket, the spell ticket whose own frame an avoid the swing took by the
--- MELEE tie arrived in (0 none), that ticket's and the swing's anchors (the slots' identities) and the avoid's time.
--- The swing's own wound in its core band later gives the avoid back to that cast.
-local tieP, tieAt, tieSw, tieT = {}, {}, {}, {}
--- The reversed order: per swing ticket, the white wound in its core band the LR refused (time, amount, flag, amount
--- class then; wAt the swing's anchor, 0 none). An avoid in a cast's own frame then finds the swing landed: the avoid
--- is the cast's.
-local wT, wAmt, wFlag, wAt, wCls = {}, {}, {}, {}, {}
--- (L1810 F1) Live, per swing ticket: the anchor of the swing whose secret white wound came in its core band (0 none): it
--- landed, so a cast's own-frame avoid in that band is the cast's. -1 none (a swing may be anchored at 0).
-local sAt, sT = {}, {} -- sT: that wound's time (a wound in a cast's success frame is the cast's own hit)
-for k = 1, T.CAP do
-    tieP[k], tieAt[k], tieSw[k], tieT[k] = 0, 0, 0, 0
-    wT[k], wAmt[k], wFlag[k], wAt[k], wCls[k] = 0, 0, "", 0, 0
-    sAt[k], sT[k] = -1, 0
-end
+-- The claim record (Pr-2, refactor lane 9) lives in Events/Tickets.lua: the tie a swing holds (T.Hold, T.Release), the
+-- evidence that a swing landed (its refused wound, its secret wound), fix A's held rows and the quiet payments.
+local claimRival, claimRivalAt, claimAt = T.claimRival, T.claimRivalAt, T.claimAt
+local wT, wAmt, wFlag, wAt, wCls = T.landT, T.landAmt, T.landFlag, T.landAt, T.landCls
+local sAt, sT = T.secretAt, T.secretT
 
 -- Fix A (L1763): per instant (FRAME) ticket still COMMITTED, the avoid row on its GUID that no open ticket took at pass
 -- 1 (live: logged 1-20 ms before the success, 28 of 287 melee instants): its time (0 none), unit, GUID, action, flag,
@@ -64,10 +53,8 @@ end
 -- melee instants, L1763), with a few ms over. Not SAME_FRAME (50 ms): an avoid of another player's that
 -- far before our success would pay our cast.
 local EARLY = I.Lat.lag("own.row.early")
-local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast = {}, {}, {}, {}, {}, {}, {}, {}
-for k = 1, T.CAP do
-    hT[k], hU[k], hG[k], hAct[k], hFlag[k], hAmt[k], hSch[k], hCast[k] = 0, 0, "", "", "", 0, 0, ""
-end
+local hT, hU, hG, hAct, hFlag, hAmt, hSch, hCast =
+    T.heldT, T.heldU, T.heldG, T.heldAct, T.heldFlag, T.heldAmt, T.heldSch, T.heldCast
 -- rel: 0 a fresh row; -1 a held row routed at its own time; i > 0 ticket i's held row, in its success's frame (a file
 -- local, not a route argument: route's frame stays as it was, L1769). Every fresh row resets it (M3: a raise in a release
 -- cannot leave fix A off).
@@ -99,10 +86,10 @@ local function tieHolder(t, g, amount, flag)
     for i = 1, T.CAP do
         local h = T.x[i]
         if
-            tieP[i] > 0
+            claimRival[i] > 0
             and T.state[i] == T.PROV
             and T.kind[i] == MELEE
-            and T.at[i] == tieSw[i]
+            and T.at[i] == claimAt[i]
             and T.guid[i] == g
             and math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h]
             and M.classOf(h, amount, flag) > 0
@@ -113,7 +100,7 @@ local function tieHolder(t, g, amount, flag)
     return nil
 end
 
--- The PROV swing on `g` whose tied avoid came in open cast ticket p's own frame (tieP), for a white wound at t that p
+-- The PROV swing on `g` whose tied avoid came in open cast ticket p's own frame (its claim), for a white wound at t that p
 -- would take and the swing's hand classes: in the swing's core band (`band`, the cast's own frame: ledger L80), else
 -- anywhere in its window (past the cast's frame: L629). Nil when none. Allocates nothing.
 -- shortcut: past the cast's frame the whole swing window can take another player's same-class white wound on `g` (a
@@ -125,11 +112,11 @@ local function tiedTo(p, t, g, amount, flag, band)
     for i = 1, T.CAP do
         local h = T.x[i]
         if
-            tieP[i] == p
-            and tieAt[i] == T.at[p]
+            claimRival[i] == p
+            and claimRivalAt[i] == T.at[p]
             and T.state[i] == T.PROV
             and T.kind[i] == MELEE
-            and T.at[i] == tieSw[i]
+            and T.at[i] == claimAt[i]
             and T.guid[i] == g
             and t - T.at[i] <= T.w[i]
             and (not band or math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h])
@@ -159,7 +146,7 @@ local function secretOwner(t, g)
             T.kind[i] == MELEE
             and T.guid[i] == g
             and T.told[i] ~= 2
-            and (st == T.OPEN or (st == T.PROV and tieP[i] > 0 and T.at[i] == tieSw[i]))
+            and (st == T.OPEN or (st == T.PROV and claimRival[i] > 0 and T.at[i] == claimAt[i]))
             and math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h]
         then
             local f = M.density(i, t)
@@ -448,10 +435,7 @@ end)
 -- SPELL_MISSED (Hekili's `missable` would drop the other cast's debuff on it). A provisional payment (TENT,
 -- attribution-recovery decision 48) holds its Crit or Avoided and its row until it is final (T.onFinal) or replaced.
 local rerouting = false -- a displaced row re-offered (decision 48 as amended): it never teaches
-local quiet = {} -- per ticket: its held payment is a divergent avoid (no row at T.onFinal either)
-for k = 1, T.CAP do
-    quiet[k] = false
-end
+local quiet = T.quiet -- per ticket: its held payment is a divergent avoid (no row at T.onFinal either)
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     local divergent, lands = false, false -- lands: only the same-ability direct-vs-tick crit diverged (landed either way)
     -- (L1917) a refusing avoid in the frames of two casts of ours goes to the latest success, as a full resist: its
@@ -520,18 +504,17 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         L.avoidRowG = act == "PARRY" and T.guid[credited] or ""
         return
     end
+    local q, qT = T.Release(credited) -- the swing's own row ends its claim
     if T.avoid[credited] ~= "" then
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
-        local q = tieP[credited]
-        if q > 0 and T.at[credited] == tieSw[credited] and T.state[q] == T.OPEN and T.at[q] == tieAt[credited] then
+        if q > 0 then
             -- pass 1 even for a pass-2/3 match (the forward order): the swing's own wound settled the tie, so the
             -- payment is final now; pass 2 would only hold it TENT to its narrow band's end (a later undo), and an
             -- avoid on a FRAME ticket (the forward order's only kind) teaches nothing at any pass (teachFrom)
             mark(R.give_back)
-            paySpell(q, 1, 1, tieT[credited], T.avoid[credited], "", 0, 1, true, false) -- the cast's, by the tie (AS)
+            paySpell(q, 1, 1, qT, T.avoid[credited], "", 0, 1, true, false) -- the cast's, by the tie (AS)
         end
     end
-    tieP[credited] = 0
     -- a credit outside the hand's core band is provisional and never teaches the median (decision 48)
     local dc = ref == 3 and t - T.ref[credited] or lag -- the scoring reference's lag (an off hand's main reference)
     local core = T.first[credited] or lag <= SAME_FRAME or math.abs(dc - L.med[ref]) <= 2 * L.spr[ref]
@@ -800,6 +783,7 @@ local function route(t, g, uid, act, flag, amount, school)
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
     local frameSw, frameP = 0, 0 -- the swing the tie gave an avoid in a cast's own frame, and that cast's ticket (AS)
+    local frameRule = 0 -- the rule that gave it (the claim's T.claimRule)
     local owed = 0 -- the swing an avoid past a cast's frame is held on (AS, the forward order)
     local held = 0 -- the provisionally credited swing whose core band took a cast's avoid (replaced below, unscored)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
@@ -890,7 +874,7 @@ local function route(t, g, uid, act, flag, amount, school)
                     mark(R.swing_secret_first)
                 else
                     if own then -- the cast's own frame: its again if the swing lands
-                        frameSw, frameP = sw, p
+                        frameSw, frameP, frameRule = sw, p, R.swing_wins_tie
                     end
                     p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
                     mark(R.swing_wins_tie)
@@ -915,7 +899,7 @@ local function route(t, g, uid, act, flag, amount, school)
                 if pass == 1 then
                     tiedP, tiedN = p, n
                     if t - T.at[p] <= SAME_FRAME then
-                        frameSw, frameP = r, p
+                        frameSw, frameP, frameRule = r, p, R.credit_core_band
                     end
                 end
                 p, tied, held = 0, true, r
@@ -931,7 +915,7 @@ local function route(t, g, uid, act, flag, amount, school)
                 -- avoids are secret and never reach here); upgrade if a plain client shows cast avoids past their frame
                 owed = owedSwing(t, g)
                 if owed > 0 then
-                    frameSw, frameP, p, tied = owed, p, 0, true
+                    frameSw, frameP, p, tied, frameRule = owed, p, 0, true, R.swing_owes_row
                     mark(R.swing_owes_row)
                 end
             end
@@ -1070,8 +1054,7 @@ local function route(t, g, uid, act, flag, amount, school)
     end
     if avoid and credited == frameSw then
         -- a held row (fix A) is paid back at its cast's success, never before the cast's own write
-        tieP[credited], tieAt[credited], tieSw[credited], tieT[credited] =
-            frameP, T.at[frameP], T.at[credited], t < T.at[frameP] and T.at[frameP] or t
+        T.Hold(credited, frameP, t < T.at[frameP] and T.at[frameP] or t, frameRule)
     end
     mark(R.credit_swing)
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
