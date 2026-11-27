@@ -34,7 +34,10 @@ end
 
 describe("a cooldown that starts when its aura ends (cooldownAfter)", function()
     it("is a registered ability field naming an aura", function()
-        local H = headless.new({ character = require("Forever.helpers.paladin_world").HolyShock.character(), pack = "Holy Shock (wowsims.com)" })
+        local H = headless.new({
+            character = require("Forever.helpers.paladin_world").HolyShock.character(),
+            pack = "Holy Shock (wowsims.com)",
+        })
         local row = H.ns.Fields.rows.ability.cooldownAfter
         assert.is_table(row)
         assert.are.equal("aura", row.type)
