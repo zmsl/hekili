@@ -2249,8 +2249,15 @@ function scripts:LoadScripts()
     end
 
     -- a line reading a window another priority declares, but neither its own priority nor a class pack does, reads it
-    -- closed and never fires (a copy of a priority whose windows moved into the priority); a name nobody declares is a
-    -- compile error already. Every pack has loaded here, so declaredWindows is complete.
+    -- closed (a copy of a priority whose windows moved into the priority); a name nobody declares is a compile error
+    -- already. Every pack has loaded here, so declaredWindows is complete. A line only passes with the window open when
+    -- it reads it up/done/next with no `or` and no `not (` or `not window` in its condition: the message prefers such a
+    -- line. shortcut: a text scan, so another `not window.y` can hide it; the fallback is the first line, as before.
+    local function needsOpen( lua, w )
+        if lua:find( "%f[%w_]or%f[^%w_]" ) or lua:find( "not%s*%(" ) or lua:find( "not%s+window%." ) then return false end
+        return lua:find( "%f[%w_]window%." .. w .. "%.up%f[^%w_]" ) ~= nil or lua:find( "%f[%w_]window%." .. w .. "%.done%f[^%w_]" ) ~= nil
+            or lua:find( "%f[%w_]window%." .. w .. "%.next%." ) ~= nil
+    end
     local stale = {}
     for id, script in pairs( self.DB ) do
         local reads = script.WindowReads
@@ -2259,23 +2266,25 @@ function scripts:LoadScripts()
         if cw and not script.Error then
             for w in pairs( reads ) do
                 if self.declaredWindows[ w ] and not cw.byName[ w ] and not luaWindow( w ) then
-                    stale[ #stale + 1 ] = { pack = pack, list = list, line = tonumber( line ), w = w }
+                    stale[ #stale + 1 ] = { pack = pack, list = list, line = tonumber( line ), w = w, open = needsOpen( script.Lua or "", w ) }
                 end
             end
         end
     end
-    -- the message names the first line in list name, then line order, whatever order the table held them in
+    -- the message names a line that needs the window open first, else the first line in list name, then line order,
+    -- whatever order the table held them in
     table.sort( stale, function( x, y )
         if x.pack ~= y.pack then return x.pack < y.pack end
+        if x.w ~= y.w then return x.w < y.w end
+        if x.open ~= y.open then return x.open end
         if x.list ~= y.list then return x.list < y.list end
-        if x.line ~= y.line then return x.line < y.line end
-        return x.w < y.w
+        return x.line < y.line
     end )
     for _, r in ipairs( stale ) do
         local seen = r.pack .. ":" .. r.w
         if not reportedStaleWindows[ seen ] then
             reportedStaleWindows[ seen ] = true
-            Hekili:Error( L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare: that line will never fire. If this is a copy of a built-in priority, copy it again."], r.pack, r.list, r.line, r.w )
+            Hekili:Error( L["Priority '%s' list '%s' line %d reads the window '%s', which this priority does not declare, so that window reads as closed and the line may never fire, or fire differently. If this is a copy of a built-in priority, copy it again."], r.pack, r.list, r.line, r.w )
         end
     end
 
