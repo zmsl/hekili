@@ -746,3 +746,235 @@ describe("the pairing matrix (finisher_miss_spec's cases, refactor lane 2) #pin"
         end)
     end
 end)
+
+-- Lane 9 (Pr-2, the claim table, L1827): the rule that decided each row of each case. A row near the case's cast (as
+-- the route column's window) reads "<stamp from T> <action> <rule>><rule>... =<owner>...": the rules that marked it in
+-- order (Rows.lua's RULES, I.Rows.trace) and every ticket paid by it (cast, or swing and its hand). Pinned from route's
+-- branches before any moved into the table (the tagged cascade); the conversion keeps every chain. Re-pin with
+-- RULES_CAPTURE=<file>.
+-- The rules no matrix case reaches, each pinned by an existing pairing spec's chain (Game.State.helpers.rule_trace):
+-- tickets_spec (replace_provisional, swing_wound_first, wound_remembered, credit_core_band, overdue, tied_wound,
+-- unmapped_excuse, give_back), pairing_replay_spec (wound_zero), now_spec (tie_crit_not_cast, latest_success_tie),
+-- cleu_rows_spec (cast_wound_wide), tie_holder_wound (tickets_spec, added by lane 9: no test reached it before).
+local UNREACHED = {
+    "wound_zero",
+    "replace_provisional",
+    "swing_wound_first",
+    "tie_crit_not_cast",
+    "credit_core_band",
+    "tie_holder_wound",
+    "cast_wound_wide",
+    "overdue",
+    "tied_wound",
+    "unmapped_excuse",
+    "wound_remembered",
+    "latest_success_tie",
+    "give_back",
+}
+local RULE_PIN = {
+    ["1 Rip MISS own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rip MISS row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 MISS hold_early_avoid; -0.015 MISS held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rip MISS swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip MISS swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip MISS swing frame, plain"] = "+0.003 WOUND swing_score>credit_swing>=swing1; +0.004 MISS cast_narrow>pay_cast>=cast; +1.003 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rip MISS swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rip MISS no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["1 Rip DODGE own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rip DODGE row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 DODGE hold_early_avoid; -0.015 DODGE held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rip DODGE swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip DODGE swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip DODGE swing frame, plain"] = "+0.003 WOUND swing_score>credit_swing>=swing1; +0.004 DODGE cast_narrow>pay_cast>=cast; +1.003 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rip DODGE swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rip DODGE no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["1 Rip PARRY own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rip PARRY row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 PARRY hold_early_avoid; -0.015 PARRY held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rip PARRY swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip PARRY swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rip PARRY swing frame, plain"] = "+0.003 WOUND swing_score>credit_swing>=swing1; +0.004 PARRY cast_narrow>pay_cast>=cast; +1.003 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rip PARRY swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rip PARRY no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["5 Rip DODGE no row, cdmOff"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["5 Rip DODGE no row, not tracked"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["1 Rake MISS own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rake MISS row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 MISS hold_early_avoid; -0.015 MISS held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rake MISS swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake MISS swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake MISS swing frame, plain"] = "+0.003 WOUND cast_narrow>pay_cast>=cast; +0.004 MISS swing_score>credit_swing>=swing1; +1.003 WOUND swing_score>credit_swing>=swing1; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rake MISS swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 MISS cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rake MISS no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["1 Rake DODGE own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rake DODGE row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 DODGE hold_early_avoid; -0.015 DODGE held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rake DODGE swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake DODGE swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake DODGE swing frame, plain"] = "+0.003 WOUND cast_narrow>pay_cast>=cast; +0.004 DODGE swing_score>credit_swing>=swing1; +1.003 WOUND swing_score>credit_swing>=swing1; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rake DODGE swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 DODGE cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rake DODGE no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["1 Rake PARRY own row +4 ms"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["2 Rake PARRY row -15 ms (fix A)"] = "-0.426 WOUND secret_wound_landed>secret_row; -0.015 PARRY hold_early_avoid; -0.015 PARRY held_row_at_success>pay_cast>=cast; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["3 Rake PARRY swing frame, secret"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake PARRY swing frame, secret, viewer"] = "+0.003 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["3 Rake PARRY swing frame, plain"] = "+0.003 WOUND cast_narrow>pay_cast>=cast; +0.004 PARRY swing_score>credit_swing>=swing1; +1.003 WOUND swing_score>credit_swing>=swing1; +2.003 WOUND swing_score>credit_swing>=swing1",
+    ["3b Rake PARRY swing -16 ms (SAME_FRAME)"] = "-0.542 WOUND secret_wound_landed>secret_row; +0.004 PARRY cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +0.458 WOUND secret_wound_landed>secret_row; +1.458 WOUND secret_wound_landed>secret_row; +2.458 WOUND secret_wound_landed>secret_row",
+    ["4 Rake PARRY no row, viewer dark"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["5 Rake DODGE no row, cdmOff"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["5 Rake DODGE no row, not tracked"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["C Rip lands"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.000 WOUND secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["C Rake lands"] = "-0.426 WOUND secret_wound_landed>secret_row; +0.004 WOUND secret_row; +0.574 WOUND secret_wound_landed>secret_row; +1.574 WOUND secret_wound_landed>secret_row; +2.574 WOUND secret_wound_landed>secret_row",
+    ["M seed 2, secret"] = "-0.191 WOUND secret_wound_landed>secret_row; +0.511 DODGE cast_avoid_wide>secret_avoid_past_frame>foreign; +1.500 WOUND secret_row; +1.809 WOUND secret_wound_landed>secret_row; +2.000 WOUND secret_row; +2.809 WOUND secret_wound_landed>secret_row",
+    ["M seed 2, plain"] = "-0.191 WOUND swing_score>credit_swing>=swing1; +0.511 DODGE cast_avoid_wide>swing_owes_row>credit_swing>=swing1; +1.500 WOUND swing_score>credit_swing>=swing1; +1.809 WOUND reroute>swing_replaces_credit>credit_swing>=swing1; +2.000 WOUND foreign; +2.809 WOUND swing_score>credit_swing>=swing1",
+    ["M seed 8, secret"] = "-0.521 WOUND secret_wound_landed>secret_row; +0.625 MISS cast_avoid_wide>secret_avoid_past_frame>swing_score>credit_swing>=swing1; +1.479 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.000 WOUND secret_row; +2.479 WOUND secret_wound_landed>secret_row",
+    ["M seed 8, plain"] = "-0.521 WOUND swing_score>credit_swing>=swing1; +0.625 MISS cast_avoid_wide>swing_owes_row>credit_swing>=swing1; +1.479 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.000 WOUND foreign; +2.479 WOUND swing_score>credit_swing>=swing1",
+    ["M core band, secret"] = "+0.003 MISS cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.000 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["M core band, plain"] = "+0.003 MISS cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +1.003 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.000 WOUND swing_score>credit_swing>=swing1; +2.003 WOUND foreign",
+    ["M own ms, plain"] = "-0.515 WOUND swing_score>credit_swing>=swing1; +0.011 MISS cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +1.485 WOUND swing_score>credit_swing>=swing1; +1.500 WOUND foreign; +2.000 WOUND foreign; +2.485 WOUND swing_score>credit_swing>=swing1",
+    ["M own ms, secret (PINNED)"] = "-0.515 WOUND secret_wound_landed>secret_row; +0.011 MISS cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +1.485 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.000 WOUND secret_row; +2.485 WOUND secret_wound_landed>secret_row",
+    ["M own ms, secret, viewer"] = "-0.515 WOUND secret_wound_landed>secret_row; +0.011 MISS cast_narrow>swing_wins_tie>tie_refused>pay_cast>=cast; +1.485 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_wound_landed>secret_row; +2.000 WOUND secret_row; +2.485 WOUND secret_wound_landed>secret_row",
+    ["M tick, secret (PINNED)"] = "+0.002 WOUND secret_wound_landed>secret_row; +0.003 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.000 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["M tick, secret, viewer"] = "+0.002 WOUND secret_wound_landed>secret_row; +0.003 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.003 WOUND secret_wound_landed>secret_row; +1.500 WOUND secret_row; +2.000 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["M seed 2, plain, viewer"] = "-0.191 WOUND swing_score>credit_swing>=swing1; +0.511 DODGE cast_avoid_wide>swing_owes_row>credit_swing>=swing1; +1.500 WOUND swing_score>credit_swing>=swing1; +1.809 WOUND reroute>swing_replaces_credit>credit_swing>=swing1; +2.000 WOUND foreign; +2.809 WOUND swing_score>credit_swing>=swing1",
+    ["P Rake lands, swing MISS core band"] = "+0.001 WOUND secret_wound_landed>secret_row; +0.030 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.030 WOUND secret_wound_landed>secret_row; +2.030 WOUND secret_wound_landed>secret_row",
+    ["P Rake lands, 2 points"] = "+0.001 WOUND secret_wound_landed>secret_row; +0.030 MISS cast_narrow>swing_secret_first>pay_cast>=cast; +1.030 WOUND secret_wound_landed>secret_row; +2.030 WOUND secret_wound_landed>secret_row",
+    ["P Rake MISS tied to open swing"] = "+0.004 MISS cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +0.729 MISS foreign; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["P Rake DODGE tied to open swing"] = "+0.004 DODGE cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +0.729 MISS foreign; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+    ["P Rake PARRY tied to open swing"] = "+0.004 PARRY cast_narrow>swing_wins_tie>swing_score>credit_swing>=swing1; +0.729 MISS foreign; +1.003 WOUND secret_wound_landed>secret_row; +2.003 WOUND secret_wound_landed>secret_row",
+}
+
+local function chains(knobs)
+    local c, out, cur, base = {}, {}, nil, nil
+    for k, v in pairs(knobs) do
+        c[k] = v
+    end
+    c.rows = true
+    if c.bleed == "rake" and c.act ~= "WOUND" and not c.pointFact then
+        c.pointFact = PT_AVOID
+        c.info = c.info or math.max(PT_AVOID, c.row or 0)
+    end
+    local events = {}
+    c.onWorld = function(W)
+        local I = W.I
+        local RULES, Tk = I.Rows.RULES, I.Tickets
+        I.Rows.trace = function(what, a, b)
+            if what == "row" then
+                events[#events + 1] = { a, b, {} }
+            elseif #events > 0 then
+                local e = events[#events][3]
+                if what == "rule" then
+                    e[#e + 1] = RULES[a][1]
+                elseif what == "cast" then
+                    e[#e + 1] = "=cast"
+                else
+                    e[#e + 1] = "=swing" .. Tk.x[a]
+                end
+            end
+        end
+    end
+    local W, T = fw.case(c)
+    for _, e in ipairs(events) do
+        local d = e[1] - T
+        if d > -0.6 and d < 3 then
+            out[#out + 1] = ("%+.3f %s %s"):format(d, e[2], table.concat(e[3], ">"))
+        end
+    end
+    assert.are.same({}, W.H.errors)
+    return table.concat(out, "; ")
+end
+
+describe("the claim table's deciding rules on each matrix case (refactor lane 9)", function()
+    local capture = os.getenv("RULES_CAPTURE")
+    for _, m in ipairs(MATRIX) do
+        it("rules: " .. m[1], function()
+            local got = chains(m[2])
+            if capture then
+                local out = assert(io.open(capture, "a"))
+                out:write(("    [%q] = %q,\n"):format(m[1], got))
+                out:close()
+            end
+            assert.are.equal(RULE_PIN[m[1]], got)
+        end)
+    end
+
+    -- the table's order is precedence: pinned whole (the chains pin it only where rules meet in one row)
+    it("rules: the table's names in their order", function()
+        local W, names = fw.world({}), {}
+        for _, r in ipairs(W.I.Rows.RULES) do
+            names[#names + 1] = r[1]
+        end
+        assert.are.same({
+            "secret_wound_landed",
+            "secret_row",
+            "wound_zero",
+            "cast_narrow",
+            "replace_provisional",
+            "held_row_at_success",
+            "hold_early_avoid",
+            "cast_avoid_wide",
+            "secret_avoid_past_frame",
+            "swing_wound_first",
+            "swing_secret_first",
+            "swing_wins_tie",
+            "tie_crit_not_cast",
+            "credit_core_band",
+            "swing_owes_row",
+            "swing_score",
+            "swing_replaces_credit",
+            "tie_holder_wound",
+            "cast_wound_wide",
+            "tie_refused",
+            "overdue",
+            "tied_wound",
+            "unmapped_excuse",
+            "pay_cast",
+            "wound_remembered",
+            "foreign",
+            "credit_swing",
+            "latest_success_tie",
+            "give_back",
+            "reroute",
+        }, names)
+    end)
+
+    -- the rules no matrix case reaches (each pinned by another spec's chain: the next test)
+    it("rules: the table's rules no matrix case reaches", function()
+        local W = fw.world({})
+        local seen, missing = {}, {}
+        for _, chain in pairs(RULE_PIN) do
+            for name in chain:gmatch("[%a_]+") do
+                seen[name] = true
+            end
+        end
+        for _, r in ipairs(W.I.Rows.RULES) do
+            if not seen[r[1]] then
+                missing[#missing + 1] = r[1]
+            end
+        end
+        assert.are.same(UNREACHED, missing)
+    end)
+
+    -- review minor 5: each of those is pinned by a chain another spec asserts ("<chain>", rt.chain(...)), so a deleted
+    -- chain assert fails here, not silently
+    it("rules: every rule no matrix case reaches is pinned by another spec's chain", function()
+        local pinned = {}
+        for _, path in ipairs({
+            "tests/Game/Events/tickets_spec.lua",
+            "tests/Game/Events/pairing_replay_spec.lua",
+            "tests/Game/Events/cleu_rows_spec.lua",
+            "tests/Game/State/now_spec.lua",
+        }) do
+            local f = assert(io.open(path))
+            local src = f:read("*a")
+            f:close()
+            for chain in src:gmatch('"([^"]*)"%s*,%s*rt%.chain%(') do
+                for name in chain:gmatch("[%a_]+") do
+                    pinned[name] = true
+                end
+            end
+        end
+        local unpinned = {}
+        for _, name in ipairs(UNREACHED) do
+            if not pinned[name] then
+                unpinned[#unpinned + 1] = name
+            end
+        end
+        assert.are.same({}, unpinned)
+    end)
+end)

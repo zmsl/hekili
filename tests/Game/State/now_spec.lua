@@ -1,6 +1,7 @@
 -- tests/Game/State/now_spec.lua (event-facade spec §12a): a cast's effects on the belief. The automatic ones from the
 -- ability's declared fields (cost, cooldown, GCD) and the class file's `now` function, run in VirtualState's context
 -- with Hekili's verb names, as `modelled` samples at the cast's time; never Hekili's `state`.
+local rt = require("Game.State.helpers.rule_trace") -- lane 9: the deciding rules
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -1395,6 +1396,7 @@ describe("now handlers", function()
         -- success: the latest's, as a full resist (target undo only): its debuff down, no refund, no onAvoid, its
         -- SPELL_MISSED; the payment is final at once (pass 1: never held, so no later stage can refund either)
         it("a same-frame avoid goes to the latest success as a target undo only: no refund, no onAvoid", function()
+            rt.on(I)
             local avoids = 0
             register("frame_test", { id = 2690, startsCombat = true }) -- a default FRAME ticket, any school
             h.Class.abilities.spender_c.funcs.onAvoid = function()
@@ -1426,9 +1428,11 @@ describe("now handlers", function()
                 end
             end
             assert.are.same({ fs.SPENDER_C }, missed)
+            assert.are.equal("cast_narrow>pay_cast>latest_success_tie>=cast", rt.chain("latest_success_tie"))
         end)
 
         it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
+            rt.on(I)
             local crits = 0
             h.Class.abilities.spender_c.funcs.onCrit = function()
                 crits = crits + 1
@@ -1459,6 +1463,10 @@ describe("now handlers", function()
             ctl.Tick(30.01)
             VS.Drain(30.02)
             assert.are.equal(2, crits)
+            assert.are.equal(
+                "cast_narrow>tie_crit_not_cast>pay_cast>=cast>cast_narrow>pay_cast>=cast>cast_narrow>pay_cast>=cast",
+                rt.chain("tie_crit_not_cast")
+            )
         end)
 
         it("keeps an onCrit's target writes out of the cast's undo: an avoid after it leaves them (GAP T)", function()
