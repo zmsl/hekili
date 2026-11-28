@@ -815,3 +815,57 @@ describe("fake_lhv's observer rules", function()
         assert.are.equal(1201, live) -- every call: the warm-up's 200, the absorbing 1 and the measured 1000
     end)
 end)
+
+-- (lane aura-stacks) the opt-in aura kind (o.auras, the aura-bands arm): the real library's stacks bands from the
+-- observer's pushes, AURA_LAG (5) frames late; off without o.auras (every other arm: unproven, as before)
+describe("fake_lhv's aura kind", function()
+    local t
+    local function lib(placed)
+        return fake_lhv.new({
+            now = function()
+                return t
+            end,
+            auras = placed,
+        })
+    end
+    local SPEC = { kind = "aura", unit = "player", spell = 77, what = "stacks", edges = { 1, 3, 4 }, max = 5 }
+    local function band(h)
+        local lo, hi = h:Get()
+        return { lo, hi }
+    end
+
+    it("is unproven without o.auras", function()
+        t = 0
+        local h = lib(nil):Watch("O", SPEC)
+        assert.are.same({ "unavailable", "unproven" }, { h:State() })
+    end)
+
+    it("bands the pushed stacks 5 frames late, absent before any push, unplaced unavailable", function()
+        t = 0
+        local on = true
+        local L = lib(function(spell)
+            return on and spell == 77
+        end)
+        local h = L:Watch("O", SPEC)
+        assert.are.equal("priming", (h:State()))
+        t = 5 * FRAME
+        assert.are.same({ 0, 1 }, band(h))
+        L:Push("aura", "player", 77, 1, nil, t)
+        assert.are.same({ 0, 1 }, band(h)) -- not shown yet
+        t = t + 5 * FRAME
+        assert.are.same({ 0, 3 }, band(h)) -- up with no count: 0 to the lowest bar
+        L:Push("aura", "player", 77, 3, nil, t)
+        t = t + 5 * FRAME
+        local lo, hi, bt = h:Get()
+        assert.are.same({ 3, 4 }, { lo, hi })
+        assert.is_true(math.abs(bt - t) < 1e-9)
+        L:Push("aura", "player", 77, 5, nil, t)
+        t = t + 5 * FRAME
+        assert.are.same({ 4, 5 }, band(h))
+        on = false
+        assert.are.same({ "unavailable", "cdm-not-tracked" }, { h:State() })
+        on = true
+        L:AuraReset()
+        assert.are.same({ 0, 1 }, band(h))
+    end)
+end)

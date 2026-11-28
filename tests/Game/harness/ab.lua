@@ -188,6 +188,18 @@ M.ARMS.bands = { outcomes = "default", presence = "router", viewer = false, band
 -- (L1805, the fallback proof) both libraries absent with the switch on (Hekili.bandOff false, LibStub answering neither
 -- major): every reader takes its library-off path; its rows must equal the default arm's row for row.
 M.ARMS["lib-absent"] = { outcomes = "default", presence = "router", viewer = false, libAbsent = true }
+-- (lane aura-stacks, L2023; record-only) the live-auras world (our auras raise in combat, the class's real layout) with
+-- the bands and fake_lhv's aura kind (observer `auraBands`): the priority's own-buff stack reads follow the Cooldown
+-- Manager's count text; compare with live-auras, the same world without the library.
+M.ARMS["aura-bands"] = {
+    outcomes = "default",
+    presence = "router",
+    viewer = true,
+    layout = "fixture",
+    bands = true,
+    bandKnobs = { auraBands = true },
+    observe = { secretPlayerAuras = true },
+}
 M.ARMS["bands-drop"] = { outcomes = "default", presence = "router", viewer = false, bands = true, bandDrop = 20 }
 -- The time to die (lane B8, design 2.7's jitter rule): the bands arm with the real LibTimeToDie over the fake library
 -- (ttd_rig.lua), so the core's fight_remains and time_to_die answer its live estimate; each fight writes a `ttd` row

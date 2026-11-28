@@ -875,11 +875,31 @@ function M.run(L, seed, o, drivers)
         -- session flag Hekili.bandOff, as cdmOff (with no library in the default arm it changes nothing)
         local bands = arm.bands and not d.plain or false
         if bands and not ctl.lhv then
+            local placed = nil -- (the aura-bands arm) the aura kind's placement: an aura viewer's item names the spell
+            if arm.bandKnobs and arm.bandKnobs.auraBands then
+                placed = function(spell)
+                    for c = 2, 3 do -- Tracked Buffs, Tracked Bars
+                        for _, id in ipairs(ctl.viewer.sets[c]) do
+                            local info = ctl.viewer.infos[id] or {}
+                            if info.spellID == spell or info.overrideSpellID == spell then
+                                return true
+                            end
+                            for _, l in ipairs(info.linkedSpellIDs or {}) do
+                                if l == spell then
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                    return false
+                end
+            end
             ctl.lhv = fake_lhv.new({
                 now = function()
                     return ctl.now
                 end,
                 history = true,
+                auras = placed,
             })
             local major, minor = ctl.lhv:GetVersion()
             local stub = rawget(d.H.env, "LibStub")
@@ -889,6 +909,9 @@ function M.run(L, seed, o, drivers)
         -- the real library keeps it (design 5.2; L1666 d)
         if ctl.lhv and select(3, ctl.lhv:IsAvailable("health", "player")) ~= "error" then
             ctl.lhv:SetAvailable("ready")
+        end
+        if ctl.lhv then
+            ctl.lhv:AuraReset() -- a fresh world: no aura of the last one shows
         end
         -- a ttd arm's driver (lane B8): the real LibTimeToDie over the fake library (ttd_rig.lua), once, so the core's
         -- time to die (Targets.lua) answers from it

@@ -329,6 +329,28 @@ function M.new(o)
         return nil
     end
 
+    -- (lane aura-stacks; o.auras only, the aura-bands arm) the aura kind's player stacks from the count text: the
+    -- observer pushes our aura's true stacks at each change (`lib:Push("aura", "player", spell, stacks)`), a handle
+    -- reports the last push at least `auraLag` frames old (LHV.SETTLE + 1, its h:Latency) as the real library's band
+    -- (absent [0, cut 1), 0 or 1 up [0, lowest bar), else [the highest cut at or below, the next cut or max]), stamped
+    -- that push's time plus the lag; unknown until a push is that old after the watch; `unavailable cdm-not-tracked`
+    -- while o.auras(spell) (the harness's layout places it on an aura viewer) says no. shortcut: no prime hold, no
+    -- "priming until the next count write" (a watch made while the aura is up reads its push at once): the belief's
+    -- watches are made out of combat, before the pull's procs; upgrade if a consumer watches mid-fight.
+    local AURA_LAG = 5
+    local auraSrc = {}
+    local function auraSource(spell)
+        local s = auraSrc[spell] or { t = {}, v = {}, n = 0 }
+        auraSrc[spell] = s
+        return s
+    end
+    -- A new fight's world: every aura absent, the pushes forgotten (loop.lua, at each fight's setup).
+    function lib:AuraReset()
+        for _, s in pairs(auraSrc) do
+            s.n = 0
+        end
+    end
+
     function lib:Watch(owner, spec, sink)
         local E = M.ERR
         if type(owner) ~= "string" then
@@ -345,6 +367,17 @@ function M.new(o)
             return nil, E.KIND_INVALID
         end
         local h = setmetatable({ owner = owner, kind = kind, sink = sink }, H)
+        if kind == "aura" and o.auras and spec.unit == "player" and spec.what == "stacks" then
+            local cut = {}
+            for i, e in ipairs(spec.edges or {}) do
+                cut[i] = e
+            end
+            sort(cut)
+            h.aura, h.spell, h.cut, h.top, h.from =
+                auraSource(spec.spell), spec.spell, cut, spec.max or math.huge, now()
+            lib.handles[#lib.handles + 1] = h
+            return h
+        end
         if not UNITS[kind] then
             h.unproven = "unproven"
             lib.handles[#lib.handles + 1] = h
@@ -415,6 +448,12 @@ function M.new(o)
 
     -- The observer's firing: the true value (plain, its own units; nil: no unit) of a source at t.
     function lib:Push(kind, unit, power, value, max, t)
+        if kind == "aura" then -- power: the spell, value: its stacks (0: absent)
+            local s = auraSource(power)
+            s.n = s.n + 1
+            s.t[s.n], s.v[s.n] = t, value
+            return
+        end
         local s = source(kind, unit, kind == "power" and power or nil)
         if o.history then -- the truth the harness checks a band against (lib:TruthAt); allocates
             local hist = s.hist or { n = 0, t = {}, v = {}, m = {} }
@@ -561,9 +600,33 @@ function M.new(o)
         return #lib.handles, 0, 0, 0, 0, 0, 0, 0
     end
 
+    -- An aura handle's reported stacks and stamp at t: the last push AURA_LAG frames old (none: absent since the
+    -- watch); nil while the watch itself is younger than that.
+    local function auraAt(h, t)
+        local s, lag = h.aura, AURA_LAG * R.frame
+        if t + EPS < h.from + lag then
+            return nil
+        end
+        for i = s.n, 1, -1 do
+            if s.t[i] <= t - lag + EPS then
+                return s.v[i], s.t[i] + lag
+            end
+        end
+        return 0, h.from + lag
+    end
+
     function H:State()
         if self.released then
             return "released"
+        end
+        if self.aura then
+            local state, why = capOf("aura")
+            if state ~= "ready" then
+                return state, why
+            elseif not o.auras(self.spell) then
+                return "unavailable", "cdm-not-tracked"
+            end
+            return auraAt(self, now()) and "live" or "priming"
         end
         if self.unproven then
             return "unavailable", self.unproven
@@ -589,6 +652,33 @@ function M.new(o)
     -- lo, hi, t, q; nil, nil, nil, UNKNOWN unless live, or the band at the pause while paused (as the real library's
     -- handle keeps its last band: only State says paused). Allocates nothing.
     function H:Get()
+        if self.aura then
+            if self:State() ~= "live" then
+                return nil, nil, nil, M.UNKNOWN
+            end
+            local v, at = auraAt(self, now())
+            local cut, lo, hi = self.cut, 0, self.top
+            local bar = nil -- the lowest cut with a bar (above 1)
+            for k = 1, #cut do
+                if cut[k] > 1 then
+                    bar = bar or cut[k]
+                end
+            end
+            if v == 0 then
+                hi = cut[1] or hi
+            elseif v < (bar or math.huge) then
+                hi = bar or hi
+            else
+                for k = 1, #cut do
+                    if cut[k] > 1 and cut[k] <= v then
+                        lo = cut[k]
+                    elseif cut[k] > v and cut[k] < hi then
+                        hi = cut[k]
+                    end
+                end
+            end
+            return lo, hi, at, M.BAND
+        end
         if self.paused and not self.released and self.plo then
             return self.plo, self.phi, self.pt, M.BAND
         end
@@ -635,7 +725,7 @@ function M.new(o)
     end
 
     function H:Latency()
-        return R.latency * R.frame
+        return (self.aura and AURA_LAG or R.latency) * R.frame
     end
 
     function H:SetPoints(list)
