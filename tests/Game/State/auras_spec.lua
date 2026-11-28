@@ -884,6 +884,33 @@ describe("auras", function()
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11.8))
         end)
 
+        -- (aura-stacks review m1) the band on a down record is kept, not applied (no delta); the light's open is a
+        -- write, and it lands inside the live band at once (set()'s clamp), not at the band's next re-assert
+        it("a band on a down record moves nothing; the light opens it inside the band at once", function()
+            local CH = I.STACK_BAND - SHOUT
+            poll(10.1)
+            local gen = VS.AuraGen("player")
+            I.bandT[CH], I.bandShows[CH] = 10.2, 1 / 6
+            S.Direct(Obs.Band, 10.2, CH, 3, 3)
+            poll(10.2)
+            assert.are.equal(gen, VS.AuraGen("player")) -- down: no stacks write, no update
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 10.2))
+            ctl.ViewerAura(pi, "player")
+            poll(10.5) -- no band re-asserted at this drain: only the open's own write
+            assert.are.equal(3, select(2, VS.Aura("player", fs.SPENDER_A, 10.5)))
+        end)
+
+        -- banded has no floor of 1: it relies on every observed open carrying at least 1 (the Read handler); this pins it
+        it("the light opens a record at none under a live band of 0 to 2: at least 1 (up settles 0 vs 1)", function()
+            local CH = I.STACK_BAND - SHOUT
+            I.bandT[CH], I.bandShows[CH] = 10.2, 1 / 6
+            S.Direct(Obs.Band, 10.2, CH, 0, 1)
+            poll(10.2)
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, 10.5)))
+        end)
+
         it(
             "a target DOWN closes our debuff once its item lit this application; never lit, it closes nothing",
             function()
@@ -2999,6 +3026,19 @@ describe("auras: the stack band", function()
         assert.are.equal(2, stacks(13.1)) -- held
         band(13.3, 1, 1, 12.58) -- the delay passed and the client still shows 1: the fact wins
         assert.are.equal(1, stacks(13.3))
+    end)
+
+    -- (aura-stacks review m2, as Resources' holdsBack third clause) a firing can trail its push: a band stamped just
+    -- after our partial spend that still shows the count before it cannot show the spend, so it waits the delay too
+    it("holds a band stamped after our partial spend that still shows the old count, for its delay", function()
+        band(12, 2, 2)
+        I.AuraModel(1, A, 10, 130, 1, 12.5, Obs.Read, false) -- our cast spent one of two (an Ice Lance)
+        band(12.55, 2, 2, 12.52) -- newer than the write, the old count: held
+        assert.are.equal(1, stacks(12.55))
+        band(12.6, 1, 1, 12.58) -- the spend shown: applied
+        assert.are.equal(1, stacks(12.6))
+        band(12.7, 2, 2, 12.68) -- the delay passed and the client shows 2 again (a new proc): the fact wins
+        assert.are.equal(2, stacks(12.7))
     end)
 
     it("an aura switched off for the Cooldown Manager takes no band", function()

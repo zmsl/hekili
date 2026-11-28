@@ -67,9 +67,10 @@ I.curSwapT = -1 -- and that swap's time (Families/Now.lua: a cast whose staged w
 
 -- (lane aura-stacks, L2023) The library's stack band on a player aura (Sources/Bands.lua): Obs.Band on channel
 -- I.STACK_BAND - j (<= -2: the health and power families ignore it), whole bounds lo..hi. By player aura j: the live
--- band's bounds (stackHi[j] < 0: none) and the t of our own last write (the hold, owner L1673).
+-- band's bounds (stackHi[j] < 0: none), the t of our own last write, and the count before our own last spend and its t
+-- (the hold, owner L1673).
 I.STACK_BAND = -1
-local stackLo, stackHi, modelT = {}, {}, {}
+local stackLo, stackHi, modelT, paidSt, paidT = {}, {}, {}, {}, {}
 
 -- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind;
 -- each one's `consumeIcd` (seconds, 0 none) and its last spend's time.
@@ -136,7 +137,7 @@ I.OnBuild(function(def, now)
         memExp[s], memApplied[s], memStacks[s], memInst[s] = e, ap, st, ins
     end
     for j = 1, U.nAura do
-        stackLo[j], stackHi[j], modelT[j] = 0, -1, -HUGE
+        stackLo[j], stackHi[j], modelT[j], paidSt[j], paidT[j] = 0, -1, -HUGE, HUGE, -HUGE
     end
     I.curSlot = 0 -- the build cleared the log (Sources/Target.lua's hook resets I.curSwapN and logs its own swap)
     CONS.n = 0
@@ -197,16 +198,25 @@ local function push(list, n, u, v)
     end
 end
 
--- Player aura j's stacks n inside its live stack band at t (lane aura-stacks): [max(lo, 1), hi] (up: at least 1), unless
--- the walk is plain (exact and newer), the band shows none (hi < 1: presence is the router's), the aura is switched off
--- for the Cooldown Manager, or the band was stamped at or before our own last write and its delay (I.bandShows) has not
--- passed. Allocates nothing.
+-- Player aura j's stacks n inside its live stack band at t (lane aura-stacks): [lo, hi], unless the walk is plain (exact
+-- and newer), the band shows none (hi < 1: presence is the router's), the aura is switched off for the Cooldown Manager,
+-- or the hold (owner L1673, as Resources' holdsBack) applies while the band's delay (I.bandShows) after our write runs:
+-- the band was stamped at or before our own last write, or (a firing can trail its push) its low end still shows the
+-- count before our own last spend. No floor of 1 is needed: every observed write of an up record carries at least 1
+-- (the Read handler), and a modelled write is never clamped. Allocates nothing.
 local function banded(j, n, t)
     local hi, ch, mt = stackHi[j], I.STACK_BAND - j, modelT[j]
-    if hi < 1 or I.playerWalkPlain or U.obj[j].cdm == false or I.bandT[ch] <= mt and t - mt < I.bandShows[ch] then
+    local shows = I.bandShows[ch]
+    if
+        hi < 1
+        or I.playerWalkPlain
+        or U.obj[j].cdm == false
+        or I.bandT[ch] <= mt and t - mt < shows
+        or stackLo[j] >= paidSt[j] and t - paidT[j] < shows
+    then
         return n
     end
-    local lo = stackLo[j] > 1 and stackLo[j] or 1
+    local lo = stackLo[j]
     return n < lo and lo or n > hi and hi or n
 end
 
@@ -215,6 +225,9 @@ end
 local function set(u, j, expires, applied, stacks, t, origin, event, harmful)
     if u == 1 and origin == "modelled" then
         modelT[j] = t
+        if stacks < U.stacks[1][j] then -- our spend: the count before it, for the hold's second clause
+            paidSt[j], paidT[j] = U.stacks[1][j], t
+        end
     elseif u == 1 and expires > 0 then
         stacks = banded(j, stacks, t)
     end

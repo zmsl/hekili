@@ -308,6 +308,21 @@ describe("the active priority's bands", function()
         assert.are.same({}, VSI.def.bandStacks)
     end)
 
+    -- (aura-stacks review m1) at the def, an alias key resolves to the tracked aura's own key, and a class aura the
+    -- build does not track is dropped
+    it("def.bandStacks takes an alias by the tracked aura's key and drops an untracked class aura", function()
+        local auras = H.Hekili.Class.auras
+        auras.flurry_alias = auras.flurry -- an alias: the same record, its own key "flurry"
+        auras.untracked_proc = { key = "untracked_proc" } -- known to the class, no ID: not in the build's def
+        install(
+            PACK,
+            "actions+=/berserker_stance,if=buff.flurry_alias.stack=3\n"
+                .. "actions+=/berserker_stance,if=buff.untracked_proc.stack=2"
+        )
+        auras.flurry_alias, auras.untracked_proc = nil, nil
+        assert.are.same({ flurry = { 3, 4 } }, VSI.def.bandStacks)
+    end)
+
     it("one entry loaded outside a full load sends the pack's points again", function()
         install(PACK, "actions+=/berserker_stance,if=rage>=40\nactions+=/berserker_stance,if=rage>=50")
         local gen = VSI.def.bandGen

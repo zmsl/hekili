@@ -1992,7 +1992,7 @@ function scripts:PackBands( pack )
                     local e = stacks[ aura ] or {}
                     stacks[ aura ] = e
                     for _, edge in ipairs( { math.ceil( r.n ), math.ceil( r.n ) + 1 } ) do
-                        if edge >= 1 and not seen[ aura .. ":" .. edge ] then
+                        if not seen[ aura .. ":" .. edge ] then -- an edge below 2 has no bar: Sources/Bands.lua drops it
                             seen[ aura .. ":" .. edge ] = true
                             e[ #e + 1 ] = edge
                         end

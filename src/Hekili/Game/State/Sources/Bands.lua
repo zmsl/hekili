@@ -60,11 +60,11 @@ local want = {} -- the list being resolved (never a def.bandPoints table: those 
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
-I.bandShows = {} -- by power channel: the band's delay behind an event of ours (I.BAND_MARGIN)
+I.bandShows = {} -- by power or stack channel: the band's delay behind an event of ours (I.BAND_MARGIN)
 -- (L1805) By channel: the watch works (switched on, the library found, its handle accepted and "live", or "priming"
 -- again: not refused, released, paused or unavailable). Families/Player.lua holds a lost band only while it is true.
 I.bandOK = {}
-I.auraKnown = false -- the library's aura kind answers (its own capability report; Hekili watches no aura yet)
+I.auraKnown = false -- the library's aura kind answers (its own capability report; the stack watches use it)
 -- By channel: how many bands a family applied since the build, and the last one as it applied it.
 I.bandUsed, I.bandUsedLo, I.bandUsedHi = {}, {}, {}
 
