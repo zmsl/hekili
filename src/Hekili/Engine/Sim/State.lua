@@ -3573,8 +3573,9 @@ do
                     start, duration, enabled, modRate = GetCooldown( id )
                     if enabled == false or enabled == 0 then
                         -- held (the client's isEnabled false / an item's enable 0: cooldown on event, any spell): it
-                        -- starts at the release, at the earliest now; the filled times are not a running cooldown
-                        start, duration = state.now, max( ability.cooldown or 0, duration or 0 )
+                        -- starts at the release, at the earliest now; the read's times are not a running cooldown
+                        start, duration = state.now, ability.cooldown or 0
+                        if duration <= 0 then duration = 3600 end -- no length known: held until a release we cannot time
                     end
 
                     local lossStart, lossDuration = GetSpellLossOfControlCooldown( id )

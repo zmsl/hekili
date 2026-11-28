@@ -989,6 +989,13 @@ local function flags(spellID)
     return active, onGcd, enabled
 end
 
+-- The client's held shape (isEnabled false: cooldown on event, plain in combat per FR-1; owner probe 2026-11-27):
+-- its filled times are not a running cooldown, so no reader gets them.
+local function held()
+    CD.startTime, CD.duration, CD.isEnabled, CD.isActive, CD.isOnGCD = 0, 0, false, false, false
+    return CD
+end
+
 local function cooldownPolicy(spellID)
     local t = now()
     CD.isEnabled = true
@@ -998,11 +1005,8 @@ local function cooldownPolicy(spellID)
         return CD
     end
     local active, onGcd, enabled = flags(spellID)
-    if enabled == false then
-        -- held (cooldown on event: plain in combat, FR-1; the owner's probe 2026-11-27): the client's held shape,
-        -- whatever the belief's time, so no reader takes it for ready
-        CD.startTime, CD.duration, CD.isEnabled, CD.isActive, CD.isOnGCD = 0, 0, false, false, false
-        return CD
+    if enabled == false then -- whatever the belief's time: no reader takes it for ready
+        return held()
     end
     if onGcd == true then
         -- bit-identical to the GCD's numbers, so Hekili zeroes it (State.lua:2972-2975, spec §7.5)
@@ -1039,6 +1043,10 @@ kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     spellID = VS.KnownID(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
     if plainTimes(info, "startTime", "duration") then
+        local enabled = info.isEnabled -- secret: tested next
+        if not issecretvalue(enabled) and enabled == false then
+            return held()
+        end
         return info
     end
     modelled = true

@@ -296,24 +296,51 @@ describe("the client's held flag (isEnabled false)", function()
         st.reset("Primary", true)
         assert.is_false(st.cooldown.feign_death.ready, "held")
         near(30, st.cooldown.feign_death.remains) -- not 5 (startTime + duration)
+        -- every reader (the displays too) gets the held shape, not the filled times
+        local info = H.ns.Facade.C_Spell.GetSpellCooldown(FEIGN_DEATH)
+        assert.are.same({ false, 0, 0 }, { info.isEnabled, info.startTime, info.duration })
         assert.are.same({}, H.errors)
     end)
 
-    -- a declared one with the flag: held while its aura is up and while the client says held after the belief's
-    -- aura fell (a spend the belief has not seen), then from the release
-    it("holds Divine Favor on the flag and runs it from the release", function()
+    -- a declared one the belief never saw pressed (a reload mid-hold, in combat): the flag alone holds it, and the
+    -- release starts it
+    it("holds Divine Favor on the flag alone and runs it from the release", function()
         local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
         local st = H.Hekili.State
-        cast(H, t + 1, 1, DIVINE_FAVOR)
+        H.ctl.now = t + 1
         H.ctl.cooldown[DIVINE_FAVOR] = HELD
         H.Fire("SPELL_UPDATE_COOLDOWN")
         t = t + 11
         H.ctl.now = t
         assert(headless.cycle(H, t))
         st.reset("Primary", true)
+        assert.is_false(st.buff.divine_favor.up, "no aura believed")
         assert.is_false(st.cooldown.divine_favor.ready, "held")
+        t = t + 1
+        H.ctl.now = t
         H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
-        cast(H, t, 2, HOLY_SHOCK)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        st.reset("Primary", true)
+        near(120 - 0.2, st.cooldown.divine_favor.remains)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- the belief's aura fell (our spend) but the client still holds it: the release, a fact, starts it, not our fall
+    it("runs Divine Favor from the client's release, not a believed fall it did not follow", function()
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        H.ctl.cooldown[DIVINE_FAVOR] = HELD
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        t = t + 11
+        cast(H, t, 2, HOLY_SHOCK) -- the belief takes the charge down here
+        st.reset("Primary", true)
+        assert.is_false(st.buff.divine_favor.up, "believed spent")
+        assert.is_false(st.cooldown.divine_favor.ready, "still held")
+        t = t + 5 -- the client releases it 5 s later
+        H.ctl.now = t
+        H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
         H.Fire("SPELL_UPDATE_COOLDOWN")
         assert(headless.cycle(H, t + 0.2))
         st.reset("Primary", true)

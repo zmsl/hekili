@@ -429,12 +429,11 @@ I.On(Obs.Cooldown, function(o, t)
     local was = A.flag[a]
     A.flag[a] = o.b == 1 and YES or o.b == 2 and HELD or NOT
     if o.b == 0 and (was == HELD or was == YES and A.waitsFor[a] > 0) then
-        -- cooldown on event: the client starts it at the release (held -> running; without the held flag, ready ->
-        -- running). A declared one from our believed aura end (castT, Auras.lua) when that came first (a ready flag
-        -- read before this edge pulled it to now), else, and for any other spell, from this edge
-        local len = I.CooldownOf(a, o.t)
+        -- cooldown on event: the client starts it at the release, this edge (held -> running: a fact, any spell).
+        -- Without the held flag (ready -> running) a declared one from our believed aura end (castT, Auras.lua) when
+        -- that came first (a ready flag read before this edge pulled it to now)
         local from = A.castT[a]
-        if A.waitsFor[a] == 0 or not (from <= o.t and o.t - from < len) then
+        if was == HELD or not (from <= o.t and o.t - from < I.CooldownOf(a, o.t)) then
             from = o.t
         end
         I.CooldownFrom(a, from, t, Obs.Cooldown)
