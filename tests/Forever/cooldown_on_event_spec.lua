@@ -284,6 +284,21 @@ describe("the client's held flag (isEnabled false)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- no registered length: the belief holds it as the engine does (3600), not ready at now (review m1)
+    it("holds a held spell with no registered cooldown in the belief too", function()
+        local H, t = hunter()
+        local I = H.ns.VirtualStateInternal
+        I.ab.obj[I.ab.bySpell[FEIGN_DEATH]].cooldown = 0 -- the belief's copy (Engine/Schema/Tracked.lua)
+        H.Fire("PLAYER_REGEN_DISABLED")
+        H.ctl.now = t + 1
+        H.ctl.cooldown[FEIGN_DEATH] = HELD
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 2))
+        local rec = H.ns.VirtualState.Cooldown(FEIGN_DEATH, t + 2)
+        assert.is_true(rec.est - (t + 2) > 3000, "belief ready in " .. (rec.est - (t + 2)))
+        assert.are.same({}, H.errors)
+    end)
+
     -- out of combat the times are plain and filled while held (Prowl's duration 10): never a running cooldown
     it("ignores a held read's filled startTime and duration out of combat", function()
         local H, t = hunter()

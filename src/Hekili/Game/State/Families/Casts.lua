@@ -436,6 +436,12 @@ I.On(Obs.Cooldown, function(o, t)
         if was == HELD or not (from <= o.t and o.t - from < I.CooldownOf(a, o.t)) then
             from = o.t
         end
+        local w = A.waitsFor[a]
+        if w > 0 and I.AuraUpAt(1, w, o.t) then
+            -- the release proves its aura was spent: one we missed (an unmodelled spend, a cancel) goes down here, or
+            -- the settle's mask and the engine's hold on it would keep the spell held all combat (review I1)
+            I.AuraModel(1, w, 0, 0, 0, t, Obs.Cooldown, nil, true)
+        end
         I.CooldownFrom(a, from, t, Obs.Cooldown)
     end
     if o.b == 1 and was == NOT and A.castT[a] > 0 and o.t > A.castT[a] then
@@ -472,7 +478,8 @@ I.OnSettle(function(now)
         end
         if flag == HELD then
             -- held: it starts at the release, at the earliest now, so ready no sooner than a full length from now
-            local at = now + I.CooldownOf(a, now)
+            local len = I.CooldownOf(a, now)
+            local at = now + (len > 0 and len or 3600) -- no length known: held until the release (the engine's 3600)
             if A.ready0[a] < at then
                 A.ready0[a] = at
                 I.Sample(A.cd[a], "modelled", at, now, Obs.Cooldown)
