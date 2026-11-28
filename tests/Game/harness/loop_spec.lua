@@ -937,7 +937,7 @@ end)
 
 -- (lane aura-stacks r2) the aura-bands arm's placement answer, as the real library's (Cdm.lua statusOf): an entry of
 -- Tracked Buffs or Tracked Bars naming the spell places it; another entry naming it: cdm-not-tracked; none: not-in-cdm
--- (so Bands.lua moves to the aura's next ID, as Frost's Fingers of Frost to its copy 400670)
+-- (so Bands.lua moves to the aura's next ID, as it does for an aura whose CDM entry links only a copy ID)
 describe("the headless loop's aura placement (loop.auraPlacement)", function()
     it("places a Tracked Buffs or Bars entry, tells not tracked from not in the CDM", function()
         local viewer = {
@@ -956,7 +956,7 @@ describe("the headless loop's aura placement (loop.auraPlacement)", function()
             loop.auraPlacement(viewer, 50),
             loop.auraPlacement(viewer, 77),
             loop.auraPlacement(viewer, 60),
-            loop.auraPlacement(viewer, 400669),
+            loop.auraPlacement(viewer, 61),
         })
     end)
 end)
