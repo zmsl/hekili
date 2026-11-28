@@ -38,6 +38,14 @@ local tracked, disagree, lost, seedN, edgeN = R.tracked, R.disagree, R.lost, R.s
 local fState, fN, fAgree, fT, fFrom, fEdge, fDark, fPdark, fPdarkT =
     fact.state, fact.n, fact.agree, fact.t, fact.from, fact.edge, fact.dark, fact.pdark, fact.pdarkT
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
+-- Scoped state (refactor Pr-10): a target change's facts (a held target fact only), a fight's start's counts.
+I.Scope(fState, I.UNDECIDED, "presence.target")
+I.Scope(fT, 0, "presence.target")
+I.Scope(fEdge, 0, "presence.target")
+I.Scope(fPdark, false, "presence.target")
+for _, a in ipairs({ disagree, lost, seedN, edgeN }) do
+    I.Scope(a, 0, "presence.pull")
+end
 -- The leaf's map builds by trigger, per session (the snapshot's presence-proof line, L972): 1-3 the viewer's events
 -- (VIEWER_EVENTS' order), 4 a belief build (I.Build), 5 any other (a provider or Cooldown Manager panel switch, VS.Start);
 -- one waiting for combat end counts for its latest trigger. evInCombat: the viewer's events received in combat (each
@@ -296,14 +304,14 @@ S.On("PLAYER_TARGET_CHANGED", nil, function()
     for j = 1, def0 and #def0.auraIds or 0 do
         local k = I.AURA_UNIT + j
         if fState[k] ~= nil then
-            fState[k], fT[k], fEdge[k], fPdark[k] = I.UNDECIDED, 0, 0, false
+            I.Reset("presence.target", k)
         end
     end
 end)
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     edges.up, edges.down = 0, 0
     for k in pairs(disagree) do
-        disagree[k], lost[k], seedN[k], edgeN[k] = 0, 0, 0, 0
+        I.Reset("presence.pull", k)
     end
 end)
 
