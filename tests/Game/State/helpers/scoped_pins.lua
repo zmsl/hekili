@@ -366,9 +366,9 @@ return {
         "T.spell[1]=1011",
     },
     ["target build"] = {
-        "goneN[1]=900032",
-        "goneN[2]=900033",
-        "goneN[3]=900034",
+        "goneN[1]=1051432",
+        "goneN[2]=1051433",
+        "goneN[3]=1051434",
         "pinGone[1]=0",
         "pinGone[2]=0",
         "pinGone[3]=0",

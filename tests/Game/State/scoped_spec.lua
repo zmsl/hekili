@@ -476,11 +476,15 @@ describe("scoped state: the families' reset matrix", function()
         end
         table.sort(names)
         local sent = {}
-        for a, name in ipairs(names) do
+        for _, name in ipairs(names) do
+            local a = 0 -- by the name, not its place: a new local elsewhere in the file moves no sentinel
+            for c = 1, #name do
+                a = (a * 31 + name:byte(c)) % 9973
+            end
             for p, i in ipairs(idx) do
                 if scalar(A[name][i]) or nils and A[name][i] == nil then
                     -- a number (arithmetic and comparisons still run), a string for a string
-                    local s = 900000 + a * 10 + p
+                    local s = 1000000 + a * 10 + p
                     if type(A[name][i]) == "string" then
                         s = "#" .. s
                     end

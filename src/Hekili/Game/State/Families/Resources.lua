@@ -709,6 +709,102 @@ local function refresh()
     end
 end
 
+-- Scoped state (refactor Pr-10, VirtualState.lua's I.Scope): every per-slot array with a constant "none" value, by
+-- the scopes that reset it. build: a build's slot loop; pull: Obs.CombatStart; combat: Obs.CombatEnd (the slot loop).
+-- Def-derived fields (type, max, rest, the swing values, decl, the regen and spirit estimates, dev, spread, over,
+-- assume) and the per-slot taken bins stay hand-written; est0/lo0/hi0 are apply()'s.
+local NEG = -1e9
+for _, f in ipairs({
+    { "maxRead", false },
+    { "fsrUntil", 0 },
+    { "pinA", 0 },
+    { "pinB", 0 },
+    { "fsrFrom", NEG },
+    { "fsrHeld", false },
+    { "spDev", 0 },
+    { "scale", 1 },
+    { "regQ", 0 },
+    { "spQ", 0 },
+    { "pinT", 0 },
+    { "pinV", 0 },
+    { "pinDelta", 0 },
+    { "gain", 0 },
+    { "spends", 0 },
+    { "pinOwn", false },
+    { "pinSkip", false },
+    { "swFrom", 0 },
+    { "skipFrom", 0 },
+    { "skipTo", 0 },
+    { "mayT", NEG },
+    { "swAccG", 0 },
+    { "swAccT", 0 },
+    { "swAccV", 0 },
+    { "swOpenV", 0 },
+    { "ownT", NEG },
+    { "ownV", 0 },
+    { "castGain", 0 },
+    { "crossT", NEG },
+    { "crossLo", 0 },
+    { "liftE", 0 },
+    { "liftL", 0 },
+    { "liftH", 0 },
+    { "liftT", NEG },
+    { "liftRec", 0 },
+    { "emptyT", NEG },
+    { "liftCE", 0 },
+    { "liftCL", 0 },
+    { "liftCH", 0 },
+    { "sinceShort", math.huge },
+    { "sinceShortEst", 0 },
+    { "sinceYes", false },
+    { "sinceSnap", false },
+    { "raised", 0 },
+    { "capT", NEG },
+    { "capB", false },
+    { "snapT", NEG },
+    { "readT", NEG },
+    { "readable", false },
+    { "bandOn", false },
+    { "banded", false },
+    { "plainT", NEG },
+    { "exactT", NEG },
+    { "bandAt", NEG },
+    { "bandDone", NEG },
+    { "bandLo", 0 },
+    { "bandHi", 0 },
+    { "markT", -1 },
+    { "markV", 0 },
+    { "movedT", NEG },
+    { "shiftT", NEG },
+    { "stepT", NEG },
+    { "paidT", NEG },
+    { "paidLo", 0 },
+    { "roseT", NEG },
+    { "roseBy", 0 },
+    { "winN", 0 },
+    { "winT", 0 },
+    { "winK", OTHER },
+    { "decay", 0 },
+    { "decayIv", 0 },
+}) do
+    I.Scope(R[f[1]], f[2], "resource.build")
+end
+for _, f in ipairs({ "decayNext", "topNext", "pinN", "pinErr" }) do
+    I.Scope(R[f], 0, "resource.build", "resource.pull")
+end
+I.Scope(R.pinValid, false, "resource.build", "resource.combat")
+I.Scope(estDebt, 0, "resource.build", "resource.combat")
+I.Scope(smpR, 0, "resource.build.hand")
+I.Scope(smpLand, false, "resource.build.hand")
+I.Scope(usable, UNKNOWN, "resource.build.ability")
+I.Scope(ansT, -1, "resource.build.ability")
+for _, a in ipairs({ shortCost, shortT, shortGain, shortCast, shortEst }) do
+    I.Scope(a, 0, "resource.build.ability")
+end
+I.Scope(recA, 0, "resource.build.record")
+I.Scope(recR, 0, "resource.build.record")
+I.Scope(recGone, false, "resource.build.record")
+
 I.OnBuild(function(def, now)
     I.FSR = def.fsr
     I.GAIN_SHOWS = I.Lat.lag("usable.shows") -- the core's def.oracleMin (Latency.lua)
@@ -722,13 +818,13 @@ I.OnBuild(function(def, now)
     R.n = #list
     hitRate[1], hitRate[2] = 1, 1
     for h = 1, 2 do
-        smpR[h], smpLand[h] = 0, false
+        I.Reset("resource.build.hand", h)
     end
     for r = 1, R.n do
         local d = list[r]
         R.type[r], R.token[r], R.onTarget[r] = d.type, d.token, d.onTarget == true
         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
-        R.maxDef[r], R.maxMods[r], R.maxRead[r] = d.max, d.maxMods, false
+        R.maxDef[r], R.maxMods[r] = d.max, d.maxMods
         R.max[r] = maxOf(r)
         R.restMax[r] = d.rest == true
         R.rest[r] = R.restMax[r] and R.max[r] or 0
@@ -739,7 +835,7 @@ I.OnBuild(function(def, now)
         R.swingWidth[r], R.swingOffWidth[r] = d.swingWidth or 0, d.swingOffWidth or 0
         R.swingCritMay[r], R.swingOffCritMay[r] = d.swingCritMay or 0, d.swingOffCritMay or 0
         apply(r, "build", R.rest[r], 0, R.max[r])
-        estDebt[r] = 0
+        I.Reset("resource.build", r) -- nothing in this loop reads a scoped field (maxOf reads maxDef, maxMods)
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
         R.over[r] = R.assume[r] and R.rest[r] or 0 -- the floor at rest too (over)
         local fsr = type(d.fsr) == "table" and d.fsr or false
@@ -747,38 +843,15 @@ I.OnBuild(function(def, now)
         if fsr then
             rate, spirit = finite(fsr.mp5) or 0, finite(fsr.spirit) or 0 -- numbers: the core's (Tracked.lua)
         end
-        R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
-        R.fsrFrom[r], R.fsrHeld[r] = -1e9, false
+        R.fsr[r], R.shaped[r] = fsr ~= false, fsr ~= false
         R.shareDef[r] = fsr and fsr.share
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
-        R.spDecl[r], R.spDev[r] = spirit, 0
+        R.spDecl[r] = spirit
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         -- a swing-paid slot's scale deviation starts at its boot spread: one window's ratio must not collapse it (L2011)
-        R.dev[r], R.scale[r], R.spread[r], R.regQ[r], R.spQ[r] =
-            R.swing[r] > 0 and I.REGEN_SPREAD or 0, 1, I.REGEN_SPREAD, 0, 0
-        R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
-        R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
-        R.mayT[r] = -1e9
-        R.swAccG[r], R.swAccT[r], R.swAccV[r], R.swOpenV[r] = 0, 0, 0, 0
-        R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
-        R.crossT[r], R.crossLo[r] = -1e9, 0
-        R.pinN[r], R.pinErr[r] = 0, 0
-        R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r], R.emptyT[r] = 0, 0, 0, -1e9, 0, -1e9
-        R.liftCE[r], R.liftCL[r], R.liftCH[r] = 0, 0, 0
-        R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
-        R.raised[r] = 0
-        R.capT[r], R.capB[r] = -1e9, false
-        R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
-        R.bandOn[r], R.banded[r], R.plainT[r], R.exactT[r] = false, false, -1e9, -1e9
-        R.bandAt[r], R.bandDone[r], R.bandLo[r], R.bandHi[r] = -1e9, -1e9, 0, 0
-        R.markT[r], R.markV[r], R.movedT[r] = -1, 0, -1e9
-        R.shiftT[r], R.stepT[r] = -1e9, -1e9
-        R.paidT[r], R.paidLo[r], R.roseT[r], R.roseBy[r] = -1e9, 0, -1e9, 0
-        R.winN[r], R.winT[r], R.winK[r] = 0, 0, OTHER
+        R.dev[r], R.spread[r] = R.swing[r] > 0 and I.REGEN_SPREAD or 0, I.REGEN_SPREAD
         R.decayDef[r] = d.decay
-        R.decay[r] = 0
-        R.decayIv[r], R.decayNext[r], R.topNext[r] = 0, 0, 0
         R.taken[r] = type(d.taken) == "function" and setfenv(d.taken, I.nowCtx) or false
         R.takenBin[r], R.takenSec[r] = {}, {}
         for i = 1, I.TAKEN_WINDOW do
@@ -858,14 +931,13 @@ I.OnBuild(function(def, now)
         end
     end
     for a = 1, #def.abilities do
-        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
-            UNKNOWN, -1, 0, 0, 0, 0, 0
+        I.Reset("resource.build.ability", a)
         local obj = def.abilities[a]
         local f = obj.usable -- the plain record's field (Engine/Schema/Tracked.lua)
         pre[a] = obj.ladder ~= false and (type(f) ~= "function" or f)
     end
     for k = 1, RECORDS do
-        recA[k], recR[k], recGone[k] = 0, 0, false
+        I.Reset("resource.build.record", k)
     end
 end)
 
@@ -2502,8 +2574,7 @@ I.On(Obs.CombatStart, function(o, t)
     refresh()
     for r = 1, R.n do
         seen(r, t, OTHER)
-        R.decayNext[r], R.topNext[r] = 0, 0
-        R.pinN[r], R.pinErr[r] = 0, 0
+        I.Reset("resource.pull", r)
         moved(r, t)
     end
 end)
@@ -2523,7 +2594,6 @@ end
 I.On(Obs.CombatEnd, function(o, t)
     fighting = false
     for r = 1, R.n do
-        estDebt[r] = 0
         for i = 1, I.TAKEN_WINDOW do
             R.takenSec[r][i] = -1
         end
@@ -2534,7 +2604,7 @@ I.On(Obs.CombatEnd, function(o, t)
         if R.rest[r] < R.lo0[r] then
             apply(r, "rest", nil, R.rest[r])
         end
-        R.pinValid[r] = false
+        I.Reset("resource.combat", r) -- estDebt, pinValid: nothing above reads them
         moved(r, t)
         local stepped = R.decayIv[r] > 0 and R.decayNext[r] == 0 and R.decay[r] > 0
         if stepped and R.est0[r] > R.rest[r] and decayFrom(r, t, t) then
