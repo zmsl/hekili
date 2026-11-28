@@ -1012,12 +1012,15 @@ M.FLICKER = {
     -- batch 5 one rule (L1814; seeds 1-20 on integ/batch5 9a8a95e23, the reading; 21-60 not re-measured): heldReady 93
     -- -> 89, loOver 5 -> 0; held 85 on forever. Likely cause (inferred for this arm, traced on bands by integ5 tracer
     -- C: 60 -> 86): priest-cost-rounding 3e0023f5c prices Judgement 82 -> 81.9, which re-times the mana-floor fights
+    -- cooldown-on-event (L2012; seeds 1-20 / 21-40 / 41-60 on dc0c77fa0, default 75 / 88 / 75, shipped 68 / 70 / 67):
+    -- heldReady 89 -> 88. The world holds Divine Favor until its aura is spent (no second press at 120 s with the
+    -- first still up), so the boot's later fights start at other mana and re-time
     ["Holy Shock"] = {
         loOver = 0,
         flicker = 0,
         retracted = 0,
         readyShort = 0,
-        heldReady = 89,
+        heldReady = 88,
         cause = { heldReady = "untraced" },
     },
     -- 0.1 -> 0.2 (Task 4, wowsims's Shaman regen in): estimate pinned at the crossing floor, 3-8 mana low at ~30 mana/s;
@@ -1207,7 +1210,11 @@ M.FLICKER = {
     -- (mind_flay waiting 0.07-0.2 s at the mana crossing, the floor under the cost, the truth over it)
     -- re-pin e5a9cd2a2d -> e4ef929e54 (Priest lane, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0 / 0, retracted 0, heldReady 405 / 406 / 396):
     -- flicker 0.02 -> 0 (the worst set reads 0); heldReady 406 holds. The new log moves 3 fixture rows and one decision (85 -> 86, a mind_flay tail), no loop-world value
-    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 406, cause = { heldReady = "L755" } }, -- flicker 0 / 0 / 0, retracted 0, heldReady 406 / 400 / 398
+    -- cooldown-on-event (L2012; seeds 1-20 / 21-40 / 41-60 on dc0c77fa0, default 404 / 406 / 412, shipped 415 / 406 /
+    -- 411): heldReady 406 -> 415. The world starts Inner Focus's cooldown at its spend, not its press (the game's rule),
+    -- so it is no longer pressed again in a fight's last second; the boot's later fights re-time. Held ticks the same
+    -- class (mind_flay waiting 0.07-0.09 s at the mana crossing, L755): base 405 of 406, lane 413 of 415
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 415, cause = { heldReady = "L755 + L2012" } }, -- flicker 0 / 0 / 0, retracted 0, heldReady 415 / 406 / 412
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)
