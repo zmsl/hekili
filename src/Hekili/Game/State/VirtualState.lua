@@ -248,6 +248,40 @@ function I.OnSnapshot(fn)
     I.SNAPSHOT[#I.SNAPSHOT + 1] = fn
 end
 
+-- Scoped state (refactor Pr-10): a state array registers once, at load, with its "none" value and every scope that
+-- resets it ("<family>.<scope>": build, pull, combat (its end), target, application). Each scope's reset site calls
+-- I.Reset(scope, i) where its hand-written list stood, over the same indices, so the order of everything around it is
+-- unchanged. A field a scope keeps says so by not naming that scope. scope -> { n, arr = arrays, none = values }.
+I.SCOPES = {}
+
+--- Registers `arr` with its `none` value for each scope named after it; returns `arr`. Load time only.
+---@param arr table
+---@param none any
+---@return table
+function I.Scope(arr, none, ...)
+    for i = 1, select("#", ...) do
+        local s = select(i, ...)
+        local L = I.SCOPES[s]
+        if not L then
+            L = { n = 0, arr = {}, none = {} }
+            I.SCOPES[s] = L
+        end
+        L.n = L.n + 1
+        L.arr[L.n], L.none[L.n] = arr, none
+    end
+    return arr
+end
+
+--- Sets index `i` of every array registered for `scope` to its none value, in registration order. Allocates nothing.
+---@param scope string
+function I.Reset(scope, i)
+    local L = I.SCOPES[scope]
+    local arr, none = L.arr, L.none
+    for n = 1, L.n do
+        arr[n][i] = none[n]
+    end
+end
+
 -- What VirtualState.Tracked(kind) lists, by kind: arrays the families fill at build time.
 I.TRACKED = {}
 

@@ -149,19 +149,42 @@ local FAM = {} -- aura index -> the pack's family name (compared, never interpre
 -- onEdge's own delivery (O2, L1771).
 local dueAt, nextDue = {}, HUGE
 local judgeable -- (j, u): defined below, with apply's guards
-local function zeroVerdict(k)
-    W[k], verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = W0, 0, 0, 0, 0, 0, 0
-    backN[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0
+
+-- Scoped state (refactor Pr-10, VirtualState.lua's I.Scope): each per-record array (by key k) with the scopes that
+-- reset it. build: every record (OnBuild); pull: a fight's start (PLAYER_REGEN_DISABLED, dueAt kept by design: a wake
+-- armed before the pull still fires); target: a target change, the target's records; application: a close of the
+-- record (closeRecord). floor (player only, beside DUR) and the scalars stay hand-written.
+local B, P, TG, AP = "aura.build", "aura.pull", "aura.target", "aura.application"
+I.Scope(lastE, 0, B, P, AP)
+I.Scope(lastSt, 0, B, P, AP)
+I.Scope(longE, 0, B, P, AP)
+for _, a in ipairs({ facts, disagree, staged, exitFix }) do
+    I.Scope(a, 0, B, P)
+end
+for _, a in ipairs({ ours, oursAp, upAt, claimT, anAp, cyD, cyAp, cyE, seedAp }) do
+    I.Scope(a, 0, B)
+end
+for _, a in ipairs({ emcN, emcSum, emcLast, cyN, cySum, cyObs, cyMod, verdictN, strikeN, darkN, refundN, backN }) do
+    I.Scope(a, 0, B, P)
+end
+I.Scope(W, W0, B)
+for _, a in ipairs({ cyT, verdictAt, strikePend, refPend, lateTo }) do
+    I.Scope(a, 0, B, P, TG)
+end
+I.Scope(dueAt, 0, B, TG)
+
+-- A close of record k (rule 1, the verdict, the avoid undo, no live slot, dark past the model's expiry, a target
+-- change, a fight's start): the debounce memory goes, so a light at the next poll re-opens at once instead of waiting
+-- on the old expiry (review I-1). What else a close sets (lateTo, the verdict's stamps) stays at its site. Allocates
+-- nothing.
+local function closeRecord(k)
+    I.Reset(AP, k)
 end
 -- The class's talent spells (def.talents) that a tracked aura lists as a `copy` (not its own ID), set at the build: an
 -- aura that copies its talent's ID (the Cooldown Manager links both) must not read the talent's own passive aura, which
 -- has no expiry, as the buff (the walk below). An aura whose own ID is the talent's (a form, an until-used buff) reads
 -- as before.
 local TALENT_COPY = {}
-local function zeroEdge(k)
-    anAp[k], emcN[k], emcSum[k], emcLast[k] = 0, 0, 0, 0
-    cyT[k], cyD[k], cyAp[k], cyE[k], cyN[k], cySum[k], cyObs[k], cyMod[k], seedAp[k] = 0, 0, 0, 0, 0, 0, 0, 0, 0
-end
 
 I.OnBuild(function(def)
     local U = I.auras
@@ -203,14 +226,8 @@ I.OnBuild(function(def)
         FAM[j] = type(def.auras[j].family) == "string" and def.auras[j].family
         local d = rawget(def.auras[j], "duration")
         DUR[j], floor[j] = type(d) == "number" and d or -1, 0
-        facts[j], disagree[j], staged[j], exitFix[j], ours[j], oursAp[j], upAt[j], claimT[j] = 0, 0, 0, 0, 0, 0, 0, 0
-        local k = I.AURA_UNIT + j
-        facts[k], disagree[k], staged[k], exitFix[k], ours[k], oursAp[k], upAt[k], claimT[k] = 0, 0, 0, 0, 0, 0, 0, 0
-        lastE[j], lastSt[j], longE[j], lastE[k], lastSt[k], longE[k] = 0, 0, 0, 0, 0, 0
-        zeroEdge(j)
-        zeroEdge(k)
-        zeroVerdict(j)
-        zeroVerdict(k)
+        I.Reset(B, j)
+        I.Reset(B, I.AURA_UNIT + j)
     end
     floorSet, anyLong, anyLast = false, false, false
     holdN.waits, holdN.fires = 0, 0
@@ -585,9 +602,9 @@ local function apply(j, u, up, t, edge)
     end
     facts[k], staged[k] = facts[k] + 1, t
     if not up then
-        -- rule 1's close; like any close it drops the debounce's memory (§2.6), so a light at the next poll re-opens
-        -- at once instead of waiting on the old expiry (review I-1)
-        lateTo[k], lastE[k], lastSt[k], longE[k] = t + STRIKE_WIN, 0, 0, 0
+        -- rule 1's close (§2.6)
+        lateTo[k] = t + STRIKE_WIN
+        closeRecord(k)
     end
     if (e > t) ~= up then
         disagree[k] = disagree[k] + 1
@@ -718,7 +735,7 @@ end
 --- refunded. Allocates nothing.
 function I.AuraVerdictClosed(k, t, ap)
     verdictAt[k], verdictN[k], refPend[k], lateTo[k] = t, verdictN[k] + 1, 0, t + STRIKE_WIN
-    lastE[k], lastSt[k], longE[k] = 0, 0, 0
+    closeRecord(k)
     if k > I.AURA_UNIT and ours[k] == BY_CAST and oursAp[k] == ap and upAt[k] < ap and I.VerdictRefund then
         if I.VerdictRefund(k - I.AURA_UNIT, ap, t) then
             refundN[k], refPend[k] = refundN[k] + 1, 1
@@ -748,9 +765,9 @@ function I.AuraUndone(j, castT, preE, t)
     local k = I.AURA_UNIT + j
     local F = I.presence and I.presence.fact
     if F and F.state[k] == I.UP and (F.t[k] or 0) < castT then
-        lastE[k], anyLast = preE > 0 and preE or t, true
+        lastE[k], anyLast = preE > 0 and preE or t, true -- kept: judged against the earlier application
     else
-        lastE[k], lastSt[k], longE[k] = 0, 0, 0
+        closeRecord(k)
     end
 end
 
@@ -817,7 +834,7 @@ S.Poll(15, function(_, t)
                     if longE[k] > 0 then
                         clamp(j, u, t)
                     end
-                    lastE[k], lastSt[k] = 0, 0 -- not lit continuously: a record still up sets it again
+                    closeRecord(k) -- not lit continuously: a record still up sets it again (longE: 0 by the clamp)
                 end
             end
             anyLong, anyLast = false, false
@@ -852,8 +869,8 @@ S.Poll(15, function(_, t)
             end
             if a ~= I.UP and lastE[k] > 0 and U.exp0[u][j] <= t then
                 -- dark past the model's expiry (a NONE counts only for a record up: UNKNOWN here): no debounce, a
-                -- later light is a new application
-                lastE[k], lastSt[k] = 0, 0
+                -- later light is a new application (longE: 0 by the clamp above)
+                closeRecord(k)
             end
         end
     end
@@ -871,19 +888,16 @@ S.On("PLAYER_TARGET_CHANGED", nil, function(_, t)
         if longE[k] > 0 and I.targetSwapN == I.curSwapN then -- a second change in one drain: the first one clamped
             clamp(j, 2, t)
         end
-        longE[k], lastE[k], lastSt[k], cyT[k] = 0, 0, 0, 0
+        closeRecord(k)
         -- (review S1) a light on the next mob says nothing of mob A's verdict
-        verdictAt[k], strikePend[k], refPend[k], lateTo[k], dueAt[k] = 0, 0, 0, 0, 0
+        I.Reset(TG, k)
     end
 end)
 
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
-        facts[k], disagree[k], staged[k], exitFix[k] = 0, 0, 0, 0
-        lastE[k], lastSt[k], longE[k] = 0, 0, 0 -- out of combat the walk answered
-        emcN[k], emcSum[k], emcLast[k], cyT[k], cyN[k], cySum[k], cyObs[k], cyMod[k] = 0, 0, 0, 0, 0, 0, 0, 0
-        verdictAt[k], verdictN[k], strikeN[k], darkN[k], strikePend[k], refundN[k] = 0, 0, 0, 0, 0, 0
-        backN[k], refPend[k], lateTo[k] = 0, 0, 0
+        closeRecord(k) -- out of combat the walk answered
+        I.Reset(P, k)
     end
     holdN.waits, holdN.fires = 0, 0
     anyLong, anyLast = false, false

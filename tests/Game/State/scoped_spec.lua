@@ -77,6 +77,10 @@ describe("scoped state: the reset matrix", function()
                 roots[#roots + 1] = f
             end
         end
+        local polls = up.all("Sources/Sources.lua", { S.Poll, S.RunPolls }).POLL_FN
+        for _, f in ipairs(up.handlers(polls, SA)) do
+            roots[#roots + 1] = f
+        end
         for _, f in ipairs(up.handlers(I.BUILD, SA)) do
             roots[#roots + 1] = f
         end
@@ -429,6 +433,14 @@ describe("scoped state: the families' reset matrix", function()
         for _, list in pairs(S.HANDLERS) do
             add(list)
         end
+        add(up.all("Sources/Sources.lua", { S.Poll, S.RunPolls }).POLL_FN)
+        local exports = {}
+        for _, v in pairs(I) do
+            if type(v) == "function" then
+                exports[#exports + 1] = v
+            end
+        end
+        add(exports)
         return out
     end
 
@@ -724,7 +736,12 @@ describe("scoped state: the families' reset matrix", function()
             table.sort(list)
             got[scope] = list
         end
-        assert.are.same(REGISTRY.scopes, got)
+        for scope in pairs(REGISTRY.scopes) do
+            got[scope] = got[scope] or {}
+        end
+        for scope, list in pairs(got) do
+            assert.are.same(REGISTRY.scopes[scope], list, scope .. ":\n  " .. table.concat(list, "\n  "))
+        end
     end)
 
     it("every array of a converted file is in a scope or exempt with its reason (none missed)", function()
@@ -744,7 +761,7 @@ describe("scoped state: the families' reset matrix", function()
             end
         end
         table.sort(missed)
-        assert.are.same({}, missed)
+        assert.are.same({}, missed, table.concat(missed, "\n"))
     end)
 
     for _, site in ipairs(SITES) do
