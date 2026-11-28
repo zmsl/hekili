@@ -18,6 +18,9 @@ local last = {}
 I.maxPlain = {}
 -- By slot: its last read answered a plain number (a secret or nil target-bound answer reads 0, below: no fact, L1832).
 I.readPlain = {}
+I.Scope(I.maxPlain, false, "power.build") -- scoped state (refactor Pr-10), per resource slot
+I.Scope(I.readPlain, false, "power.build")
+I.Scope(last, -1, "power.build.ability")
 
 -- Asks every tracked spender (an ability whose cost is paid from a tracked resource). `onlyChanged`: report only
 -- the answers that changed (the events); `direct`: into the log (the poll) rather than staged. True when any
@@ -57,10 +60,10 @@ end
 
 I.OnBuild(function(def)
     for a = 1, #def.abilities do
-        last[a] = -1
+        I.Reset("power.build.ability", a)
     end
     for r = 1, #def.resources do
-        I.maxPlain[r], I.readPlain[r] = false, false
+        I.Reset("power.build", r)
     end
 end)
 

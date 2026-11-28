@@ -227,6 +227,10 @@ end)
 local sentCast, sentSpell, sentSlot, sentGone, sentSwap = nil, 0, 0, 0, 0
 local stCast, stSpell, stSlot, stGone, stSwap = nil, 0, 0, 0, 0
 local pinT, pinSlot, pinGone, pinSwap = {}, {}, {}, {}
+I.Scope(pinT, -1, "target.build") -- scoped state (refactor Pr-10), per ability
+for _, a in ipairs({ pinSlot, pinGone, pinSwap }) do
+    I.Scope(a, 0, "target.build")
+end
 -- Whether a cast event names the pinned cast: the same castGUID, or (one secret: nil) both nil and the same spell.
 local function same(castGUID, spellID, cast, spell)
     if castGUID ~= nil then
@@ -278,7 +282,7 @@ function I.CastSlot(a, t)
 end
 I.OnBuild(function(def)
     for a = 1, #def.abilities do
-        pinT[a], pinSlot[a], pinGone[a], pinSwap[a] = -1, 0, 0, 0
+        I.Reset("target.build", a)
     end
     for s = 1, I.TARGET_CAP do -- the build made the memory anew: no pin across it
         goneN[s] = goneN[s] + 1

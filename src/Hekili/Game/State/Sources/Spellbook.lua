@@ -20,6 +20,8 @@ local Plain, Stage, Note = S.Plain, S.Stage, S.Note
 -- By ability index: the last ready flag reported (-1 none, 0 not ready, 1 ready); the GCD's (-1, 0 idle, 1 active).
 local last, gcdLast = {}, -1
 local lastItem = {} -- by ability index: the last plain item ready time staged (-1 none)
+I.Scope(last, -1, "spellbook.build") -- scoped state (refactor Pr-10)
+I.Scope(lastItem, -1, "spellbook.build")
 
 -- The highest known rank of each ability (rank order: its `id`, then its `copy` IDs) and, out of combat, its plain
 -- cost and whether it costs a second power type. Out of the hot path: build, SPELLS_CHANGED.
@@ -62,8 +64,7 @@ end
 I.OnBuild(function(def)
     I.GCD_SPELL = def.gcdSpell
     for a = 1, #def.abilities do
-        last[a] = -1
-        lastItem[a] = -1
+        I.Reset("spellbook.build", a)
     end
     gcdLast = -1
     if I.api then
