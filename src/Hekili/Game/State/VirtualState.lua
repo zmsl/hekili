@@ -259,6 +259,9 @@ I.SCOPES = {}
 ---@param none any
 ---@return table
 function I.Scope(arr, none, ...)
+    if type(arr) ~= "table" then -- a registration above its array's `local` line: stop at load
+        error("VirtualState: I.Scope needs the array itself, got " .. type(arr), 2)
+    end
     for i = 1, select("#", ...) do
         local s = select(i, ...)
         local L = I.SCOPES[s]

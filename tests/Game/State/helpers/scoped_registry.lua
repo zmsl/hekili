@@ -3,9 +3,6 @@ local M = {}
 
 -- scope -> its arrays as "name=none", sorted (names as the files name them).
 M.scopes = {
-    ["attackers.combat"] = {
-        "atkAnchor=0",
-    },
     ["aura.application"] = {
         "lastE=0",
         "lastSt=0",
@@ -86,16 +83,13 @@ M.scopes = {
         "A.castStartT=0",
         "A.castT=0",
         "A.cdLen=0",
-        "A.flag=0",
+        "A.flag=-1",
         "A.multiCost=false",
         "A.next0=0",
         "A.queued=false",
         "A.rMax=0",
         "A.readCost=0",
         "A.ready0=0",
-    },
-    ["castsource.build"] = {
-        "queued=-1",
     },
     ["now.build.ability"] = {
         "usableAns=false",
@@ -128,12 +122,12 @@ M.scopes = {
         "baseAt=0",
         "split=false",
     },
+    ["power.build"] = {
+        "I.maxPlain=false",
+        "I.readPlain=false",
+    },
     ["power.build.ability"] = {
         "last=-1",
-    },
-    ["power.build.resource"] = {
-        "maxPlain=false",
-        "readPlain=false",
     },
     ["presence.pull"] = {
         "disagree=0",
@@ -236,6 +230,7 @@ M.scopes = {
         "usable=-1",
     },
     ["resource.build.hand"] = {
+        "hitRate=1",
         "smpLand=false",
         "smpR=0",
     },
@@ -269,9 +264,6 @@ M.scopes = {
         "prevTick=0",
         "w0=0",
     },
-    ["talentsource.build"] = {
-        "walkRank=0",
-    },
     ["target.build"] = {
         "pinGone=0",
         "pinSlot=0",
@@ -283,12 +275,15 @@ M.scopes = {
         "T.bandLo=0",
         "T.bandN=0",
     },
-    ["units.combat"] = {
-        "dT=-1000000000",
-    },
 }
 
--- file -> array name -> why it is in no scope.
-M.exempt = {}
+-- "file: line" -> why a converted scope site still resets that array by hand.
+M.stays = {
+    ["Families/Casts.lua: A.ch[a], A.chNext[a] = false, false"] = "the else of a charge ability's records: by def",
+    ["Families/Casts.lua: sc[ab] = true"] = "a set built from the def, no none value",
+    ["Families/Resources.lua: R.shaped[r] = true"] = "def-derived: a regen mult entry names the slot",
+    ["Sources/Auras.lua: f[j], s[j] = 0, false"] = "tables allocated by this build (found, seen)",
+    ['Sources/Target.lua: guid[s] = ""'] = "conditional on its own value (a plate-less slot keeps false)",
+}
 
 return M

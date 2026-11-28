@@ -699,15 +699,10 @@ describe("scoped state: the families' reset matrix", function()
         ["Families/Player.lua"] = {},
         ["Families/Casts.lua"] = { A = true },
         ["Families/Now.lua"] = {},
-        ["Families/Talents.lua"] = { T = true },
-        ["Sources/Casts.lua"] = {},
         ["Sources/Spellbook.lua"] = {},
         ["Sources/Power.lua"] = {},
-        ["Sources/Talents.lua"] = {},
         ["Sources/Target.lua"] = {},
-        ["Sources/Units.lua"] = {},
         ["Presence/Router.lua"] = {},
-        ["Events/Attackers.lua"] = {},
         ["Events/Tickets.lua"] = { T = true },
     }
     local REGISTRY = require("Game.State.helpers.scoped_registry")
@@ -718,6 +713,11 @@ describe("scoped state: the families' reset matrix", function()
         for file, structs in pairs(FILES) do
             for name, arr in pairs(arrays(file, structs)) do
                 out[arr] = out[arr] or name
+            end
+        end
+        for k, v in pairs(I) do -- arrays the files keep on I (Sources/Power.lua's I.maxPlain)
+            if type(v) == "table" and not out[v] then
+                out[v] = "I." .. k
             end
         end
         return out
@@ -748,24 +748,79 @@ describe("scoped state: the families' reset matrix", function()
         end
     end)
 
-    it("every array of a converted file is in a scope or exempt with its reason (none missed)", function()
-        setup()
-        local reg = {}
-        for _, L in pairs(I.SCOPES) do
-            for n = 1, L.n do
-                reg[L.arr[n]] = true
+    -- A constant written at an index, by every target of the line: `x[i], R.y[i] = 0, false` (a reset by hand).
+    local CONST = { ["0"] = true, ["1"] = true, ["-1"] = true, ["-1e9"] = true, ["false"] = true, ["true"] = true }
+    -- (nil: a map's wipe over its own keys, no state array)
+    for _, c in ipairs({ '""', "math.huge", "HUGE", "NEG", "W0", "OTHER", "UNKNOWN", "FREE", "I.UNDECIDED" }) do
+        CONST[c] = true
+    end
+    local function trim(x)
+        return (x:gsub("^%s+", ""):gsub("%s+$", ""))
+    end
+    local function handReset(line)
+        local code = line:gsub("%-%-.*$", "")
+        local lhs, rhs = code:match("^%s*([^=]-[^=~<>])%s*=%s*([^=].*)$")
+        if not lhs then
+            return false
+        end
+        for target in (lhs .. ","):gmatch("([^,]*),") do
+            if not trim(target):match("^[%w_%.]+%[[^%]]+%]$") then
+                return false
             end
         end
-        local missed = {}
-        for file, structs in pairs(FILES) do
-            for name, arr in pairs(arrays(file, structs)) do
-                if not reg[arr] and not (REGISTRY.exempt[file] or {})[name] then
-                    missed[#missed + 1] = file .. ": " .. name
+        for value in (rhs .. ","):gmatch("([^,]*),") do
+            if not CONST[trim(value)] then
+                return false
+            end
+        end
+        return true
+    end
+
+    -- The scope events' handlers of every converted file: builds, the fight's edges, a target change, a swap.
+    local function siteHooks(file)
+        local out = {}
+        local function add(list)
+            for _, f in ipairs(up.handlers(list or {}, file)) do
+                out[#out + 1] = f
+            end
+        end
+        add(I.BUILD)
+        add(APPLY[VS.Obs.CombatStart])
+        add(APPLY[VS.Obs.CombatEnd])
+        add(APPLY[VS.Obs.TargetSwap])
+        add(APPLY[VS.Obs.TargetGone])
+        for _, ev in ipairs({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_TARGET_CHANGED" }) do
+            add(S.HANDLERS[ev])
+        end
+        return out
+    end
+
+    -- (none missed) No scope event's handler in a converted file resets an array by hand, except the lines
+    -- helpers/scoped_registry.lua's `stays` names with their reason; the seven close sites call closeRecord.
+    it("no converted scope site resets an array by hand (none missed)", function()
+        setup()
+        local found = {}
+        for file in pairs(FILES) do
+            for _, f in ipairs(siteHooks(file)) do
+                local info = debug.getinfo(f, "S")
+                local path = info.source:sub(2)
+                local n = 0
+                for line in io.lines(path) do
+                    n = n + 1
+                    if n >= info.linedefined and n <= info.lastlinedefined and handReset(line) then
+                        local key = file .. ": " .. trim(line:gsub("%-%-.*$", ""))
+                        if not REGISTRY.stays[key] then
+                            found[#found + 1] = key
+                        end
+                    end
                 end
             end
         end
-        table.sort(missed)
-        assert.are.same({}, missed, table.concat(missed, "\n"))
+        table.sort(found)
+        assert.are.same({}, found, table.concat(found, "\n"))
+        local src = assert(io.open(load.ROOT .. "Game/State/Sources/Auras.lua")):read("*a")
+        local _, closes = src:gsub("\n%s*closeRecord%(k%)", "")
+        assert.are.equal(7, closes) -- rule 1, the verdict, the avoid undo, no live slot, dark past expiry, target, pull
     end)
 
     for _, site in ipairs(SITES) do

@@ -796,6 +796,7 @@ I.Scope(R.pinValid, false, "resource.build", "resource.combat")
 I.Scope(estDebt, 0, "resource.build", "resource.combat")
 I.Scope(smpR, 0, "resource.build.hand")
 I.Scope(smpLand, false, "resource.build.hand")
+I.Scope(hitRate, 1, "resource.build.hand")
 I.Scope(usable, UNKNOWN, "resource.build.ability")
 I.Scope(ansT, -1, "resource.build.ability")
 for _, a in ipairs({ shortCost, shortT, shortGain, shortCast, shortEst }) do
@@ -816,7 +817,6 @@ I.OnBuild(function(def, now)
     end
     local list = def.resources
     R.n = #list
-    hitRate[1], hitRate[2] = 1, 1
     for h = 1, 2 do
         I.Reset("resource.build.hand", h)
     end
