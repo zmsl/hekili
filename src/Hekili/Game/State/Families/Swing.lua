@@ -20,6 +20,11 @@ local W_SWING, W_PAIR, W_COMBAT = 1, 0.5, 0.3
 local anchorT, speed, base, last, w0, confAt =
     { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
 local prevTick = { 0, 0, 0 }
+-- Scoped state (refactor Pr-10): per hand, reset at a build and (the clock's anchors only) at combat end.
+I.Scope(anchorT, 0, "swing.build", "swing.combat")
+I.Scope(w0, 0, "swing.build", "swing.combat")
+I.Scope(prevTick, 0, "swing.build", "swing.combat")
+I.Scope(last, 0, "swing.build")
 local HAND = { "main", "off", "ranged" }
 local swingRec, speedRec, haste = {}, {}, nil
 -- Parry haste (parry-haste spec decision 59): the main hand's pull and the swing it was taken from (VS.SwingPull)
@@ -28,7 +33,7 @@ I.haste0 = 1
 
 I.OnBuild(function(def, now)
     for h = 1, 3 do
-        anchorT[h], w0[h], prevTick[h], last[h] = 0, 0, 0, 0 -- the old set's clock; Sources/Swing.lua re-reads speeds
+        I.Reset("swing.build", h) -- the old set's clock; Sources/Swing.lua re-reads speeds
         swingRec[h] = I.NewBelief("swing " .. HAND[h])
         speedRec[h] = I.NewBelief("swing speed " .. HAND[h])
         I.Sample(speedRec[h], "default", h == 1 and 2 or 0, now, 0)
@@ -196,7 +201,7 @@ end)
 
 I.On(Obs.CombatEnd, function()
     for h = 1, 3 do
-        anchorT[h], w0[h], prevTick[h] = 0, 0, 0
+        I.Reset("swing.combat", h)
     end
     pull, pullFrom = 0, 0
 end)

@@ -81,6 +81,8 @@ end
 local P = { n = 0, j = {}, q = {}, def = {}, add = {}, mul = {} }
 local split = {} -- [q] = a part is declared for it
 local base, baseAt = {}, {} -- [q] = the fight's base, and when it was derived (0: none)
+I.Scope(split, false, "player.build") -- scoped state (refactor Pr-10), q = 0..5
+I.Scope(baseAt, 0, "player.build")
 local hasteRead, hasteReadT = 0, 0 -- the last plain spell haste read (percent) and its time
 for q = 0, 5 do
     split[q], base[q], baseAt[q] = false, 0, 0
@@ -151,12 +153,8 @@ I.On(Obs.CombatStart, function(o, t)
     splitAtPull(t)
 end)
 
--- `combat` reads 0 out of combat, as the sim's does: an evaluator on it falls here and rises at the next pull
-I.On(Obs.CombatEnd, function()
-    I.combatT = 0
-end)
-
--- `combat` reads 0 out of combat, as the sim's does: an evaluator on it falls here and rises at the next pull
+-- `combat` reads 0 out of combat, as the sim's does: an evaluator on it falls here and rises at the next pull (one
+-- handler: a second identical copy registered after it did nothing more)
 I.On(Obs.CombatEnd, function()
     I.combatT = 0
 end)
@@ -179,7 +177,7 @@ I.OnBuild(function(def, now)
     spellHaste = I.NewBelief("spell haste")
     P.n = 0
     for q = 0, 5 do
-        split[q], baseAt[q] = false, 0
+        I.Reset("player.build", q)
     end
     local auras = def.auras or {}
     for j = 1, #auras do
