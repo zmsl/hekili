@@ -354,7 +354,7 @@ function M.new(seed)
             e.gcdUntil = t + gcdLen
         end
         local held = p.heldBy and (p.cooldown or 0) > 0
-        if held then -- cooldown on event: held until its aura leaves us (W.emit), the client's flag ready meanwhile
+        if held then -- cooldown on event: held until its aura leaves us (W.emit), the client's flag held meanwhile
             e.cdUntil[key] = math.huge
             local h = { key = key, cd = p.cooldown, ids = p.ids or { p.spell } }
             for _, id in ipairs(p.heldBy) do

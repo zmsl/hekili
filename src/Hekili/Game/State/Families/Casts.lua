@@ -474,7 +474,7 @@ I.OnSettle(function(now)
         local flag = A.flag[a]
         local w = A.waitsFor[a]
         if w > 0 and I.AuraUpAt(1, w, now) then
-            flag = UNKNOWN -- held while its aura is up: the client's flag reads ready (isActive false) all along
+            flag = UNKNOWN -- held while its aura is up, whatever the flag reads (held, or ready: flagless, no duration)
         end
         if flag == HELD then
             -- held: it starts at the release, at the earliest now, so ready no sooner than a full length from now

@@ -1238,7 +1238,7 @@ M.FLICKER = {
     -- 411): heldReady 406 -> 415. The world starts Inner Focus's cooldown at its spend, not its press (the game's rule),
     -- so it is no longer pressed again in a fight's last second; the boot's later fights re-time. Held ticks the same
     -- class (mind_flay waiting 0.07-0.09 s at the mana crossing, L755): base 405 of 406, lane 413 of 415
-    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 415, cause = { heldReady = "L755 + L2012" } }, -- flicker 0 / 0 / 0, retracted 0, heldReady 415 / 406 / 412
+    ["Shadow"] = { flicker = 0, retracted = 0, heldReady = 415, cause = { heldReady = "L755 + L2012" } }, -- flicker 0 / 0 / 0, retracted 0, heldReady default 404 / 406 / 412, shipped 415 / 406 / 411
     -- retracted 0.9 -> 0: 0.83 (oracle 0.63, Shoot at mana.pct<=10) before gap BD's cast bar, 0 / 0 / 0 after
     -- CN8 (D2 + S + C1, R6; seeds 1-20 / 21-40 / 41-60 flicker 0 / 0.02 / 0, readyShort 0 / 0 / 0, heldReady 0 / 0 / 0):
     -- flicker 0.1 -> 0.03 (S, steady icons on by default; the measured worst + 0.01: the line rounds to two decimals)

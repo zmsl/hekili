@@ -99,8 +99,9 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api)
 end)
 
 -- The plain ready flag of one spell: true ready, false on cooldown, nil when unreadable; then isActive, and whether
--- the client holds it (isEnabled false: cooldown on event, not ready, its times not a running cooldown; probe
--- 2026-11-27). A spell on the GCD only reads ready. Allocates nothing (the client allocates the info table).
+-- the client holds it (isEnabled false with a duration not read as zero: cooldown on event, not ready, its times not a
+-- running cooldown; probe 2026-11-27; the flag off with no duration is no hold, stage-5 review I1). A spell on the GCD
+-- only reads ready. Allocates nothing (the client allocates the info table).
 local function ready(api, spellID)
     local raw = api.C_Spell.GetSpellCooldown(spellID) -- secret: Plain next, then each field
     local info = Plain(api, raw)
@@ -109,7 +110,7 @@ local function ready(api, spellID)
         return nil
     end
     local active, onGcd = Plain(api, info.isActive), Plain(api, info.isOnGCD)
-    if Plain(api, info.isEnabled) == false then
+    if Plain(api, info.isEnabled) == false and Plain(api, info.duration) ~= 0 then
         Note("GetSpellCooldown flags", "readable")
         return false, active, true
     end
@@ -122,14 +123,15 @@ local function ready(api, spellID)
 end
 
 -- An item's ready time from its plain cooldown read (0 ready), or nil: secret, raising, or held until its buff ends
--- (enable 0: the client starts it later). Allocates nothing.
+-- (enable 0 / false with a length: the client starts it later; with no duration it is idle, stage-5 review I1).
+-- Allocates nothing.
 local function itemReady(api, item)
     local ok, s, d, e = pcall(api.C_Item.GetItemCooldown, item) -- secret: each value through Plain next; a raise is nil
     if not ok then
         return nil
     end
     s, d, e = Plain(api, s), Plain(api, d), Plain(api, e)
-    if type(s) ~= "number" or type(d) ~= "number" or e == 0 or e == false then
+    if type(s) ~= "number" or type(d) ~= "number" or ((e == 0 or e == false) and d ~= 0) then
         return nil
     end
     return s > 0 and d > 0 and s + d or 0

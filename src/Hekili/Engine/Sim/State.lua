@@ -3573,7 +3573,8 @@ do
                     start, duration, enabled, modRate = GetCooldown( id )
                     if enabled == false or enabled == 0 then
                         -- held (the client's isEnabled false / an item's enable 0: cooldown on event, any spell): it
-                        -- starts at the release, at the earliest now; the read's times are not a running cooldown
+                        -- starts at the release, at the earliest now; the read's times are not a running cooldown. The
+                        -- facade decides it (Facade.lua): the flag off with no duration answers enabled, never secret
                         start, duration = state.now, ability.cooldown or 0
                         if duration <= 0 then duration = 3600 end -- no length known: held until a release we cannot time
                     end
@@ -3624,7 +3625,8 @@ do
                 t.true_expires = start > 0 and ( start + true_duration ) or 0
 
                 -- cooldown on event (`cooldownAfter`): held while its aura is up, then a full cooldown from that aura's
-                -- end; the client reads ready while held (isActive false), in or out of combat
+                -- end, whatever the read shows (the held flag above, or none: a flagless read, the flag off with no
+                -- duration)
                 local held = ability.cooldownAfter
                 if held and state.buff[ held ].up then
                     local at = state.buff[ held ].expires + ( ability.cooldown or 0 )

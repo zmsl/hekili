@@ -970,7 +970,14 @@ end, "plain in combat [W PR14; gate spike]; for the pet, Pet() while our summon 
 local CD = { startTime = 0, duration = 0, isEnabled = true, modRate = 1, isActive = false, isOnGCD = false }
 local CHARGES = { currentCharges = 1, maxCharges = 1, cooldownStartTime = 0, cooldownDuration = 0, chargeModRate = 1 }
 
--- The real call's plain flags: isActive, isOnGCD, isEnabled (each nil when secret or unreadable).
+-- A plain zero (a secret or missing value is not a known zero).
+local function knownZero(v)
+    return not issecretvalue(v) and v == 0
+end
+
+-- The real call's plain flags: isActive, isOnGCD, isEnabled (each nil when secret or unreadable). isEnabled false
+-- with a zero duration reads true: a held read carries its length (Prowl's 10, probe 2026-11-27), so the flag off with
+-- no duration is no hold (an idle item's 0 / false, stage-5 review I1).
 local function flags(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID) -- secret: tested next, then each field
     if issecretvalue(info) or type(info) ~= "table" then
@@ -985,6 +992,8 @@ local function flags(spellID)
     end
     if issecretvalue(enabled) then
         enabled = nil
+    elseif enabled == false and knownZero(info.duration) then
+        enabled = true
     end
     return active, onGcd, enabled
 end
@@ -1044,8 +1053,18 @@ kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
     if plainTimes(info, "startTime", "duration") then
         local enabled = info.isEnabled -- secret: tested next
-        if not issecretvalue(enabled) and enabled == false then
-            return held()
+        if issecretvalue(enabled) then -- review M1: unknown, not held, and no reader gets the secret
+            modelled = true
+            return cooldownPolicy(spellID)
+        elseif enabled == false then
+            if info.duration ~= 0 then
+                return held()
+            end
+            -- the flag off with no duration: no hold (review I1), the client's own times and flags (every CD writer
+            -- sets these five; modRate stays 1)
+            CD.startTime, CD.duration, CD.isEnabled = info.startTime, 0, true
+            CD.isActive, CD.isOnGCD = info.isActive, info.isOnGCD
+            return CD
         end
         return info
     end
@@ -1117,6 +1136,9 @@ kept("C_Item.GetItemCooldown", realGetItemCooldown and "hybrid" or "virtual", fu
     if realGetItemCooldown then
         local ok, s, d, e = pcall(realGetItemCooldown, item) -- a raising read is answered as a secret one
         if ok and not (issecretvalue(s) or issecretvalue(d) or issecretvalue(e)) then
+            if (e == 0 or e == false) and d == 0 then
+                e = 1 -- the flag off with no duration: an idle item, not a held one (stage-5 review I1)
+            end
             return s, d, e
         end
     end

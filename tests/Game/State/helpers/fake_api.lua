@@ -814,7 +814,8 @@ function M.new()
             if c == "raise" then
                 error("GetItemCooldown: a raising read")
             elseif c then
-                return c[1], c[2], c[3] or 1 -- c[3]: the enable flag (0: held until its effect ends)
+                local e = c[3] -- the enable flag (0 or false with a length: held until its effect ends); nil: 1
+                return c[1], c[2], e == nil and 1 or e
             end
             return 0, 0, 1
         end,
