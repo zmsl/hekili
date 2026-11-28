@@ -19,6 +19,8 @@ Without the Cooldown Manager, Hekili Forever estimates in combat whether each bu
 
 When one of the Cooldown Manager's bars shows one of the player's auras, Hekili Forever uses it to correct whether that aura is up. Hekili Forever learns only about the auras that are on a bar. An aura that the game offers but that sits in no bar teaches it nothing.
 
+The bars also show how many stacks a buff of yours has. When a priority line checks the stacks of one of your buffs (such as Heating Up at 3, Fingers of Frost or Maelstrom Weapon at 5), Hekili Forever reads that count from the bar during combat. The buff must be in the **Tracked Buffs** or **Tracked Bars** section of the Cooldown Manager: an Essential or Utility icon shows no count. The game shows no number at 1 stack, so 1 stack is known from the buff being up. Without the buff on such a bar, Hekili Forever uses its own estimate of the stacks.
+
 An icon proves itself the first time it lights up for an aura. From then on, when it stays dark after one of your casts, Hekili Forever knows the aura did not land. Hekili Forever remembers the proven icons for each character across logouts and reloads, so a debuff that misses in your first pull is caught too. Moving an icon to another bar or removing it in the game's settings makes Hekili Forever forget that icon until it lights up again. Changes you discard are ignored.
 
 The game's Cooldown Manager must be turned on in the game's options. When it is off, the panel says so. When the game offers no Cooldown Manager to the character, the panel shows the game's reason.
