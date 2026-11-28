@@ -390,6 +390,24 @@ describe("the client's held flag (isEnabled false)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- the same without the held flag (a client that reads it ready while held): the ready -> running edge is the release
+    it("takes a missed aura down at a flagless client's ready -> running edge", function()
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        H.ctl.cooldown[DIVINE_FAVOR] = { isActive = false, isOnGCD = false, startTime = SECRET, duration = SECRET }
+        H.Fire("SPELL_UPDATE_COOLDOWN") -- read ready, before the press and all through the hold
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        t = t + 11
+        H.ctl.now = t
+        H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        st.reset("Primary", true)
+        assert.is_false(st.buff.divine_favor.up, "taken down at the release")
+        near(120 - 0.2, st.cooldown.divine_favor.remains)
+        assert.are.same({}, H.errors)
+    end)
+
     -- an item held until its effect ends (the client's enable 0, Sources/Spellbook.lua itemReady): held in the read
     it("reads an item's held cooldown (enable 0) as not ready", function()
         local H, t = hunter()
