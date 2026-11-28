@@ -408,23 +408,107 @@ describe("the client's held flag (isEnabled false)", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- an item held until its effect ends (the client's enable 0, Sources/Spellbook.lua itemReady): held in the read
-    it("reads an item's held cooldown (enable 0) as not ready", function()
-        local H, t = hunter()
-        local st = H.Hekili.State
+    -- the first item ability by name (a stable pick): its key, ability and the item ID its cooldown reads
+    local function itemAbility(H)
         local key
-        for k, a in pairs(H.Hekili.Class.abilities) do -- the first by name, for a stable pick
+        for k, a in pairs(H.Hekili.Class.abilities) do
             if type(k) == "string" and k:match("^[a-z_]+$") and type(a.item) == "number" and (a.cooldown or 0) > 0 then
                 key = (key == nil or k < key) and k or key
             end
         end
         assert.is_string(key, "an item ability")
         local a = H.Hekili.Class.abilities[key]
-        H.ctl.itemCooldown[a.itemCd or a.item] = { 0, 0, 0 }
+        return key, a, a.itemCd or a.item
+    end
+
+    -- an item held until its effect ends (the client's enable 0 with its length filled, Sources/Spellbook.lua
+    -- itemReady): held in the read, from now
+    it("reads an item's held cooldown (enable 0, a length) as not ready", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        local key, a, item = itemAbility(H)
+        H.ctl.itemCooldown[item] = { t - 5, 60, 0 }
         H.ctl.now = t
         assert(headless.cycle(H, t + 0.1))
         st.reset("Primary", true)
         assert.is_true(st.cooldown[key].true_remains >= a.cooldown - 0.3, key .. " " .. st.cooldown[key].true_remains)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- an idle item may read enable 0 / false with no duration (stage-5 review I1: no capture of a worn idle trinket;
+    -- ForeverAuras forces the flag on at duration 0): ready, as before the lane, in the read and in the belief
+    for _, e in ipairs({ 0, false }) do
+        it("reads an idle item (0, 0, " .. tostring(e) .. ") as ready", function()
+            local H, t = hunter()
+            local st = H.Hekili.State
+            local key, _, item = itemAbility(H)
+            H.ctl.itemCooldown[item] = { t - 5, 60, 1 } -- running first: the belief learns a ready time
+            H.ctl.now = t
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            assert(headless.cycle(H, t + 0.1))
+            local rec = H.ns.VirtualState.ItemCooldown(item, t + 0.1)
+            near(t + 55, rec.est)
+            H.ctl.itemCooldown[item] = { 0, 0, e }
+            H.ctl.now = t + 0.2
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            assert(headless.cycle(H, t + 0.3))
+            st.reset("Primary", true)
+            near(0, st.cooldown[key].true_remains)
+            rec = H.ns.VirtualState.ItemCooldown(item, t + 0.3)
+            assert.is_true(rec.est <= t + 0.3, "belief ready in " .. (rec.est - (t + 0.3)))
+            assert.are.same({}, H.errors)
+        end)
+    end
+
+    -- the same for a spell: the flag off with no duration is not a hold (a held read carries its length, as Prowl's 10)
+    it("reads an undeclared spell's (0, 0, false) as ready", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        H.ctl.now = t
+        H.ctl.cooldown[FEIGN_DEATH] = { isEnabled = false, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.1))
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown.feign_death.ready, tostring(st.cooldown.feign_death.remains))
+        local rec = H.ns.VirtualState.Cooldown(FEIGN_DEATH, t + 0.1)
+        assert.is_true(rec.est <= t + 0.1, "belief ready in " .. (rec.est - (t + 0.1)))
+        assert.are.same({}, H.errors)
+    end)
+
+    -- a declared one: (0, 0, false) is ready on its own, held only while its declared aura is up (the pack's field)
+    it("reads Divine Favor's (0, 0, false) as ready, and held while its aura is up", function()
+        local IDLE = { isEnabled = false, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        H.Fire("PLAYER_REGEN_ENABLED") -- plain times: out of combat
+        H.ctl.now = t + 0.5
+        H.ctl.cooldown[DIVINE_FAVOR] = IDLE
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.6))
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown.divine_favor.ready, tostring(st.cooldown.divine_favor.remains))
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 1.2))
+        st.reset("Primary", true)
+        assert.is_true(st.buff.divine_favor.up)
+        assert.is_false(st.cooldown.divine_favor.ready, "held through its aura")
+        assert.are.same({}, H.errors)
+    end)
+
+    -- review M1: plain times with a secret flag: unknown, not held, and no reader gets the secret
+    it("answers a secret isEnabled with plain times as unknown, not held", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        H.ctl.now = t
+        H.ctl.cooldown[FEIGN_DEATH] = { isEnabled = SECRET, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.1))
+        local info = H.ns.Facade.C_Spell.GetSpellCooldown(FEIGN_DEATH)
+        assert.is_false(rawequal(info.isEnabled, SECRET), "the secret passed through")
+        assert.are_not.equal(false, info.isEnabled)
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown.feign_death.ready, tostring(st.cooldown.feign_death.remains))
         assert.are.same({}, H.errors)
     end)
 end)
