@@ -1974,17 +1974,30 @@ end
 
 --- (bands integration design 3.3) Pack `pack`'s harvested thresholds (each script's `Bands`, Hekili:LoadScript)
 --- as { [resource key] = { points, deficit, pct } }: distinct and sorted, a percent only when fractional (a whole one
---- is a 1% cell edge), only the keys of the pack's spec's resources. Cold path: the options and ApplyBands.
+--- is a 1% cell edge), only the keys of the pack's spec's resources. Second return (lane aura-stacks, L2023): the
+--- player's buffs' stack edges { [aura key] = { edge, ... } }, N and N + 1 for each literal N (ceil of a fractional
+--- one; the pair decides every comparison of a whole count), sorted and distinct. Cold path: the options and ApplyBands.
 function scripts:PackBands( pack )
-    local out, seen = {}, {}
+    local out, seen, stacks = {}, {}, {}
     local pData = pack and rawget( Hekili.Engine.settings.packs, pack ) -- no wildcard default: "(none)" is no pack
     local specData = pData and pData.spec and class.specs[ pData.spec ]
     local res = specData and specData.resources
-    if not res then return out end
+    if not res then return out, stacks end
     for list, lData in pairs( pData.lists ) do
         for i in ipairs( lData ) do
             local script = self.DB[ pack .. ":" .. list .. ":" .. i ]
             for _, r in ipairs( script and script.Bands or {} ) do
+                local aura = r.kind == "aura" and r.key:match( "^buff%.([%w_]+)%.stack$" )
+                if aura and class.auras[ aura ] then
+                    local e = stacks[ aura ] or {}
+                    stacks[ aura ] = e
+                    for _, edge in ipairs( { math.ceil( r.n ), math.ceil( r.n ) + 1 } ) do
+                        if edge >= 1 and not seen[ aura .. ":" .. edge ] then
+                            seen[ aura .. ":" .. edge ] = true
+                            e[ #e + 1 ] = edge
+                        end
+                    end
+                end
                 local dst = out[ r.key ] and out[ r.key ][ r.kind ]
                 if res[ r.key ] and ( r.kind == "points" or r.kind == "deficit" or ( r.kind == "pct" and r.n % 1 ~= 0 and r.n > 0 and r.n < 100 ) ) then
                     local id = r.key .. ":" .. r.kind .. ":" .. r.n
@@ -2003,7 +2016,8 @@ function scripts:PackBands( pack )
     for _, e in pairs( out ) do
         table.sort( e.points ); table.sort( e.deficit ); table.sort( e.pct )
     end
-    return out
+    for _, e in pairs( stacks ) do table.sort( e ) end
+    return out, stacks
 end
 
 --- The active priority's thresholds into the belief's def (Tracked.lua ns.SetAplBands: a new generation); a resource
@@ -2011,19 +2025,19 @@ end
 --- LoadScripts, after one entry's load outside a full load, before a Build (Activation.lua) and when the active
 --- priority changes (Core.lua Hekili.Update). `scripts.appliedBands`: the priority last applied.
 function scripts:ApplyBands( pack )
-    local bands = self:PackBands( pack )
+    local bands, stacks = self:PackBands( pack )
     for key, e in pairs( bands ) do
         if ns.AplPointCount( e ) > ns.APL_POINT_CAP then bands[ key ] = nil end
     end
     self.appliedBands = pack
-    ns.SetAplBands( bands )
+    ns.SetAplBands( bands, stacks )
 end
 
 --- The priority editor's warning (Options.lua, beside the import warning): one line per resource over the cap, or nil.
 --- `nameOf(key)`: the resource's name to show (the options' client power name), else the key.
 function scripts:BandWarning( pack, nameOf )
     local text
-    for key, e in orderedPairs( self:PackBands( pack ) ) do
+    for key, e in orderedPairs( ( self:PackBands( pack ) ) ) do
         local n = ns.AplPointCount( e )
         if n > ns.APL_POINT_CAP then
             local line = format( L["This priority compares %s with %d exact values; Hekili can watch %d. Those conditions use the nearest 1%% instead."], nameOf and nameOf( key ) or key, n, ns.APL_POINT_CAP )

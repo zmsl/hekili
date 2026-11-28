@@ -508,21 +508,34 @@ end
 --- (bands integration design 3.3, lane B7) The active priority's harvested thresholds (Scripts.lua
 --- scripts:ApplyBands: { [resource key] = { points, deficit, pct } }, sorted plain numbers, a resource over the cap
 --- already left out) as def.bandPoints = { [powerType] = { points, deficit, pct } } at a new def.bandGen; a key that
---- is not a resource of this spec is dropped. Every build re-maps them and moves the generation (buildDef).
-local bandSource = {}
+--- is not a resource of this spec is dropped. Every build re-maps them and moves the generation (buildDef). The
+--- player's buffs' stack edges (lane aura-stacks, L2023; PackBands' second return) go as def.bandStacks =
+--- { [aura key] = { edge, ... } } at the same generation, by the tracked aura's own key (an alias resolved), one the
+--- build does not track dropped.
+local bandSource, stackSource = {}, {}
 resolveBands = function()
-    local out = {}
+    local out, stacks, tracked = {}, {}, {}
     for key, e in pairs(bandSource) do
         local r = class.resources[key]
         if r and type(r.type) == "number" then
             out[r.type] = { points = e.points, deficit = e.deficit, pct = e.pct }
         end
     end
-    def.bandPoints, def.bandGen = out, (def.bandGen or 0) + 1
+    for j = 1, #def.auras do
+        tracked[def.auras[j].key] = true
+    end
+    for key, edges in pairs(stackSource) do
+        local a = class.auras[key]
+        local k = a and rawget(a, "key") or key
+        if tracked[k] then
+            stacks[k] = edges
+        end
+    end
+    def.bandPoints, def.bandStacks, def.bandGen = out, stacks, (def.bandGen or 0) + 1
 end
 
-function ns.SetAplBands(records)
-    bandSource = records
+function ns.SetAplBands(records, stacks)
+    bandSource, stackSource = records, stacks or {}
     resolveBands()
 end
 

@@ -735,6 +735,121 @@ describe("the band source on the real library (Game/State/Sources/Bands.lua)", f
         assert.is_true(p.lo == 310 and p.hi < 320)
     end)
 
+    -- (lane aura-stacks, L2023) a player buff's stacks the priority reads, from the Cooldown Manager's count text: the
+    -- aura (fs.def's spender_a, max 5) placed as a Tracked Buff icon; the edges 3 and 4 (`stack=3`) plus 1
+    describe("stack watches", function()
+        local A, CDID = 1, 21
+        local CH
+
+        local function stackBoot(place, ids, record)
+            W.cdm.catalogue = { [CDID] = { spellID = fs.SPENDER_A, category = 2 } }
+            W.cdm.icon = place == false and {} or { CDID }
+            boot(record)
+            CH = I.STACK_BAND - A
+            def.auras[A].max_stack = 5
+            def.auraIds[A] = ids or def.auraIds[A]
+            def.bandStacks = { [def.auras[A].key] = { 3, 4, 6 } } -- 6: over the max, dropped
+            def.bandGen = (def.bandGen or 0) + 1
+            live()
+            frames(14)
+        end
+
+        it("absent reads 0, up with no count 0-2 (never 1 alone), the count from 3 exact, in whole stacks", function()
+            stackBoot()
+            assert.are.equal("0 0", frames(1, CH))
+            W.combat = true
+            Fake.setAura("player", fs.SPENDER_A, 1)
+            frames(8)
+            assert.are.equal("0 2", frames(1, CH))
+            Fake.setAura("player", fs.SPENDER_A, 3)
+            frames(3)
+            assert.are.equal("3 3", frames(1, CH))
+            Fake.setAura("player", fs.SPENDER_A, 5)
+            frames(3)
+            assert.are.equal("4 5", frames(1, CH))
+            Fake.setAura("player", fs.SPENDER_A, nil)
+            frames(3)
+            assert.are.equal("0 0", frames(1, CH))
+            assert.is_truthy(
+                VS.Snapshot():find(
+                    "band stacks spender_a spell=" .. fs.SPENDER_A .. " edges=1,3,4 state=live reason=nil band=0-0",
+                    1,
+                    true
+                )
+            )
+        end)
+
+        it("an aura not on the Cooldown Manager's bars reads unknown, never 0; the snapshot says why", function()
+            stackBoot(false)
+            assert.are.equal("", frames(1, CH))
+            assert.is_truthy(VS.Snapshot():find("state=unavailable reason=cdm-not-tracked", 1, true))
+        end)
+
+        it("watches the first of the aura's IDs the Cooldown Manager names", function()
+            stackBoot(true, { 9999, fs.SPENDER_A })
+            assert.are.equal("0 0", frames(1, CH))
+            assert.are.equal(fs.SPENDER_A, LHV:GetAuraSources()[1].spell)
+        end)
+
+        it(
+            "a new generation with the same edges keeps the band live; other edges watch again; none releases",
+            function()
+                stackBoot()
+                def.bandGen = def.bandGen + 1
+                assert.are.equal("0 0", frames(1, CH))
+                def.bandStacks = { [def.auras[A].key] = { 2 } }
+                def.bandGen = def.bandGen + 1
+                assert.are.equal("-", frames(1, CH)) -- the old watch released: one unknown
+                frames(14)
+                assert.are.equal("0 0", frames(1, CH))
+                def.bandStacks = {}
+                def.bandGen = def.bandGen + 1
+                assert.are.equal("-", frames(1, CH))
+                assert.are.equal("", frames(1, CH))
+                assert.are.equal(0, #LHV:GetAuraSources())
+            end
+        )
+
+        it("the library switched off: one unknown, no band", function()
+            stackBoot()
+            def.providers.bands = false
+            assert.are.equal("-", frames(1, CH))
+            assert.are.equal("", frames(2, CH):gsub("|", ""))
+        end)
+
+        it("allocates nothing over 1000 drains with a stack band live", function()
+            stackBoot(true, nil, false)
+            W.combat = true
+            Fake.setAura("player", fs.SPENDER_A, 3)
+            Fake.tick(8)
+            VS.Drain(sync())
+            assert.are.equal(3, I.bandLo[CH])
+            local bytes = alloc.bytes(function()
+                VS.Drain(sync())
+                assert(I.bandLo[CH] == 3)
+            end, 1000)
+            assert.are.equal(0, bytes)
+        end)
+
+        -- the whole path: the walk secret in combat (FR-1), the record believed up, its stacks the band's
+        it("in combat the belief's stacks follow the count: a record believed at 1 reads 3", function()
+            ctl.now = 1000
+            ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 1100, applications = 0 }
+            stackBoot()
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, ctl.now)))
+            ctl.combat, W.combat = true, true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auraError.player = true
+            ctl.Fire("UNIT_AURA", "player")
+            Fake.setAura("player", fs.SPENDER_A, 3)
+            frames(4)
+            assert.are.equal(3, select(2, VS.Aura("player", fs.SPENDER_A, ctl.now)))
+            Fake.setAura("player", fs.SPENDER_A, 2)
+            frames(4)
+            assert.are.equal(2, select(2, VS.Aura("player", fs.SPENDER_A, ctl.now))) -- the ceiling: 0-2
+        end)
+    end)
+
     it("allocates nothing over 1000 drains with every band live", function()
         boot(false)
         live()
