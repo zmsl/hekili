@@ -177,6 +177,37 @@ end
 -- On a power also (re-review H3, H4): applied, whether this drain applied it, and the branches the order arms are for:
 -- late, the drains a spend's paid low end alone held the band back (a stamp newer than our change that cannot show the
 -- spend: review I3); shown, the gains the band had risen by before they were heard (review I4: the rise consumed).
+-- (the aura-bands arm) an aura watch's placement, as the real library answers it (Cdm.lua statusOf): true when a
+-- Tracked Buffs or Tracked Bars entry names the spell; else cdm-not-tracked when any entry names it, not-in-cdm when
+-- none does. shortcut: an entry placed only in Essential/Utility reads cdm-not-tracked (the library: cdm-cooldown-only);
+-- Bands.lua moves on not-in-cdm only, so only the snapshot text differs.
+local function names(info, spell)
+    if info.spellID == spell or info.overrideSpellID == spell then
+        return true
+    end
+    for _, l in ipairs(info.linkedSpellIDs or {}) do
+        if l == spell then
+            return true
+        end
+    end
+    return false
+end
+function M.auraPlacement(viewer, spell)
+    for c = 2, 3 do -- Tracked Buffs, Tracked Bars
+        for _, id in ipairs(viewer.sets[c]) do
+            if names(viewer.infos[id] or {}, spell) then
+                return true
+            end
+        end
+    end
+    for _, info in pairs(viewer.infos) do
+        if names(info, spell) then
+            return "cdm-not-tracked"
+        end
+    end
+    return "not-in-cdm"
+end
+
 local BAND_EPS, CELL = 1e-9, 0.01
 local LATENCY = fake_lhv.DEFAULTS.latency * fake_lhv.DEFAULTS.frame
 local function away(x, lo, hi) -- how far x lies outside [lo, hi]
@@ -905,11 +936,18 @@ function M.run(L, seed, o, drivers)
         -- session flag Hekili.bandOff, as cdmOff (with no library in the default arm it changes nothing)
         local bands = arm.bands and not d.plain or false
         if bands and not ctl.lhv then
+            local placed = nil -- (the aura-bands arm) the aura kind's placement (M.auraPlacement)
+            if arm.bandKnobs and arm.bandKnobs.auraBands then
+                placed = function(spell)
+                    return M.auraPlacement(ctl.viewer, spell)
+                end
+            end
             ctl.lhv = fake_lhv.new({
                 now = function()
                     return ctl.now
                 end,
                 history = true,
+                auras = placed,
             })
             local major, minor = ctl.lhv:GetVersion()
             local stub = rawget(d.H.env, "LibStub")
@@ -919,6 +957,9 @@ function M.run(L, seed, o, drivers)
         -- the real library keeps it (design 5.2; L1666 d)
         if ctl.lhv and select(3, ctl.lhv:IsAvailable("health", "player")) ~= "error" then
             ctl.lhv:SetAvailable("ready")
+        end
+        if ctl.lhv then
+            ctl.lhv:AuraReset() -- a fresh world: no aura of the last one shows
         end
         -- a ttd arm's driver (lane B8): the real LibTimeToDie over the fake library (ttd_rig.lua), once, so the core's
         -- time to die (Targets.lua) answers from it

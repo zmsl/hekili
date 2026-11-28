@@ -853,6 +853,64 @@ describe("auras", function()
             ctl.Fire("PLAYER_TARGET_CHANGED")
         end
 
+        -- (lane aura-stacks) the live path of a proc (Heating Up): the Cooldown Manager's light opens it at 1 stack, the
+        -- library's stack band lifts it; our spend at 3 closes it and the band (the item still lit, its count not yet
+        -- rewritten) neither re-opens it nor gives a re-open its old count
+        it("a proc the light opened takes its stacks from the stack band; our spend at 3 is not undone", function()
+            local CH = I.STACK_BAND - SHOUT
+            local function band(t, lo, hi, bt)
+                I.bandT[CH], I.bandShows[CH] = bt or t, 1 / 6
+                S.Direct(Obs.Band, t, CH, lo, hi)
+            end
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, 10.5))) -- opened by the light, 1 stack
+            band(10.7, 0, 2)
+            poll(10.7)
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, 10.7))) -- up: at least 1
+            band(11, 3, 3)
+            poll(11)
+            assert.are.equal(3, select(2, VS.Aura("player", fs.SPENDER_A, 11)))
+            I.AuraModel(1, SHOUT, 0, 0, 0, 11.1, Obs.CastSuccess, false, true) -- our spend (a Pyroblast)
+            for t = 11.2, 11.6, 0.2 do
+                band(t, 3, 3, 11) -- the item still lit, its count as before the spend
+                poll(t)
+                local rec, n = VS.Aura("player", fs.SPENDER_A, t)
+                assert.is_true(rec == nil or n < 3, t)
+            end
+            ctl.ViewerClear(pi)
+            band(11.8, 0, 0, 11.75)
+            poll(11.8)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11.8))
+        end)
+
+        -- (aura-stacks review m1) the band on a down record is kept, not applied (no delta); the light's open is a
+        -- write, and it lands inside the live band at once (set()'s clamp), not at the band's next re-assert
+        it("a band on a down record moves nothing; the light opens it inside the band at once", function()
+            local CH = I.STACK_BAND - SHOUT
+            poll(10.1)
+            local gen = VS.AuraGen("player")
+            I.bandT[CH], I.bandShows[CH] = 10.2, 1 / 6
+            S.Direct(Obs.Band, 10.2, CH, 3, 3)
+            poll(10.2)
+            assert.are.equal(gen, VS.AuraGen("player")) -- down: no stacks write, no update
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 10.2))
+            ctl.ViewerAura(pi, "player")
+            poll(10.5) -- no band re-asserted at this drain: only the open's own write
+            assert.are.equal(3, select(2, VS.Aura("player", fs.SPENDER_A, 10.5)))
+        end)
+
+        -- banded has no floor of 1: it relies on every observed open carrying at least 1 (the Read handler); this pins it
+        it("the light opens a record at none under a live band of 0 to 2: at least 1 (up settles 0 vs 1)", function()
+            local CH = I.STACK_BAND - SHOUT
+            I.bandT[CH], I.bandShows[CH] = 10.2, 1 / 6
+            S.Direct(Obs.Band, 10.2, CH, 0, 1)
+            poll(10.2)
+            ctl.ViewerAura(pi, "player")
+            poll(10.5)
+            assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_A, 10.5)))
+        end)
+
         it(
             "a target DOWN closes our debuff once its item lit this application; never lit, it closes nothing",
             function()
@@ -2862,5 +2920,130 @@ describe("auras", function()
                 "presence-layout spender_s on=? neverLit=yes",
             })
         end)
+    end)
+end)
+
+-- (lane aura-stacks, L2023) The library's stack band on a player aura (Sources/Bands.lua: Obs.Band on channel
+-- I.STACK_BAND - j, whole bounds lo..hi): while the player walk is not plain (in combat on live, FR-1) an up record's
+-- stacks are clamped into [max(lo, 1), hi] (presence settles 0 vs 1); a down record, a plain walk, an unknown band and a
+-- band of none on an up record move nothing; our own write after the band's stamp holds it for its delay (owner L1673).
+describe("auras: the stack band", function()
+    local VS, I, S, Obs, ctl, api
+    local A = 1 -- spender_a, a player aura in fs.def
+    local CH
+
+    local function fold(t)
+        ctl.Tick(t)
+        I.Fold(t, false)
+        I.Settle(t)
+    end
+
+    local function stacks(t)
+        return select(2, VS.Aura("player", fs.SPENDER_A, t))
+    end
+
+    -- the band as Sources/Bands.lua logs it: stamped bt, its delay 1/6 s
+    local function band(t, lo, hi, bt)
+        I.bandT[CH], I.bandShows[CH] = bt or t, 1 / 6
+        S.Direct(Obs.Band, t, CH, lo, hi)
+        fold(t)
+    end
+
+    before_each(function()
+        api, ctl = fake.new()
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        S, Obs = I.Sources, VS.Obs
+        CH = I.STACK_BAND - A
+        local def = fs.def(fs.new(9))
+        def.auras[A].max_stack = 5
+        I.Build(def, 1)
+        VS.Start(api)
+        ctl.Tick(1)
+        I.ObsLog.Clear(I.log)
+        ctl.now = 10
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 130, applications = 0 }
+        ctl.Fire("UNIT_AURA", "player")
+        fold(10) -- up, 1 stack, read plain
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.auraError.player = true -- FR-1: the walk raises in combat
+        ctl.Fire("UNIT_AURA", "player")
+        fold(11)
+        assert.are.equal(1, stacks(11)) -- believed up still (never seen in combat)
+    end)
+
+    it("follows the band's floor and ceiling on an up record", function()
+        band(12, 3, 3)
+        assert.are.equal(3, stacks(12))
+        local gen = VS.AuraGen("player")
+        band(12.2, 3, 3) -- re-asserted: no change, no delta
+        assert.are.equal(gen, VS.AuraGen("player"))
+        band(13, 0, 2) -- up with no count shown: at most 2
+        assert.are.equal(2, stacks(13))
+        band(14, 4, 5)
+        assert.are.equal(4, stacks(14))
+        assert.are.equal(130, VS.Aura("player", fs.SPENDER_A, 14).est) -- the expiry untouched
+    end)
+
+    it("0 vs 1 stays a range: an up record reads at least 1, a band of none moves nothing", function()
+        band(12, 0, 2)
+        assert.are.equal(1, stacks(12))
+        band(13, 3, 3)
+        band(14, 0, 0) -- the item shows none: presence is the router's, not the band's
+        assert.are.equal(3, stacks(14))
+        assert.is_not_nil(VS.Aura("player", fs.SPENDER_A, 14))
+    end)
+
+    it("an unknown band or a plain walk moves nothing; a down record stays down", function()
+        band(12, 2, 2)
+        band(13, 1, 0) -- unknown
+        band(13.2, 1, 0)
+        assert.are.equal(2, stacks(13.2))
+        ctl.auraError.player = nil
+        ctl.auras.player.HELPFUL[1].applications = 4
+        ctl.Fire("UNIT_AURA", "player")
+        fold(14) -- a plain walk: exact and newer
+        band(14.2, 2, 2)
+        assert.are.equal(4, stacks(14.2))
+        ctl.auraError.player = true
+        ctl.Fire("UNIT_AURA", "player")
+        fold(15)
+        I.AuraModel(1, A, 0, 0, 0, 15, Obs.Read, false, true) -- our cast spent it (a Pyroblast's Heating Up)
+        band(15.1, 3, 3, 14.9) -- the item still shows the count
+        band(16, 3, 3, 14.9)
+        assert.is_nil(VS.Aura("player", fs.SPENDER_A, 16)) -- no band opens it
+    end)
+
+    it("holds a band stamped before our own write for its delay, then the band stands", function()
+        band(12, 2, 2)
+        I.AuraModel(1, A, 10, 130, 1, 12.5, Obs.Read, false) -- our cast spent one
+        band(12.55, 2, 2, 12) -- stamped before the write, inside its delay: held
+        assert.are.equal(1, stacks(12.55))
+        band(12.6, 1, 1, 12.58) -- the count rewritten after the write: applied
+        assert.are.equal(1, stacks(12.6))
+        I.AuraModel(1, A, 10, 130, 2, 13, Obs.Read, false)
+        band(13.1, 1, 1, 12.58)
+        assert.are.equal(2, stacks(13.1)) -- held
+        band(13.3, 1, 1, 12.58) -- the delay passed and the client still shows 1: the fact wins
+        assert.are.equal(1, stacks(13.3))
+    end)
+
+    -- (aura-stacks review m2, as Resources' holdsBack third clause) a firing can trail its push: a band stamped just
+    -- after our partial spend that still shows the count before it cannot show the spend, so it waits the delay too
+    it("holds a band stamped after our partial spend that still shows the old count, for its delay", function()
+        band(12, 2, 2)
+        I.AuraModel(1, A, 10, 130, 1, 12.5, Obs.Read, false) -- our cast spent one of two (an Ice Lance)
+        band(12.55, 2, 2, 12.52) -- newer than the write, the old count: held
+        assert.are.equal(1, stacks(12.55))
+        band(12.6, 1, 1, 12.58) -- the spend shown: applied
+        assert.are.equal(1, stacks(12.6))
+        band(12.7, 2, 2, 12.68) -- the delay passed and the client shows 2 again (a new proc): the fact wins
+        assert.are.equal(2, stacks(12.7))
+    end)
+
+    it("an aura switched off for the Cooldown Manager takes no band", function()
+        I.def.auras[A].cdm = false
+        band(12, 3, 3)
+        assert.are.equal(1, stacks(12))
     end)
 end)

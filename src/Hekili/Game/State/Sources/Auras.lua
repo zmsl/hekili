@@ -34,6 +34,7 @@ local pending = false
 -- Whether the last player walk completed (plain): then it wins over the overlay reads, except that a permanent aura with
 -- `overlay` still goes down while its glow is off.
 local playerPlain = true
+I.playerWalkPlain = true -- its copy for Families/Auras.lua (the stack band)
 local targetPlain = true -- its twin for the target's walk (presence, providers decision 80)
 -- The player auras with a numeric `overlay`: their aura indices and overlay spell IDs (built at OnBuild).
 local OVL_J, OVL_ID, OVL_N = {}, {}, 0
@@ -196,6 +197,7 @@ I.OnBuild(function(def)
         end
     end
     playerPlain, targetPlain = true, true
+    I.playerWalkPlain = true
     for j = 1, U.nAura do
         KEY[j] = tostring(def.auras[j].key)
         FAM[j] = type(def.auras[j].family) == "string" and def.auras[j].family
@@ -321,6 +323,7 @@ local function walk(api, u, unit, t)
     end
     if u == 1 then
         playerPlain = complete
+        I.playerWalkPlain = complete -- Families/Auras.lua's stack band waits while it is
     elseif u == 2 then
         targetPlain = complete
     end

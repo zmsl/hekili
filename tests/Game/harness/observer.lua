@@ -100,6 +100,9 @@ M.DEFAULTS = {
     -- (lane B4) false: the bars show no power (the watches prime for good), the bands-health arm: what the health bands
     -- alone change, which the B2 and B3 loop rows pin.
     bandPower = true,
+    -- (lane aura-stacks, the aura-bands arm; only with `bands`) our auras' true stacks at each change on us, for
+    -- fake_lhv.lua's aura kind (the Cooldown Manager's count text). Added events only.
+    auraBands = false,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -817,6 +820,9 @@ function M.new(W, k)
                     auraTarget = ev.dst
                 end
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
+                if k.auraBands and unit == "player" then -- (aura-bands arm) the count text the library decodes
+                    push(t, "@lhv", "aura", "player", ev.aura, ev.stacks)
+                end
                 push(t, "UNIT_AURA", unit)
                 if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2); a partner's copy
                     -- (an aura event with another source) lights none of our items (F10, CDM-P)

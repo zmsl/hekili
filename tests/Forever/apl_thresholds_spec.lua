@@ -287,6 +287,42 @@ describe("the active priority's bands", function()
         assert.is_nil(H.Hekili.Scripts:BandWarning(PACK))
     end)
 
+    -- (lane aura-stacks, L2023) a player buff's stack literals go to the belief as edges: N and N + 1 each (the pair
+    -- decides every comparison of a whole count), sorted and distinct, by the aura's own key; a target debuff's, a
+    -- seconds read and an aura the spec does not know send none
+    it("the stack edges of the player's buffs go to def.bandStacks by aura key, N and N + 1 each", function()
+        local gen = VSI.def.bandGen
+        install(
+            PACK,
+            "actions+=/berserker_stance,if=buff.flurry.stack=3\n"
+                .. "actions+=/berserker_stance,if=buff.flurry.stack>=1.5&rage>=40\n"
+                .. "actions+=/berserker_stance,if=debuff.sunder_armor.stack<5&buff.flurry.remains<2\n"
+                .. "actions+=/berserker_stance,if=buff.no_such_aura.stack>2"
+        )
+        local _, stacks = H.Hekili.Scripts:PackBands(PACK)
+        assert.are.same({ flurry = { 2, 3, 4 } }, stacks)
+        assert.are.same({ flurry = { 2, 3, 4 } }, VSI.def.bandStacks)
+        assert.are_not.equal(gen, VSI.def.bandGen)
+        assert.are.same({ 40 }, VSI.def.bandPoints[RAGE].points) -- the power points unchanged beside them
+        install(PACK, "actions+=/berserker_stance,if=rage>=40")
+        assert.are.same({}, VSI.def.bandStacks)
+    end)
+
+    -- (aura-stacks review m1) at the def, an alias key resolves to the tracked aura's own key, and a class aura the
+    -- build does not track is dropped
+    it("def.bandStacks takes an alias by the tracked aura's key and drops an untracked class aura", function()
+        local auras = H.Hekili.Class.auras
+        auras.flurry_alias = auras.flurry -- an alias: the same record, its own key "flurry"
+        auras.untracked_proc = { key = "untracked_proc" } -- known to the class, no ID: not in the build's def
+        install(
+            PACK,
+            "actions+=/berserker_stance,if=buff.flurry_alias.stack=3\n"
+                .. "actions+=/berserker_stance,if=buff.untracked_proc.stack=2"
+        )
+        auras.flurry_alias, auras.untracked_proc = nil, nil
+        assert.are.same({ flurry = { 3, 4 } }, VSI.def.bandStacks)
+    end)
+
     it("one entry loaded outside a full load sends the pack's points again", function()
         install(PACK, "actions+=/berserker_stance,if=rage>=40\nactions+=/berserker_stance,if=rage>=50")
         local gen = VSI.def.bandGen

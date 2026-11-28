@@ -25,6 +25,7 @@
 - On-use trinkets from a shared trinket line are now suggested during the global cooldown, like other off-GCD lines, instead of trading places with another off-GCD cooldown (such as Combustion) for a moment.
 - The Desaturate option on the Multiple displays tab now shows its per-display Checked/Unchecked lines in its tooltip. The Targets tab's list of alternative pet abilities and the "priorities were updated/reverted" message now list their entries in a fixed order instead of a varying one.
 - Mana, focus and energy users: when you reach an ability's cost, its icon no longer wavers between ready and waiting for a moment as often.
+- Priority lines that check the stacks of one of your own buffs in combat (such as Pyroblast at 3 stacks of Heating Up, Fingers of Frost, Maelstrom Weapon at 5) now follow the stack count the game's Cooldown Manager shows, instead of a guess. The buff must be in the Cooldown Manager's Tracked Buffs or Tracked Bars section.
 - Effects you put on your target that the Cooldown Manager tracks (such as Rip and Insect Swarm): when a miss right after your cast was taken as that cast missing, the effect could be treated as still on the target long after it fell off, so it was not recommended again on that target until you left combat. It is now recommended again once it falls off.
 
 ### Known issues

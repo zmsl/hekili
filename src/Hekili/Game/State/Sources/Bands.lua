@@ -21,6 +21,12 @@
 -- percent one for this build, converted at the belief's max and widened a point each side (design 2.4), only once that
 -- max was read plain (I.maxPlain): a guessed one would make a measured floor of a percent, so then it logs no band.
 -- A power that proves plain in combat (R.readable) releases its watch when combat ends, for this build.
+-- Stacks (lane aura-stacks, L2023): each player aura the active priority reads as `buff.<key>.stack <op> N`
+-- (def.bandStacks: its edges, Engine/Sim/Scripts.lua PackBands) with an edge from 2 to its max_stack is watched as the
+-- library's aura kind (`what = "stacks"`, edge 1 added: the absent band is then [0, 1)) on the first of its IDs the
+-- Cooldown Manager names, made out of combat and listed again when def.bandGen brings another edge set; poll 1.6 logs
+-- a live band as Obs.Band on channel I.STACK_BAND - j in whole stacks (Families/Auras.lua applies it). In their own
+-- arrays: the health and power loops, and the harness's I.bandLive walk, never see them.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -54,13 +60,20 @@ local want = {} -- the list being resolved (never a def.bandPoints table: those 
 -- By channel: the library's stamp of the last live band, its low and high end (the family's units), whether the last
 -- poll logged a band, and how many settles found the belief's value outside it.
 I.bandT, I.bandLo, I.bandHi, I.bandLive, I.bandDisagree = {}, {}, {}, {}, {}
-I.bandShows = {} -- by power channel: the band's delay behind an event of ours (I.BAND_MARGIN)
+I.bandShows = {} -- by power or stack channel: the band's delay behind an event of ours (I.BAND_MARGIN)
 -- (L1805) By channel: the watch works (switched on, the library found, its handle accepted and "live", or "priming"
 -- again: not refused, released, paused or unavailable). Families/Player.lua holds a lost band only while it is true.
 I.bandOK = {}
-I.auraKnown = false -- the library's aura kind answers (its own capability report; Hekili watches no aura yet)
+I.auraKnown = false -- the library's aura kind answers (its own capability report; the stack watches use it)
 -- By channel: how many bands a family applied since the build, and the last one as it applied it.
 I.bandUsed, I.bandUsedLo, I.bandUsedHi = {}, {}, {}
+
+-- Stack watches by watch i (sn of them): its aura index, spec, edge list as text (a kept watch's test), handle (false:
+-- none), cuts as a set (a band's hi is exclusive at a cut above lo), why it is not asked again before combat's end
+-- (false or a code), the index of the aura ID it watches, and whether the last poll logged a band. sGen: the
+-- def.bandGen listed (false: none since the build).
+local sn, sJ, sSpec, sSig, sHandle, sCut, sRefused, sNext, sLive = 0, {}, {}, {}, {}, {}, {}, {}, {}
+local sGen = false
 
 local LHV -- the library, once found
 local on = false -- the watches wanted (def.providers.bands), as applied
@@ -182,10 +195,91 @@ local function ensure(api)
     end
 end
 
+-- Stack watch i's band is no longer live: one unknown.
+local function stackLost(i, t)
+    if sLive[i] then
+        sLive[i] = false
+        Direct(Obs.Band, t, I.STACK_BAND - sJ[i], 1, 0)
+    end
+end
+
+-- The stack watches def.bandStacks asks for (out of combat, at a new def.bandGen; cold: allocates). A watch whose aura
+-- and edges stand keeps its handle and band (bandGen moves at every script load); every other old one is released.
+local function listStacks(t)
+    local def = I.def
+    sGen = def.bandGen or 0
+    local old, k = {}, 0
+    for i = 1, sn do
+        old[sJ[i]] = i
+    end
+    local nJ, nSpec, nSig, nH, nCut, nRef, nNext, nLive = {}, {}, {}, {}, {}, {}, {}, {}
+    for j, a in ipairs(def.auras) do
+        local max = a.max_stack
+        max = type(max) == "number" and max >= 1 and max % 1 == 0 and max or nil
+        local edges, cut = { 1 }, { [1] = true }
+        for _, e in ipairs(def.bandStacks and def.bandStacks[a.key] or {}) do
+            if e > 1 and e % 1 == 0 and (not max or e <= max) then
+                edges[#edges + 1], cut[e] = e, true
+            end
+        end
+        if #edges > 1 then -- edge 1 alone has no bar: nothing beyond presence
+            k = k + 1
+            local sig, i = table.concat(edges, ","), old[j]
+            if i and sSig[i] == sig then
+                nJ[k], nSpec[k], nSig[k], nH[k], nCut[k] = j, sSpec[i], sig, sHandle[i], sCut[i]
+                nRef[k], nNext[k], nLive[k] = sRefused[i], sNext[i], sLive[i]
+                sHandle[i], sLive[i] = false, false -- kept: neither released nor told unknown below
+            else
+                nJ[k], nSig[k], nH[k], nCut[k], nRef[k], nNext[k], nLive[k] = j, sig, false, cut, false, 1, false
+                nSpec[k] = { kind = "aura", unit = "player", what = "stacks", edges = edges, max = max }
+            end
+            local ch = I.STACK_BAND - j
+            I.bandT[ch], I.bandShows[ch] = I.bandT[ch] or 0, I.bandShows[ch] or I.BAND_MARGIN
+        end
+    end
+    for i = 1, sn do
+        if sHandle[i] then
+            sHandle[i]:Release()
+        end
+        stackLost(i, t)
+    end
+    sJ, sSpec, sSig, sHandle, sCut, sRefused, sNext, sLive = nJ, nSpec, nSig, nH, nCut, nRef, nNext, nLive
+    sn = k
+end
+
+-- Every missing stack watch, out of combat: on the aura's IDs in order, the next one while the Cooldown Manager names
+-- none (`not-in-cdm`, also once a pending answer turns into it); any other answer stays the watch's own (its State).
+local function ensureStacks()
+    for i = 1, sn do
+        local h, ids = sHandle[i], I.def.auraIds[sJ[i]]
+        if h and select(2, h:State()) == "not-in-cdm" and ids[sNext[i] + 1] then
+            h:Release()
+            sHandle[i], sNext[i] = false, sNext[i] + 1
+        end
+        while not sHandle[i] and not sRefused[i] do
+            local s = sSpec[i]
+            s.spell = ids[sNext[i]]
+            local nh, code = LHV:Watch(OWNER, s)
+            if not nh then
+                sRefused[i] = code
+            elseif select(2, nh:State()) == "not-in-cdm" and ids[sNext[i] + 1] then
+                nh:Release()
+                sNext[i] = sNext[i] + 1
+            else
+                sHandle[i] = nh
+            end
+        end
+    end
+end
+
 -- The kill switch: every watch released, one unknown for each channel that had a band. Allocates nothing.
 local function off(t)
     if LHV then
         LHV:ReleaseAll(OWNER)
+    end
+    for i = 1, sn do
+        sHandle[i], sRefused[i] = false, false
+        stackLost(i, t)
     end
     I.auraKnown = false
     for k = 1, n do
@@ -224,7 +318,7 @@ I.OnBuild(function(def, now)
         I.bandLive[ch], I.bandOK[ch] = false, false
     end
     I.auraKnown = false
-    n = 0
+    n, sn, sGen = 0, 0, false -- the stack watches listed again from this def (the log and their bands are cleared)
     local function add(ch, s, pt)
         n = n + 1
         chan[n], spec[n], handle[n], ptype[n], refused[n], paused[n] = ch, s, false, pt, false, false
@@ -278,6 +372,10 @@ S.Poll(1.6, function(api, t)
                     setPoints(k)
                 end
             end
+            if sGen ~= (I.def.bandGen or 0) then
+                listStacks(t)
+            end
+            ensureStacks()
         end
     end
     idle = false
@@ -326,6 +424,24 @@ S.Poll(1.6, function(api, t)
             end
         else
             I.bandOK[chan[k]] = false
+        end
+    end
+    -- the stack watches: a live band in whole stacks (hi exclusive at a cut above lo; the top `max` closed)
+    for i = 1, sn do
+        local h, lo, hi, bt = sHandle[i], nil, nil, nil
+        if h and h:State() == "live" then
+            lo, hi, bt = h:Get()
+        end
+        if lo then
+            local ch = I.STACK_BAND - sJ[i]
+            if hi > lo and sCut[i][hi] then
+                hi = hi - 1
+            end
+            I.bandT[ch], I.bandLo[ch], I.bandHi[ch], sLive[i] = bt, lo, hi, true
+            I.bandShows[ch] = h:Latency() + I.BAND_MARGIN
+            Direct(Obs.Band, t, ch, lo, hi)
+        else
+            stackLost(i, t)
         end
     end
 end)
@@ -378,6 +494,9 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
         if pointCode[k] then
             pointGen[k] = false
         end
+    end
+    for i = 1, sn do
+        sRefused[i] = false
     end
 end)
 
@@ -451,6 +570,23 @@ I.OnSnapshot(function(out, now)
             I.bandLive[ch] and now - I.bandT[ch] or 0,
             I.bandDisagree[ch],
             held
+        )
+    end
+    for i = 1, sn do -- why a priority's stack read follows the library or not (not on the Cooldown Manager's bars...)
+        local h, ch = sHandle[i], I.STACK_BAND - sJ[i]
+        local state, reason = "none", sRefused[i] or nil
+        if h then
+            state, reason = h:State()
+        end
+        out[#out + 1] = string.format(
+            "band stacks %s spell=%s edges=%s state=%s reason=%s band=%s-%s",
+            tostring(I.def.auras[sJ[i]].key),
+            tostring(sSpec[i].spell),
+            sSig[i],
+            tostring(state),
+            tostring(reason),
+            tostring(sLive[i] and I.bandLo[ch] or "?"),
+            tostring(sLive[i] and I.bandHi[ch] or "?")
         )
     end
     local bars, usFrame, usPeak, _, _, desyncs, _, splits = LHV:GetStats()
