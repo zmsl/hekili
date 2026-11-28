@@ -348,6 +348,33 @@ describe("the client's held flag (isEnabled false)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- the belief missed the aura's fall (a spend the pack does not model, a cancel): the client's release is the
+    -- fact that it was spent, so the believed aura goes down at the edge and nothing holds it on (review I1)
+    it("runs Divine Favor from the client's release when the belief missed its aura's fall", function()
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        H.ctl.cooldown[DIVINE_FAVOR] = HELD
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 1.1))
+        t = t + 11 -- the client releases it, no modelled spender
+        H.ctl.now = t
+        H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        st.reset("Primary", true)
+        assert.is_false(st.buff.divine_favor.up, "taken down at the release")
+        near(120 - 0.2, st.cooldown.divine_favor.remains)
+        t = t + 130 -- the client reads it ready again
+        H.ctl.now = t
+        H.ctl.cooldown[DIVINE_FAVOR] = nil
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t))
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown.divine_favor.ready, "ready after its cooldown")
+        assert.are.same({}, H.errors)
+    end)
+
     -- an item held until its effect ends (the client's enable 0, Sources/Spellbook.lua itemReady): held in the read
     it("reads an item's held cooldown (enable 0) as not ready", function()
         local H, t = hunter()
