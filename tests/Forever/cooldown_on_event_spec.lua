@@ -465,7 +465,8 @@ describe("the client's held flag (isEnabled false)", function()
         local H, t = hunter()
         local st = H.Hekili.State
         H.ctl.now = t
-        H.ctl.cooldown[FEIGN_DEATH] = { isEnabled = false, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        H.ctl.cooldown[FEIGN_DEATH] =
+            { isEnabled = false, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
         H.Fire("SPELL_UPDATE_COOLDOWN")
         assert(headless.cycle(H, t + 0.1))
         st.reset("Primary", true)
@@ -501,7 +502,8 @@ describe("the client's held flag (isEnabled false)", function()
         local H, t = hunter()
         local st = H.Hekili.State
         H.ctl.now = t
-        H.ctl.cooldown[FEIGN_DEATH] = { isEnabled = SECRET, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
+        H.ctl.cooldown[FEIGN_DEATH] =
+            { isEnabled = SECRET, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
         H.Fire("SPELL_UPDATE_COOLDOWN")
         assert(headless.cycle(H, t + 0.1))
         local info = H.ns.Facade.C_Spell.GetSpellCooldown(FEIGN_DEATH)
