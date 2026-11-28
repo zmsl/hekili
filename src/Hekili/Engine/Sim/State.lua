@@ -3569,8 +3569,13 @@ do
                 local start, duration = 0, 0
 
                 if id > 0 then
-                    local _, modRate = nil, 1
-                    start, duration, _, modRate = GetCooldown( id )
+                    local enabled, modRate = nil, 1
+                    start, duration, enabled, modRate = GetCooldown( id )
+                    if enabled == false or enabled == 0 then
+                        -- held (the client's isEnabled false / an item's enable 0: cooldown on event, any spell): it
+                        -- starts at the release, at the earliest now; the filled times are not a running cooldown
+                        start, duration = state.now, max( ability.cooldown or 0, duration or 0 )
+                    end
 
                     local lossStart, lossDuration = GetSpellLossOfControlCooldown( id )
                     if lossStart and lossDuration and lossStart + lossDuration > start + duration then

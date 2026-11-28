@@ -589,21 +589,22 @@ describe("the world's press", function()
         assert.are.equal(math.huge, us.cdUntil.spender_a)
         W.t = 100
         assert.are.same({ false, "cooldown" }, { W.press(us, "spender_a", p) })
-        local cds = 0
-        for _, line in ipairs(seen()) do
-            cds = cds + (line:find("^@cooldown " .. fs.SPENDER_A) and 1 or 0)
+        -- at the press the client reads it held (isEnabled false, the owner's probe 2026-11-27), no running cooldown
+        local function reads()
+            local s, out = observer.observe(W), {}
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.a1[i] == fs.SPENDER_A then
+                    local a2 = rawequal(s.a2[i], fake.SECRET) and "SECRET" or tostring(s.a2[i])
+                    out[#out + 1] = ("%.0f %s %s"):format(s.t[i], a2, tostring(s.a4[i]))
+                end
+            end
+            return out
         end
-        assert.are.equal(0, cds) -- no cooldown at the press: the client's flag reads ready while held
+        assert.are.same({ "1 SECRET held" }, reads())
         us.auras[AURA] = nil
         W.emit({ kind = "aura", dst = us, aura = AURA, stacks = 0, expires = 0, duration = 0 })
         assert.are.equal(106, us.cdUntil.spender_a)
         assert.is_nil(us.held[AURA])
-        local got = {}
-        for _, line in ipairs(seen()) do
-            if line:find("^@cooldown " .. fs.SPENDER_A) then
-                got[#got + 1] = line
-            end
-        end
-        assert.are.same({ "@cooldown " .. fs.SPENDER_A .. " SECRET", "@cooldown " .. fs.SPENDER_A .. " nil" }, got)
+        assert.are.same({ "1 SECRET held", "100 SECRET nil", "106 nil nil" }, reads())
     end)
 end)

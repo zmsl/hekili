@@ -915,6 +915,12 @@ function M.new(W, k)
                 for _, rid in ipairs(ev.ids or { id }) do
                     cooldown(t, rid, ev.cd)
                 end
+            elseif ev.held then -- cooldown on event: held (isEnabled false, its length filled) until the release
+                for _, rid in ipairs(ev.ids or { id }) do
+                    dropEnds(t, rid)
+                    push(t, "@cooldown", rid, k.plain and t or fake.SECRET, k.plain and ev.held or fake.SECRET, "held")
+                end
+                push(t, "SPELL_UPDATE_COOLDOWN")
             end
             if ev.gcd and k.gcdSpell and not gcdFirst then
                 cooldown(t, k.gcdSpell, ev.gcd)

@@ -229,3 +229,115 @@ describe("the packs' cooldown-on-event spells", function()
         end)
     end
 end)
+
+-- The client's held flag (owner probe 2026-11-27, Feral prowling out of combat: C_Spell.GetSpellCooldown(5215) =
+-- isEnabled false, isActive false, startTime set, duration 10; FR-1: isEnabled plain in combat; L2013): while a
+-- cooldown-on-event effect is held the read is held, not ready, for any spell, declared or not, and the filled
+-- startTime/duration are never a running cooldown. The release (isEnabled true, the cooldown running) starts it.
+describe("the client's held flag (isEnabled false)", function()
+    local FEIGN_DEATH = 5384 -- undeclared: no aura registered (L2014)
+    local HELD = { isEnabled = false, isActive = false, isOnGCD = false, startTime = SECRET, duration = SECRET }
+
+    -- Survival's world, Feign Death known (no kit has it)
+    local function hunter()
+        local C = require("Forever.helpers.hunter_world").Survival
+        local ch = C.character()
+        ch.known[#ch.known + 1] = FEIGN_DEATH
+        local H = headless.new({ character = ch, pack = C.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        return H, t
+    end
+
+    it("reads an undeclared spell held in combat as not ready, then runs it from the release", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        H.Fire("PLAYER_REGEN_DISABLED")
+        cast(H, t + 1, 1, FEIGN_DEATH)
+        H.ctl.cooldown[FEIGN_DEATH] = HELD
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        t = t + 41 -- 40 s held: past the press's 30 s
+        H.ctl.now = t
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t))
+        st.reset("Primary", true)
+        assert.is_false(st.cooldown.feign_death.ready, "held")
+        near(30, st.cooldown.feign_death.remains) -- at the earliest a full cooldown from now
+
+        -- the release: the client runs it from now
+        t = t + 1
+        H.ctl.now = t
+        H.ctl.cooldown[FEIGN_DEATH] = RUNNING
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        st.reset("Primary", true)
+        near(30 - 0.2, st.cooldown.feign_death.remains)
+        t = t + 20
+        H.ctl.now = t
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t))
+        st.reset("Primary", true)
+        near(10, st.cooldown.feign_death.remains)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- out of combat the times are plain and filled while held (Prowl's duration 10): never a running cooldown
+    it("ignores a held read's filled startTime and duration out of combat", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        H.ctl.now = t
+        H.ctl.cooldown[FEIGN_DEATH] =
+            { isEnabled = false, isActive = false, isOnGCD = false, startTime = t - 25, duration = 30 }
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.1))
+        st.reset("Primary", true)
+        assert.is_false(st.cooldown.feign_death.ready, "held")
+        near(30, st.cooldown.feign_death.remains) -- not 5 (startTime + duration)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- a declared one with the flag: held while its aura is up and while the client says held after the belief's
+    -- aura fell (a spend the belief has not seen), then from the release
+    it("holds Divine Favor on the flag and runs it from the release", function()
+        local H, t = boot(require("Forever.helpers.paladin_world").HolyShock)
+        local st = H.Hekili.State
+        cast(H, t + 1, 1, DIVINE_FAVOR)
+        H.ctl.cooldown[DIVINE_FAVOR] = HELD
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        t = t + 11
+        H.ctl.now = t
+        assert(headless.cycle(H, t))
+        st.reset("Primary", true)
+        assert.is_false(st.cooldown.divine_favor.ready, "held")
+        H.ctl.cooldown[DIVINE_FAVOR] = RUNNING
+        cast(H, t, 2, HOLY_SHOCK)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.2))
+        st.reset("Primary", true)
+        near(120 - 0.2, st.cooldown.divine_favor.remains)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- an item held until its effect ends (the client's enable 0, Sources/Spellbook.lua itemReady): held in the read
+    it("reads an item's held cooldown (enable 0) as not ready", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        local key
+        for k, a in pairs(H.Hekili.Class.abilities) do -- the first by name, for a stable pick
+            if type(k) == "string" and k:match("^[a-z_]+$") and type(a.item) == "number" and (a.cooldown or 0) > 0 then
+                key = (key == nil or k < key) and k or key
+            end
+        end
+        assert.is_string(key, "an item ability")
+        local a = H.Hekili.Class.abilities[key]
+        H.ctl.itemCooldown[a.itemCd or a.item] = { 0, 0, 0 }
+        H.ctl.now = t
+        assert(headless.cycle(H, t + 0.1))
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown[key].true_remains >= a.cooldown - 0.3, key .. " " .. st.cooldown[key].true_remains)
+        assert.are.same({}, H.errors)
+    end)
+end)

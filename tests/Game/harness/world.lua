@@ -383,6 +383,7 @@ function M.new(seed)
                 cost = p.cost,
                 pt = p.pt,
                 cd = not held and p.cooldown or nil,
+                held = held and p.cooldown or nil, -- the client reads it held (isEnabled false) until the release
                 gcd = gcd,
                 order = gcd and order or nil,
                 hard = hard or nil, -- its UNIT_SPELLCAST_START came at the press

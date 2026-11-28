@@ -151,7 +151,7 @@ function M.new()
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
         itemUsable = {}, -- [itemID] = true: C_Item.IsUsableItem answers true (default false)
-        itemCooldown = {}, -- [itemID] = { start, duration }: C_Item.GetItemCooldown (either may be SECRET; default 0,
+        itemCooldown = {}, -- [itemID] = { start, duration, enable }: C_Item.GetItemCooldown (either may be SECRET; default 0,
         -- 0); "raise": the read raises
         -- [index] = UnitStat's value (its first two returns; default 0); .armor UnitArmor's, .block GetShieldBlock's
         stats = {},
@@ -814,7 +814,7 @@ function M.new()
             if c == "raise" then
                 error("GetItemCooldown: a raising read")
             elseif c then
-                return c[1], c[2], 1
+                return c[1], c[2], c[3] or 1 -- c[3]: the enable flag (0: held until its effect ends)
             end
             return 0, 0, 1
         end,

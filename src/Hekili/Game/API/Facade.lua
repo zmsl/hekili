@@ -970,30 +970,40 @@ end, "plain in combat [W PR14; gate spike]; for the pet, Pet() while our summon 
 local CD = { startTime = 0, duration = 0, isEnabled = true, modRate = 1, isActive = false, isOnGCD = false }
 local CHARGES = { currentCharges = 1, maxCharges = 1, cooldownStartTime = 0, cooldownDuration = 0, chargeModRate = 1 }
 
--- The real call's plain flags: isActive, isOnGCD (each nil when secret or unreadable).
+-- The real call's plain flags: isActive, isOnGCD, isEnabled (each nil when secret or unreadable).
 local function flags(spellID)
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID) -- secret: tested next, then each field
     if issecretvalue(info) or type(info) ~= "table" then
-        return nil, nil
+        return nil, nil, nil
     end
-    local active, onGcd = info.isActive, info.isOnGCD -- secret: each tested next
+    local active, onGcd, enabled = info.isActive, info.isOnGCD, info.isEnabled -- secret: each tested next
     if issecretvalue(active) then
         active = nil
     end
     if issecretvalue(onGcd) then
         onGcd = nil
     end
-    return active, onGcd
+    if issecretvalue(enabled) then
+        enabled = nil
+    end
+    return active, onGcd, enabled
 end
 
 local function cooldownPolicy(spellID)
     local t = now()
+    CD.isEnabled = true
     if spellID == I.GCD_SPELL then
         local s, d = VS.GcdInfo(t)
         CD.startTime, CD.duration, CD.isActive, CD.isOnGCD = s, d, d > 0, false
         return CD
     end
-    local active, onGcd = flags(spellID)
+    local active, onGcd, enabled = flags(spellID)
+    if enabled == false then
+        -- held (cooldown on event: plain in combat, FR-1; the owner's probe 2026-11-27): the client's held shape,
+        -- whatever the belief's time, so no reader takes it for ready
+        CD.startTime, CD.duration, CD.isEnabled, CD.isActive, CD.isOnGCD = 0, 0, false, false, false
+        return CD
+    end
     if onGcd == true then
         -- bit-identical to the GCD's numbers, so Hekili zeroes it (State.lua:2972-2975, spec §7.5)
         local s, d = VS.GcdInfo(t)
@@ -1033,7 +1043,7 @@ kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     end
     modelled = true
     return cooldownPolicy(spellID)
-end, "times secret in combat, flags plain [W PR4, PR11]; Cooldown(), GcdInfo()")
+end, "times secret in combat, flags plain [W PR4, PR11; FR-1 isEnabled]; Cooldown(), GcdInfo(); held: isEnabled false")
 
 local function chargesPolicy(spellID)
     local cur, nextAt = VS.Charges(spellID, now())
