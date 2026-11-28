@@ -108,6 +108,7 @@ function Hekili:SpecializationChanged()
     wipe( class.totemSlots )
     wipe( class.windows )
     wipe( class.reactions )
+    wipe( class.cooldownAfter )
 
     local specs = { currentID, 0 }
 
@@ -319,6 +320,15 @@ function Hekili:SpecializationChanged()
 
     -- The race pack's abilities and auras win a key clash with the class's and `all`'s (Engine/Schema/Races.lua, spec §12b).
     ns.applyRace( class )
+
+    -- the simulation's removeBuff starts these cooldowns (Engine/Sim/State.lua); built here, never per removal
+    for k, ability in pairs( class.abilities ) do
+        local aura = ability.key == k and rawget( ability, "cooldownAfter" )
+        if aura then
+            class.cooldownAfter[ aura ] = class.cooldownAfter[ aura ] or {}
+            insert( class.cooldownAfter[ aura ], k )
+        end
+    end
 
     for k in pairs( class.abilityList ) do
         local ability = class.abilities[ k ]

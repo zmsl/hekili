@@ -47,6 +47,7 @@ function M.new(o)
         dmgMult = 1,
         gcdUntil = 0, -- the true GCD's end (W.press)
         cdUntil = {}, -- [key] = the true cooldown's end
+        held = {}, -- [aura spell ID] = the press whose cooldown waits for it to leave us (W.press `heldBy`)
         avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
         spentAt = {}, -- [pt] = the last time a cast of ours spent that type (the world's five-second rule)
         heldUntil = {}, -- [pt] = the paid channel's end that holds that type's casting rate (0: none)

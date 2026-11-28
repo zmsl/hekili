@@ -14,6 +14,7 @@
 - Retribution (wowsims.com): the opener at the pull (Judgement, then a seal, while moving to melee) is now a sequence in the priority itself, ended by the fight's first main-hand swing, instead of a rotation window inside the class pack.
 
 ### Fixed
+- Spells whose cooldown only starts when their effect is used up or ends, such as Divine Favor, Presence of Mind and Nature's Swiftness (also Combustion, Cold Blood, Inner Focus, Amplify Curse, Shadowform, Stealth and Prowl), are no longer recommended again while their effect is held; their cooldown is now counted from when the effect is spent or runs out. Any other spell or item the game holds this way, such as Feign Death, is also treated as not ready until the game starts its cooldown. Thanks to himea-saito for the report.
 - Guardian Druids with Primal Fury (Blood Frenzy) at 1 of 2 ranks: the 5 rage a critical hit only sometimes gives in Bear Form is no longer counted as half of it always coming; rage-gated recommendations wait for the rage you have.
 - Paladins with Sanctified Judgement at 1 or 2 ranks: Judgement's mana refund, a chance below the last rank, is no longer counted as if part of it always came; your mana is counted when the refund shows.
 - Guardian Druids and Fury Warriors when LibHiddenValues is off or has no answer: the rage Hekili estimates from your white swings no longer runs ahead of the rage you really have over a long fight, so rage-gated recommendations wait until you can afford them.

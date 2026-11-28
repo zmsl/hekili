@@ -420,8 +420,11 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.power[a1] = a2
     elseif ev == "@health" then
         ctl.unitHealth[a1], ctl.unitHealthMax[a1] = a2, a3
-    elseif ev == "@cooldown" then -- spellID, start, duration: on cooldown; start 0: ready (plain); nil: ready (secret)
-        if a2 == nil then
+    elseif ev == "@cooldown" then -- spellID, start, duration: on cooldown; start 0: ready (plain); nil: ready (secret);
+        -- a4 "held": cooldown on event, held until its effect ends (isEnabled false, the times filled: probe 2026-11-27)
+        if a4 == "held" then
+            ctl.cooldown[a1] = { isEnabled = false, isActive = false, isOnGCD = false, startTime = a2, duration = a3 }
+        elseif a2 == nil then
             ctl.cooldown[a1] = nil
         elseif a2 == 0 then
             ctl.cooldown[a1] = PLAIN_READY

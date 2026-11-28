@@ -1678,6 +1678,7 @@ spec:RegisterAbilities({
         id = 17116,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "natures_swiftness", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
@@ -1777,6 +1778,7 @@ spec:RegisterAbilities({
         copy = rest(PROWL),
         cast = 0,
         cooldown = 10,
+        cooldownAfter = "prowl", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,

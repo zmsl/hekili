@@ -915,12 +915,25 @@ function M.new(W, k)
                 for _, rid in ipairs(ev.ids or { id }) do
                     cooldown(t, rid, ev.cd)
                 end
+            elseif ev.held then -- cooldown on event: held (isEnabled false, its length filled) until the release
+                -- (probe 2026-11-27: one read, out of combat). UNCAPTURED: SPELL_UPDATE_COOLDOWN at the hold's start,
+                -- and the false read in combat (FR-1 saw isEnabled plain, true); probe: in combat, Divine Favor held,
+                -- /dump C_Spell.GetSpellCooldown(20216) and an event trace of SPELL_UPDATE_COOLDOWN at the press
+                for _, rid in ipairs(ev.ids or { id }) do
+                    dropEnds(t, rid)
+                    push(t, "@cooldown", rid, k.plain and t or fake.SECRET, k.plain and ev.held or fake.SECRET, "held")
+                end
+                push(t, "SPELL_UPDATE_COOLDOWN")
             end
             if ev.gcd and k.gcdSpell and not gcdFirst then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
             if ev.hard then
                 castEv(tc, ev.onUs, "UNIT_SPELLCAST_STOP", guid, id, bar)
+            end
+        elseif kind == "cooldown" and ev.src == us then -- a held cooldown starts (cooldown on event, W.emit)
+            for _, rid in ipairs(ev.ids) do
+                cooldown(t, rid, ev.cd)
             end
         elseif kind == "castStart" and ev.src == us then -- our hard cast: SENT, UnitCastingInfo, START, the GCD
             castN = castN + 1

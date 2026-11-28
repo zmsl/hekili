@@ -887,6 +887,11 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
     duration = duration or model.duration or 15
 
     if duration == 0 then
+        local waiting = class.cooldownAfter[ aura ] -- cooldown on event: the aura's end starts their cooldowns
+        if waiting and b.up then
+            for _, k in ipairs( waiting ) do setCooldown( k, class.abilities[ k ].cooldown or 0 ) end
+        end
+
         b.last_expiry = b.expires or 0
         b.expires = 0
 
@@ -3564,8 +3569,14 @@ do
                 local start, duration = 0, 0
 
                 if id > 0 then
-                    local _, modRate = nil, 1
-                    start, duration, _, modRate = GetCooldown( id )
+                    local enabled, modRate = nil, 1
+                    start, duration, enabled, modRate = GetCooldown( id )
+                    if enabled == false or enabled == 0 then
+                        -- held (the client's isEnabled false / an item's enable 0: cooldown on event, any spell): it
+                        -- starts at the release, at the earliest now; the read's times are not a running cooldown
+                        start, duration = state.now, ability.cooldown or 0
+                        if duration <= 0 then duration = 3600 end -- no length known: held until a release we cannot time
+                    end
 
                     local lossStart, lossDuration = GetSpellLossOfControlCooldown( id )
                     if lossStart and lossDuration and lossStart + lossDuration > start + duration then
@@ -3611,6 +3622,14 @@ do
                 t.expires = start > 0 and ( start + duration ) or 0
                 t.true_duration = true_duration
                 t.true_expires = start > 0 and ( start + true_duration ) or 0
+
+                -- cooldown on event (`cooldownAfter`): held while its aura is up, then a full cooldown from that aura's
+                -- end; the client reads ready while held (isActive false), in or out of combat
+                local held = ability.cooldownAfter
+                if held and state.buff[ held ].up then
+                    local at = state.buff[ held ].expires + ( ability.cooldown or 0 )
+                    if at > t.expires then t.expires, t.true_expires = at, at end
+                end
 
                 if ability.charges and ability.charges > 1 then
                     local charges, _
@@ -6674,6 +6693,14 @@ function state:RunHandler( key, noStart )
         if ability.start then ability.start() end
         self.channelSpell( key, self.query_time, ability.cast, ability.id )
     elseif ability.handler then ability.handler() end
+
+    -- cooldown on event (`cooldownAfter`): the press's cooldown waits for the aura it applied; removeBuff starts it
+    local held = ability.cooldownAfter
+    if held and self.buff[ held ].up then
+        local cd = self.cooldown[ key ]
+        local at = self.buff[ held ].expires + ( ability.cooldown or 0 )
+        if cd.expires < at then cd.expires = at end
+    end
 
     if WIN.n > 0 then state.WindowCast( key, ability ) end -- a stepped window's forecast step
 

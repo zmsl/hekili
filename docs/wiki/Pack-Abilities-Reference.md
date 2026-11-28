@@ -61,6 +61,7 @@ A proc that makes abilities cheaper is a cost modifier (`RegisterCostMod`), not 
 | `channeled` | boolean | The cast is a channel; `cast` is its length |
 | `cooldown` | number or function | The cooldown in seconds |
 | `hasteCD` | boolean | A numeric `cooldown` and `recharge` are multiplied by haste |
+| `cooldownAfter` | string | A player aura the cooldown waits for (the game's "cooldown starts when the effect ends"): while it is up the ability is held, and its cooldown runs from when the aura is spent or runs out, in the forecast and in what Hekili reads |
 | `charges` | number or function | The number of charges; 1 for none |
 | `recharge` | number or function | The time to regain one charge |
 | `gcd` | string or function | `"spell"` (the 1.5 second GCD, shortened by haste), `"totem"` (a fixed 1 second GCD) or `"off"` (no GCD) |

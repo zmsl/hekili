@@ -569,4 +569,42 @@ describe("the world's press", function()
             "2.00 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. c,
         }, casts())
     end)
+
+    -- cooldown on event (lane cooldown-on-event): a press whose cooldown waits for an aura (`heldBy`, its spell IDs) is
+    -- held while the aura is on us, and starts, in the truth and the client, when the aura leaves
+    it("holds a heldBy press's cooldown until its aura leaves us", function()
+        setup()
+        local AURA = 999001
+        local p = {
+            spell = fs.SPENDER_A,
+            cooldown = 6,
+            offGcd = true,
+            heldBy = { AURA },
+            effect = function(W_, e)
+                W_.applyAura(e, AURA, 3600)
+            end,
+        }
+        W.t = 1
+        assert.is_true(W.press(us, "spender_a", p))
+        assert.are.equal(math.huge, us.cdUntil.spender_a)
+        W.t = 100
+        assert.are.same({ false, "cooldown" }, { W.press(us, "spender_a", p) })
+        -- at the press the client reads it held (isEnabled false, the owner's probe 2026-11-27), no running cooldown
+        local function reads()
+            local s, out = observer.observe(W), {}
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.a1[i] == fs.SPENDER_A then
+                    local a2 = rawequal(s.a2[i], fake.SECRET) and "SECRET" or tostring(s.a2[i])
+                    out[#out + 1] = ("%.0f %s %s"):format(s.t[i], a2, tostring(s.a4[i]))
+                end
+            end
+            return out
+        end
+        assert.are.same({ "1 SECRET held" }, reads())
+        us.auras[AURA] = nil
+        W.emit({ kind = "aura", dst = us, aura = AURA, stacks = 0, expires = 0, duration = 0 })
+        assert.are.equal(106, us.cdUntil.spender_a)
+        assert.is_nil(us.held[AURA])
+        assert.are.same({ "1 SECRET held", "100 SECRET nil", "106 nil nil" }, reads())
+    end)
 end)

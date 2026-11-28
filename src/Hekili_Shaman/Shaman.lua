@@ -869,6 +869,7 @@ spec:RegisterAbilities({
         id = 16188,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "natures_swiftness", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,

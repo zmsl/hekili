@@ -1075,6 +1075,7 @@ spec:RegisterAbilities({
         id = 18288,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "amplify_curse", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,

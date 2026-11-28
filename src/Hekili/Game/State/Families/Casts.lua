@@ -40,14 +40,16 @@ local A = {
     -- the query ID's range in yards (C_Spell.GetSpellInfo's maxRange, Sources/Spellbook.lua; 5 for a hostile spell's
     -- 0); 0: no range check (self-cast, or on-next-swing: the client answers those in range at any distance)
     rMax = {},
+    waitsFor = {}, -- the aura index its cooldown waits for (`cooldownAfter`, Families/Now.lua), 0 none
 }
 I.ab = A
+I.cdAfter = {} -- by aura index: the ability whose cooldown waits for it (Families/Now.lua builds it)
 A.bySpell = {}
 A.idPos = {} -- by spell ID: its place among its ability's IDs (A.ids), the rank a cast of it was (Obs.CastSuccess `c`)
 A.byItem = {} -- by item ID: the ability whose `item` (a number) or `items` names it (VS.ItemCooldown)
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
-local UNKNOWN, NOT, YES = -1, 0, 1
+local UNKNOWN, NOT, YES, HELD = -1, 0, 1, 2 -- HELD: the client's isEnabled false (cooldown on event)
 -- The plausible lengths a falling edge may teach, by kind: spell [1.0, 1.51), totem [0.9, 1.01). Haste only shortens a
 -- GCD and the totem kind's is 1.0; a longer fall is one seen late (the flag is read only on the next
 -- SPELL_UPDATE_COOLDOWN, any spell's: in game 1.85 was learned).
@@ -425,7 +427,23 @@ I.On(Obs.Cooldown, function(o, t)
     end
     local a = o.a
     local was = A.flag[a]
-    A.flag[a] = o.b == 1 and YES or NOT
+    A.flag[a] = o.b == 1 and YES or o.b == 2 and HELD or NOT
+    if o.b == 0 and (was == HELD or was == YES and A.waitsFor[a] > 0) then
+        -- cooldown on event: the client starts it at the release, this edge (held -> running: a fact, any spell).
+        -- Without the held flag (ready -> running) a declared one from our believed aura end (castT, Auras.lua) when
+        -- that came first (a ready flag read before this edge pulled it to now)
+        local from = A.castT[a]
+        if was == HELD or not (from <= o.t and o.t - from < I.CooldownOf(a, o.t)) then
+            from = o.t
+        end
+        local w = A.waitsFor[a]
+        if w > 0 and I.AuraUpAt(1, w, o.t) then
+            -- the release proves its aura was spent: one we missed (an unmodelled spend, a cancel) goes down here, or
+            -- the settle's mask and the engine's hold on it would keep the spell held all combat (review I1)
+            I.AuraModel(1, w, 0, 0, 0, t, Obs.Cooldown, nil, true)
+        end
+        I.CooldownFrom(a, from, t, Obs.Cooldown)
+    end
     if o.b == 1 and was == NOT and A.castT[a] > 0 and o.t > A.castT[a] then
         -- a ready edge after our cast teaches the real length (talents included), but only near the registered one:
         -- a flag that also tracks something else (a kill window's usability) would teach minutes
@@ -454,7 +472,19 @@ end)
 I.OnSettle(function(now)
     for a = 1, A.n do
         local flag = A.flag[a]
-        if flag == YES then
+        local w = A.waitsFor[a]
+        if w > 0 and I.AuraUpAt(1, w, now) then
+            flag = UNKNOWN -- held while its aura is up: the client's flag reads ready (isActive false) all along
+        end
+        if flag == HELD then
+            -- held: it starts at the release, at the earliest now, so ready no sooner than a full length from now
+            local len = I.CooldownOf(a, now)
+            local at = now + (len > 0 and len or 3600) -- no length known: held until the release (the engine's 3600)
+            if A.ready0[a] < at then
+                A.ready0[a] = at
+                I.Sample(A.cd[a], "modelled", at, now, Obs.Cooldown)
+            end
+        elseif flag == YES then
             if A.ready0[a] > now then
                 A.ready0[a] = now
                 I.Sample(A.cd[a], "pinned", now, now, Obs.Cooldown)
@@ -486,6 +516,14 @@ function I.CooldownModel(a, expires, duration, t, event)
         A.cdLen[a] = duration
     end
     I.Sample(A.cd[a], "modelled", expires, t, event)
+end
+
+--- Ability a's cooldown, waiting for an aura (`cooldownAfter`), starts at `from`: that aura's end, planned or seen
+--- (Families/Auras.lua's write); the ready edge then teaches the length from it. Allocates nothing.
+function I.CooldownFrom(a, from, t, event)
+    local ready = from + I.CooldownOf(a, t)
+    A.ready0[a], A.castT[a] = ready, from
+    I.Sample(A.cd[a], "modelled", ready, t, event)
 end
 
 --- Our own cast spent a charge (spec §5.3). Allocates nothing.

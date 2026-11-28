@@ -98,8 +98,9 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api)
     end
 end)
 
--- The plain ready flag of one spell: true ready, false on cooldown, nil when unreadable. A spell on the GCD only
--- reads ready. Allocates nothing (the client allocates the info table).
+-- The plain ready flag of one spell: true ready, false on cooldown, nil when unreadable; then isActive, and whether
+-- the client holds it (isEnabled false: cooldown on event, not ready, its times not a running cooldown; probe
+-- 2026-11-27). A spell on the GCD only reads ready. Allocates nothing (the client allocates the info table).
 local function ready(api, spellID)
     local raw = api.C_Spell.GetSpellCooldown(spellID) -- secret: Plain next, then each field
     local info = Plain(api, raw)
@@ -108,6 +109,10 @@ local function ready(api, spellID)
         return nil
     end
     local active, onGcd = Plain(api, info.isActive), Plain(api, info.isOnGCD)
+    if Plain(api, info.isEnabled) == false then
+        Note("GetSpellCooldown flags", "readable")
+        return false, active, true
+    end
     if active == nil then
         Note("GetSpellCooldown flags", "secret")
         return nil
@@ -137,9 +142,10 @@ local function onCooldown(api, t)
     local A, edge = I.ab, false
     for a = 1, A.n do
         -- an item's cooldown is the item's, not its use spell's (lane gear-1): no use spell's flag constrains it
-        local r, item = nil, A.obj[a].item
+        local r, held, item = nil, nil, A.obj[a].item
         if item == nil then
-            r = ready(api, A.qid[a])
+            local _
+            r, _, held = ready(api, A.qid[a])
         elseif type(item) == "number" then
             local at = itemReady(api, item)
             if at and at ~= lastItem[a] then
@@ -148,7 +154,7 @@ local function onCooldown(api, t)
             end
         end
         if r ~= nil then
-            local v = r and 1 or 0
+            local v = held and 2 or r and 1 or 0
             if v ~= last[a] then
                 last[a] = v
                 edge = Stage(Obs.Cooldown, t, a, v, 0) or edge

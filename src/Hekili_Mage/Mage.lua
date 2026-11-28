@@ -676,6 +676,7 @@ spec:RegisterAbilities({
         id = 12043,
         cast = 0,
         cooldown = 180,
+        cooldownAfter = "presence_of_mind", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
@@ -694,6 +695,9 @@ spec:RegisterAbilities({
         id = 11129,
         cast = 0,
         cooldown = 180,
+        -- shortcut: no cast spends the aura here (its charges go on Fire crits, unmodelled), so the believed aura and
+        -- the hold last until a read or the client's release takes it down; model the crit spend if a pack needs a recast
+        cooldownAfter = "combustion", -- cooldown on event (attribute 0x02000000): it starts when the aura ends
         gcd = "off",
 
         startsCombat = false,
