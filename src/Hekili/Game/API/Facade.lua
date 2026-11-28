@@ -1060,8 +1060,9 @@ kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
             if info.duration ~= 0 then
                 return held()
             end
-            -- the flag off with no duration: no hold (review I1), the client's own times
-            CD.startTime, CD.duration, CD.isEnabled, CD.modRate = info.startTime, 0, true, info.modRate or 1
+            -- the flag off with no duration: no hold (review I1), the client's own times and flags (every CD writer
+            -- sets these five; modRate stays 1)
+            CD.startTime, CD.duration, CD.isEnabled = info.startTime, 0, true
             CD.isActive, CD.isOnGCD = info.isActive, info.isOnGCD
             return CD
         end

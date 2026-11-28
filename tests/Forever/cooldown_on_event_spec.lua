@@ -476,6 +476,22 @@ describe("the client's held flag (isEnabled false)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- the same with a secret startTime (the policy's path, Facade.lua flags()): a known-zero duration is no hold
+    it("reads an undeclared spell's (secret, 0, false) as ready", function()
+        local H, t = hunter()
+        local st = H.Hekili.State
+        H.ctl.now = t
+        H.ctl.cooldown[FEIGN_DEATH] =
+            { isEnabled = false, isActive = false, isOnGCD = false, startTime = SECRET, duration = 0 }
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert(headless.cycle(H, t + 0.1))
+        local info = H.ns.Facade.C_Spell.GetSpellCooldown(FEIGN_DEATH)
+        assert.is_true(info.isEnabled)
+        st.reset("Primary", true)
+        assert.is_true(st.cooldown.feign_death.ready, tostring(st.cooldown.feign_death.remains))
+        assert.are.same({}, H.errors)
+    end)
+
     -- a declared one: (0, 0, false) is ready on its own, held only while its declared aura is up (the pack's field)
     it("reads Divine Favor's (0, 0, false) as ready, and held while its aura is up", function()
         local IDLE = { isEnabled = false, isActive = false, isOnGCD = false, startTime = 0, duration = 0 }
