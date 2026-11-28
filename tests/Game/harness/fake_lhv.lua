@@ -333,8 +333,9 @@ function M.new(o)
     -- observer pushes our aura's true stacks at each change (`lib:Push("aura", "player", spell, stacks)`), a handle
     -- reports the last push at least `auraLag` frames old (LHV.SETTLE + 1, its h:Latency) as the real library's band
     -- (absent [0, cut 1), 0 or 1 up [0, lowest bar), else [the highest cut at or below, the next cut or max]), stamped
-    -- that push's time plus the lag; unknown until a push is that old after the watch; `unavailable cdm-not-tracked`
-    -- while o.auras(spell) (the harness's layout places it on an aura viewer) says no. shortcut: no prime hold, no
+    -- that push's time plus the lag; unknown until a push is that old after the watch; `unavailable <reason>` while
+    -- o.auras(spell) (the harness's layout places it on an aura viewer) says no: its reason string (not-in-cdm,
+    -- cdm-not-tracked), false reading cdm-not-tracked. shortcut: no prime hold, no
     -- "priming until the next count write" (a watch made while the aura is up reads its push at once): the belief's
     -- watches are made out of combat, before the pull's procs; upgrade if a consumer watches mid-fight.
     local AURA_LAG = 5
@@ -623,8 +624,10 @@ function M.new(o)
             local state, why = capOf("aura")
             if state ~= "ready" then
                 return state, why
-            elseif not o.auras(self.spell) then
-                return "unavailable", "cdm-not-tracked"
+            end
+            local placed = o.auras(self.spell) -- true, or why not (false: cdm-not-tracked)
+            if placed ~= true then
+                return "unavailable", placed or "cdm-not-tracked"
             end
             return auraAt(self, now()) and "live" or "priming"
         end

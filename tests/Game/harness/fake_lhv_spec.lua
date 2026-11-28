@@ -868,4 +868,15 @@ describe("fake_lhv's aura kind", function()
         L:AuraReset()
         assert.are.same({ 0, 1 }, band(h))
     end)
+
+    it("reports the resolver's reason when it gives one (not-in-cdm: no entry names the spell)", function()
+        t = 0
+        local why = "not-in-cdm"
+        local h = lib(function()
+            return why
+        end):Watch("O", SPEC)
+        assert.are.same({ "unavailable", "not-in-cdm" }, { h:State() })
+        why = "cdm-not-tracked"
+        assert.are.same({ "unavailable", "cdm-not-tracked" }, { h:State() })
+    end)
 end)

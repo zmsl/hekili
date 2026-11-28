@@ -934,3 +934,29 @@ describe("the headless loop's client frames, one per wowsims timestamp (L1793)",
         end
     )
 end)
+
+-- (lane aura-stacks r2) the aura-bands arm's placement answer, as the real library's (Cdm.lua statusOf): an entry of
+-- Tracked Buffs or Tracked Bars naming the spell places it; another entry naming it: cdm-not-tracked; none: not-in-cdm
+-- (so Bands.lua moves to the aura's next ID, as Frost's Fingers of Frost to its copy 400670)
+describe("the headless loop's aura placement (loop.auraPlacement)", function()
+    it("places a Tracked Buffs or Bars entry, tells not tracked from not in the CDM", function()
+        local viewer = {
+            sets = { [0] = { 501 }, [1] = {}, [2] = { 502 }, [3] = { 503 } },
+            infos = {
+                [501] = { spellID = 9, linkedSpellIDs = { 77 } }, -- a cooldown entry linking 77 only
+                [502] = { spellID = 40, overrideSpellID = 41 },
+                [503] = { spellID = 50, linkedSpellIDs = { 51, 52 } },
+                [504] = { spellID = 60 }, -- in no set: not displayed
+            },
+        }
+        assert.are.same({ true, true, true, true, "cdm-not-tracked", "cdm-not-tracked", "not-in-cdm" }, {
+            loop.auraPlacement(viewer, 40),
+            loop.auraPlacement(viewer, 41),
+            loop.auraPlacement(viewer, 52),
+            loop.auraPlacement(viewer, 50),
+            loop.auraPlacement(viewer, 77),
+            loop.auraPlacement(viewer, 60),
+            loop.auraPlacement(viewer, 400669),
+        })
+    end)
+end)
