@@ -50,6 +50,21 @@ A.byItem = {} -- by item ID: the ability whose `item` (a number) or `items` name
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES, HELD = -1, 0, 1, 2 -- HELD: the client's isEnabled false (cooldown on event)
+-- Scoped state (refactor Pr-10): per ability, reset at a build (the charge records stay: built per ability).
+for _, f in ipairs({
+    { "readCost", 0 },
+    { "multiCost", false },
+    { "ready0", 0 },
+    { "cdLen", 0 },
+    { "castT", 0 },
+    { "flag", UNKNOWN },
+    { "next0", 0 },
+    { "queued", false },
+    { "castStartT", 0 },
+    { "rMax", 0 },
+}) do
+    I.Scope(A[f[1]], f[2], "casts.build")
+end
 -- The plausible lengths a falling edge may teach, by kind: spell [1.0, 1.51), totem [0.9, 1.01). Haste only shortens a
 -- GCD and the totem kind's is 1.0; a longer fall is one seen late (the flag is read only on the next
 -- SPELL_UPDATE_COOLDOWN, any spell's: in game 1.85 was learned).
@@ -248,11 +263,9 @@ I.OnBuild(function(def, now)
             end
         end
         A.slot[a] = def.abilitySlot[a]
-        A.qid[a], A.readCost[a], A.multiCost[a] = ids[1], 0, false
-        A.ready0[a], A.cdLen[a], A.castT[a], A.flag[a] = 0, 0, 0, UNKNOWN
-        A.charges0[a], A.next0[a] = maxCharges(a), 0
-        A.queued[a], A.castStartT[a] = false, 0
-        A.rMax[a] = 0
+        A.qid[a] = ids[1]
+        I.Reset("casts.build", a) -- maxCharges reads only the record's `charges`
+        A.charges0[a] = maxCharges(a)
         local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- a passive: no GCD
         A.gcdKind[a] = (g == "off" or extra) and 0 or (g == "totem" and 2 or 1) -- anything else: State.lua's "spell"
         A.gcdFn[a] = not extra and type(g) == "function" and g or false -- on the GCD; its kind at each cast

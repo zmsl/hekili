@@ -253,11 +253,14 @@ end
 -- Per ability: the amount band of its own clean wounds (a crit halved), declared abilities only (spec §3.4); reset at
 -- each build (ability indices change with the spec).
 T.bandLo, T.bandHi, T.bandN = {}, {}, {}
+for _, a in ipairs({ T.bandLo, T.bandHi, T.bandN }) do
+    I.Scope(a, 0, "tickets.build") -- scoped state (refactor Pr-10), per ability
+end
 -- Per ability: its ticking aura's spell ID (0 none), which CombatLog's removal rows name (T.AuraGone).
 T.tickAuraId = {}
 I.OnBuild(function()
     for a = 1, A.n do
-        T.bandLo[a], T.bandHi[a], T.bandN[a] = 0, 0, 0
+        I.Reset("tickets.build", a)
         local au = A.tickAura[a]
         T.tickAuraId[a] = au and tonumber(rawget(au, "id")) or 0
     end

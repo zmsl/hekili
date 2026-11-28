@@ -148,6 +148,16 @@ local hHeld, hC, hT = false, 0, 0
 -- item). While unsettled, the slot's pins measure no regen (I.RefundPending): the server refunds at the success, the
 -- belief only at the avoid's row. Filled at OnBuild.
 local rfT, rfOld = {}, {}
+-- Scoped state (refactor Pr-10): reset at a build, per resource slot and per aura.
+I.Scope(rdV1, 0, "now.build.resource")
+I.Scope(rdT1, -1e9, "now.build.resource")
+I.Scope(rdV2, 0, "now.build.resource")
+I.Scope(rdT2, -1e9, "now.build.resource")
+I.Scope(rfT, -1, "now.build.refund")
+I.Scope(rfOld, -1, "now.build.refund")
+for _, a in ipairs({ vA, vT, vPaid, vAp, vSpends, vRaised, bR, bD, bE, bL, bH, bP }) do
+    I.Scope(a, 0, "now.build.aura")
+end
 -- How long after its success a cast's own avoid row may still come: its cast ticket's window (Events/Tickets.lua arm:
 -- the learned main-hand landing lag's median plus three spreads, I.Log.LandWindow(1), never under
 -- I.Melee.CAST_WINDOW). Allocates nothing.
@@ -378,6 +388,7 @@ end
 -- usable.<key>: the last plain IsSpellUsable answer for a tracked ability (Sources/Power.lua's poll: spenders only; a
 -- secret answer is no observation there, so the last plain one stays); false before one and for an untracked key.
 local usableAns = {} -- by ability index
+I.Scope(usableAns, false, "now.build.ability") -- scoped state (refactor Pr-10)
 NAMES.usable = setmetatable({}, {
     __index = function(_, key)
         local a = abByKey[key]
@@ -765,7 +776,7 @@ end
 
 I.OnBuild(function(def)
     for r = 1, #def.resources do
-        rdV1[r], rdT1[r], rdV2[r], rdT2[r] = 0, -1e9, 0, -1e9
+        I.Reset("now.build.resource", r)
     end
     for k in pairs(abByKey) do
         abByKey[k] = nil
@@ -803,7 +814,7 @@ I.OnBuild(function(def)
     end
     for a = 1, A.n do
         abByKey[A.key[a]] = a
-        usableAns[a] = false
+        I.Reset("now.build.ability", a)
         A.known[a] = A.known[a] or false
         A.extra[a] = type(A.key[a]) == "string" and A.key[a]:sub(1, 6) == "track_"
         local obj = def.abilities[a]
@@ -848,8 +859,7 @@ I.OnBuild(function(def)
     for j = 1, #def.auras do
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
-        vA[j], vT[j], vPaid[j], vAp[j], vSpends[j], vRaised[j] = 0, 0, 0, 0, 0, 0
-        bR[j], bD[j], bE[j], bL[j], bH[j], bP[j] = 0, 0, 0, 0, 0, 0
+        I.Reset("now.build.aura", j)
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
         auraFn[j] = type(d) == "function" and d or false
@@ -875,7 +885,7 @@ I.OnBuild(function(def)
     end
     for r = 1, #def.resources do
         local d = def.resources[r]
-        rfT[r], rfOld[r] = -1, -1
+        I.Reset("now.build.refund", r)
         if d.key then
             resByKey[d.key] = r
             rawset(NAMES, d.key, setmetatable({ type = d.type }, resourceMeta))
